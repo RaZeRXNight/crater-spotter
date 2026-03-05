@@ -1,7 +1,9 @@
+# Created by https://www.toptal.com/developers/gitignore/api/react
+# Edit at https://www.toptal.com/developers/gitignore?templates=react
+
 # Important Files
 .env
 
-# Modules & Misc.
 # dotenv environment variable files
 .env
 .env.development.local
@@ -18,3 +20,5 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 .pnpm-debug.log*
+
+# End of https://www.toptal.com/developers/gitignore/api/react
