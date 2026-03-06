@@ -1,3 +1,5 @@
+npm i ; cd app ; npm i ; cd .. ;
+
 cd app
 npm run build
 cd ..

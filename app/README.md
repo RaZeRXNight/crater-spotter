@@ -1,17 +1,75 @@
-# React + Vite
+# crater-spotter-react
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+The notes below are for the react app. These are to help me in navigating and
+learning react. This isn't meant to be a full reference or documentation for
+the application.
 
-Currently, two official plugins are available:
+## Routes
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+We must import:
 
-## React Compiler
+- createBrowserRouter from react-router
+- RouterProvider from react-router/dom.
 
-The React Compiler is not enabled on this template because of its impact on dev
-& build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+These two will take care of the routing for our react app.
 
-## Expanding the ESLint configuration
+### Basic Routing
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```javascript
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <AppComponentNameHere />,
+  },
+]);
+```
+
+Within `createBrowserRouter` it takes a list of Javascript objects. Here we can
+specify what routes we want to use and what they'll return. This is showcased
+in the example above.
+
+### Nested Routing
+
+```javascript
+
+  {
+    path: "/",
+    element: <AppComponentNameHere />,
+    children: [{ path: "auth", element: <AuthComponentNameHere /> }],
+  }
+
+```
+
+The above example shows nested routes. This is how we get routes such as admin/dashboard.
+
+### Route objects
+
+```javascript
+import { createBrowserRouter, useLoaderData } from "react-router";
+
+createBrowserRouter([
+  {
+    path: "/teams/:teamId",
+    loader: async ({ params }) => {
+      let team = await fetchTeam(params.teamId);
+      return { name: team.name };
+    },
+    Component: Team,
+  },
+]);
+
+function Team() {
+  let data = useLoaderData();
+  return <h1>{data.name}</h1>;
+}
+```
+
+The example above showcases how to pass an object to a route.
+
+<https://reactrouter.com/start/data/route-object>
+
+### CSS
+
+<https://ui.shadcn.com/docs/installation/vite>
+
+## How to edit
