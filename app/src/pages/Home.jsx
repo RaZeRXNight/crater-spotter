@@ -1,4 +1,19 @@
 import "../css/Home.css";
+import { APIProvider, Map } from "@vis.gl/react-google-maps";
+
+const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+
+const App = () => (
+  <APIProvider apiKey={API_KEY}>
+    <Map
+      style={{ width: "100%", height: "200px" }}
+      defaultCenter={{ lat: 22.54992, lng: 0 }}
+      defaultZoom={3}
+      gestureHandling="greedy"
+      disableDefaultUI
+    />
+  </APIProvider>
+);
 
 export function Home() {
   return (
@@ -9,18 +24,43 @@ export function Home() {
           <a href="/">Home</a>
           <a href="#posts">Posts</a>
           <a href="#about">About</a>
+          <a href="#contact">Contact</a>
+          <a href="/auth">Login/Register</a>
         </nav>
       </header>
       <main>
         <section>
           <p>Welcome to the Home page!</p>
-          <img
-            src="https://via.placeholder.com/600x300"
-            alt="Placeholder Image"
-          />
+          {/* <img */}
+          {/*   src="https://thumbs.dreamstime.com/b/map-malawi-africa-regions-blank-map-bahamas-gray-every-island-map-titles-high-quality-map-bahamas-islands-239274905.jpg" */}
+          {/*   alt="Placeholder Image" */}
+          {/* /> */}
+          <App />
         </section>
         <section id="posts">
+          <h2>Recent Posts</h2>
           <p>Posts will be displayed here.</p>
+          <table id="posts-table">
+            <tbody>
+              <tr>
+                <td>
+                  <h3>Post Title</h3> <p>Comments Here</p>
+                </td>
+                <td>
+                  <h3>Post Title</h3> <p>Comments Here</p>
+                </td>
+                <td>
+                  <h3>Post Title</h3> <p>Comments Here</p>
+                </td>
+                <td>
+                  <h3>Post Title</h3> <p>Comments Here</p>
+                </td>
+                <td>
+                  <h3>Post Title</h3> <p>Comments Here</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </section>
         <section id="about">
           <p>Posts will be displayed here.</p>

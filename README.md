@@ -20,6 +20,7 @@ database used is SQLite, and the project may be deployed using docker.
 
 - [ ] User authentication and authorization
 - [ ] CRUD operations for posting and commenting.
+  - [ ] Validation for image uploads and post content.
 - [ ] Admin functionalities to manage users and posts.
 - [ ] Integration with Google Maps API to display pins and posts on the map.
 - [ ] Database schema design for users, posts, comments, and pins.
@@ -27,6 +28,12 @@ database used is SQLite, and the project may be deployed using docker.
 ## Features
 
 With the current react app, you are able to do the following:
+
+The structure of the back-end was modeled after Laravel's structure, with the
+following folders:
+
+- `storage/` - for storing uploaded images and files.
+- `app/` - being the front-end of the project, containing all of the react code.
 
 ## How to Install
 
