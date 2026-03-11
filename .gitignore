@@ -3,6 +3,7 @@
 
 # Important Files
 .env
+!.env.example
 
 # dotenv environment variable files
 .env

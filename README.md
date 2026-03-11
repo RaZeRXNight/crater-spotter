@@ -60,3 +60,4 @@ and run the project in development mode.
 - <https://dev.to/techcheck/creating-a-react-node-and-express-app-1ieg>
 - <https://reactrouter.com/start/declarative/routing>
 - <https://react.dev/learn>
+- <https://visgl.github.io/react-google-maps/docs/guides/interacting-with-google-maps-api>
