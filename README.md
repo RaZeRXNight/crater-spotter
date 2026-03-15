@@ -34,6 +34,7 @@ following folders:
 
 - `storage/` - for storing uploaded images and files.
 - `app/` - being the front-end of the project, containing all of the react code.
+- `src/` - being the essentials of how the server-side operates.
 
 ## How to Install
 
