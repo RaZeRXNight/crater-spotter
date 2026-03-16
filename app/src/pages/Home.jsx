@@ -1,7 +1,15 @@
 import "../css/Home.css";
 import App from "../components/Maps.jsx";
+import {
+  APIProvider,
+  Map,
+  Marker,
+  useMarkerRef,
+} from "@vis.gl/react-google-maps";
 
 export function Home() {
+  const markerPositions = [{ lat: 22.54992, lng: 0 }];
+
   return (
     <>
       <header>
@@ -21,7 +29,7 @@ export function Home() {
           {/*   src="https://thumbs.dreamstime.com/b/map-malawi-africa-regions-blank-map-bahamas-gray-every-island-map-titles-high-quality-map-bahamas-islands-239274905.jpg" */}
           {/*   alt="Placeholder Image" */}
           {/* /> */}
-          <App />
+          <App></App>
         </section>
         <section id="posts">
           <h2>Recent Posts</h2>
@@ -29,12 +37,6 @@ export function Home() {
           <table id="posts-table">
             <tbody>
               <tr>
-                <td>
-                  <h3>Post Title</h3> <p>Comments Here</p>
-                </td>
-                <td>
-                  <h3>Post Title</h3> <p>Comments Here</p>
-                </td>
                 <td>
                   <h3>Post Title</h3> <p>Comments Here</p>
                 </td>

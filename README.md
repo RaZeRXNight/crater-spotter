@@ -36,7 +36,6 @@ following folders:
 - `app/` - Being the front-end of the project, containing all of the react code.
 - `src/` - Being the essentials of how the server-side operates.
   - `src/database` - Where Databases may be migrated and defined.
-  - `src/controllers` - Where Operations with Databases are defined.
   - `src/routes` - Where routes are defined.
 
 ## How to Install
@@ -65,3 +64,4 @@ and run the project in development mode.
 - <https://reactrouter.com/start/declarative/routing>
 - <https://react.dev/learn>
 - <https://visgl.github.io/react-google-maps/docs/guides/interacting-with-google-maps-api>
+- <https://axios-http.com/docs/example>
