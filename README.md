@@ -65,3 +65,4 @@ and run the project in development mode.
 - <https://react.dev/learn>
 - <https://visgl.github.io/react-google-maps/docs/guides/interacting-with-google-maps-api>
 - <https://axios-http.com/docs/example>
+- <https://developers.google.com/maps/documentation/javascript/reference/map#Map>
