@@ -32,9 +32,12 @@ With the current react app, you are able to do the following:
 The structure of the back-end was modeled after Laravel's structure, with the
 following folders:
 
-- `storage/` - for storing uploaded images and files.
-- `app/` - being the front-end of the project, containing all of the react code.
-- `src/` - being the essentials of how the server-side operates.
+- `storage/` - For storing uploaded images and files.
+- `app/` - Being the front-end of the project, containing all of the react code.
+- `src/` - Being the essentials of how the server-side operates.
+  - `src/database` - Where Databases may be migrated and defined.
+  - `src/controllers` - Where Operations with Databases are defined.
+  - `src/routes` - Where routes are defined.
 
 ## How to Install
 
