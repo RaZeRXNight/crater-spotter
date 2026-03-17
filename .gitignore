@@ -3,6 +3,7 @@
 
 # Important Files
 .env
+!.env.example
 
 # dotenv environment variable files
 .env
@@ -12,6 +13,7 @@
 .env.local
 
 node_modules
+.sqlite3
 
 logs
 *.log

@@ -1,28 +1,19 @@
 @import "tailwindcss";
 
-:root {
-  --primary-color: #4f46e5;
-  --secondary-color: #6b7280;
-  --background-color: #f9fafb;
-  --text-color: #111827;
-}
-
 header {
-  background-color: var(--primary-color);
+  background-color: var(--tertiary-color);
   color: white;
   padding: 1rem;
 
   display: grid;
   grid-template-columns: 1fr auto;
 
-  @media (max-width: 414px) {
-    grid-template-columns: 1fr;
-    text-align: center;
-  }
+  border-bottom: 2px solid var(--secondary-color);
 
-  h1 {
-    margin: 0;
-    font-size: 1.5rem;
+  @media (max-width: 414px) {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
   }
 
   nav {
@@ -44,16 +35,62 @@ header {
 
 main {
   padding: 2rem;
+  margin: 4rem auto 4rem auto;
+  max-width: 80%;
   background-color: var(--background-color);
   color: var(--text-color);
 
-  h2 {
-    font-size: 1.25rem;
-    margin-bottom: 1rem;
-  }
+  border: 1px solid var(--primary-color);
+  border-radius: 8px;
+  border-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 
   p {
     margin-bottom: 1rem;
     line-height: 1.5;
+  }
+}
+
+section {
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--primary-color);
+}
+
+#posts-table {
+  width: 80%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  margin-left: auto;
+  margin-right: auto;
+
+  tbody {
+    display: flex;
+    flex-direction: column;
+
+    tr {
+      padding: 0.5rem;
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+
+      td {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+
+        margin: 1.5rem;
+        border: 1px solid var(--primary-color);
+        text-align: center;
+
+        border-radius: 4px;
+        padding: 0.5rem;
+      }
+    }
+  }
+
+  th {
+    background-color: var(--primary-color);
+    color: var(--background-color);
   }
 }

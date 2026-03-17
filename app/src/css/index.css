@@ -1,1 +1,30 @@
 @import "tailwindcss";
+
+:root {
+  --primary-color: #ffdd70;
+  --secondary-color: #ffffff;
+  --background-color: #121212;
+  --text-color: #ffffff;
+
+  --phone-width: 414px;
+}
+
+body {
+  background-color: var(--background-color);
+}
+
+text {
+  color: var(--text-color);
+}
+
+h1 {
+  color: var(--primary-color);
+  font-size: 1.5rem;
+  margin-bottom: 0;
+}
+
+h2 {
+  color: var(--primary-color);
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+}

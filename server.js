@@ -1,7 +1,6 @@
 const ENVIRONMENT = require("process").argv[2];
 const express = require("express");
 const server = express();
-// const cors = require("cors");
 const path = require("path");
 require("dotenv").config({
   path: ENVIRONMENT,
@@ -9,25 +8,22 @@ require("dotenv").config({
   debug: ENVIRONMENT ? true : false,
 });
 
-// const corsOptions = { origin: ["http://localhost:5173"] };
-const dist_path = path.join(process.cwd(), "app", "dist");
 const host = process.env.HOST;
 const port = process.env.PORT;
 
+const dist_path = path.join(process.cwd(), "app", "dist");
 server.use(express.static(dist_path));
-// server.use(cors(corsOptions));
 
-// Routes
-// const Routes = require("./src/routes/routes.js");
-// server.use("/", Routes);
+// APIs
+const router = require("./src/routes/api.js");
+server.use("/api", router);
 
-const Api = require("./src/routes/api.js");
-server.use("/api", Api);
+// Serves the React distribution
+server.use("/", (req, res) =>
+  res.sendFile(path.resolve(dist_path, "index.html")),
+);
 
-server.get("/", (req, res) => {
-  res.sendFile(path.resolve(dist_path, "index.html"));
-});
-
+// Server Starts up
 server.listen(port, host, () => {
   console.log(`Now Hosting on ${host}:${port}/`);
 });
