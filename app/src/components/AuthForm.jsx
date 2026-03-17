@@ -1,11 +1,15 @@
-import axios from "axios";
-import useState from "react";
+// import axios from "axios";
+// import { useState } from "react";
 
 export default function AuthForm() {
-  const [userAuth, setUserAuth] = useState({
-    user: "",
-    password: "",
-  });
+  // const [userAuth, setUserAuth] = useState({
+  //   user: "",
+  //   password: "",
+  // });
+
+  // function HandleTextAreaChange(e) {
+  //   setUserAuth({...userAuth, e.target.name: e.target.value})
+  // }
 
   // function HandleUserAuth() {
   //
@@ -15,20 +19,8 @@ export default function AuthForm() {
     <section>
       <form action="/api/user" method="POST">
         <div>
-          <button
-            onclick={function (event) {
-              console.log(this.innerText);
-            }}
-          >
-            Login
-          </button>
-          <button
-            onclick={function (event) {
-              console.log(this.innerText);
-            }}
-          >
-            Register
-          </button>
+          <a href="/auth/login">Login</a>
+          <a href="/auth/register">Register</a>
         </div>
         <fieldset name="Auth"></fieldset>
         <label for="user"></label>

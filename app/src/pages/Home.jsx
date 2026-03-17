@@ -1,15 +1,8 @@
 import "../css/Home.css";
 import App from "../components/Maps.jsx";
-import {
-  APIProvider,
-  Map,
-  Marker,
-  useMarkerRef,
-} from "@vis.gl/react-google-maps";
+import { APIProvider, Map, Marker } from "@vis.gl/react-google-maps";
 
-export function Home() {
-  const markerPositions = [{ lat: 22.54992, lng: 0 }];
-
+export default function Home() {
   return (
     <>
       <header>
@@ -57,5 +50,3 @@ export function Home() {
     </>
   );
 }
-
-export default Home;
