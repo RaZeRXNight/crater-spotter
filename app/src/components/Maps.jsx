@@ -1,20 +1,14 @@
 import { APIProvider, Map, Marker } from "@vis.gl/react-google-maps";
 import axios from "axios";
+import { useCallback, useState } from "react";
 
 const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
-const App = () => {
-  const markerPositions = [{ lat: 22.54992, lng: 0 }];
-
-  axios
-    .get("/api/user")
-    .then((res) => {
-      console.log(res.data);
-    })
-    .catch((err) => {
-      console.error(err);
-    });
-
+/**
+ * Accepts an Onclick Function, An Array of markerPositions and a longitude & Latitude Object depicting positioning.
+ * It returns a Map returned by Google's APIProvider
+ */
+const App = ({ OnClick, markerPositions, currentMarkerPosition }) => {
   return (
     <APIProvider apiKey={API_KEY}>
       <Map
@@ -23,10 +17,24 @@ const App = () => {
         defaultZoom={11}
         gestureHandling="greedy"
         disableDefaultUI
+        onClick={OnClick}
       >
-        {markerPositions.map((marker) => {
-          return <Marker position={marker} />;
-        })}
+        {
+          // Renders the List of MarkerPositions as Markers
+          function () {
+            if (markerPositions) {
+              return markerPositions.map((marker) => {
+                return <Marker position={marker} />;
+              });
+            }
+          }
+        }
+
+        {function () {
+          if (currentMarkerPosition) {
+            return <Marker position={currentMarkerPosition} />;
+          }
+        }}
       </Map>
     </APIProvider>
   );

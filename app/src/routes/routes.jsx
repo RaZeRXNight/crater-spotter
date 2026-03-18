@@ -1,10 +1,10 @@
 import { createBrowserRouter } from "react-router";
-import Home from "../pages/Home";
 import AuthForm from "../components/AuthForm.jsx";
 import AuthLayout from "../layouts/AuthLayout.jsx";
 import MainLayout from "../layouts/MainLayout.jsx";
-import Posts from "../pages/posts.jsx";
-// Home()
+import Home from "../pages/Home";
+import { Posts, CreatePost } from "../pages/posts.jsx";
+
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -22,6 +22,9 @@ export const router = createBrowserRouter([
   {
     path: "/posts",
     element: <MainLayout />,
-    children: [{ index: true, element: <Posts /> }],
+    children: [
+      { index: true, element: <Posts /> },
+      { path: "/posts/create", element: <CreatePost /> },
+    ],
   },
 ]);

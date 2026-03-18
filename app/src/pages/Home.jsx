@@ -1,6 +1,5 @@
 import "../css/Home.css";
 import App from "../components/Maps.jsx";
-import { APIProvider, Map, Marker } from "@vis.gl/react-google-maps";
 
 export default function Home() {
   return (
@@ -18,10 +17,6 @@ export default function Home() {
       <main>
         <section>
           <p>Welcome to the Home page!</p>
-          {/* <img */}
-          {/*   src="https://thumbs.dreamstime.com/b/map-malawi-africa-regions-blank-map-bahamas-gray-every-island-map-titles-high-quality-map-bahamas-islands-239274905.jpg" */}
-          {/*   alt="Placeholder Image" */}
-          {/* /> */}
           <App></App>
         </section>
         <section id="posts">
