@@ -1,9 +1,4 @@
-import {
-  APIProvider,
-  Map,
-  Marker,
-  useMarkerRef,
-} from "@vis.gl/react-google-maps";
+import { APIProvider, Map, Marker } from "@vis.gl/react-google-maps";
 import axios from "axios";
 
 const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
