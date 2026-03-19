@@ -8,8 +8,8 @@ import { Posts, CreatePost } from "../pages/posts.jsx";
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <Home />,
-    children: [],
+    element: <MainLayout />,
+    children: [{ index: true, element: <Home /> }],
   },
   {
     path: "/auth",

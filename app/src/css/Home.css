@@ -20,16 +20,6 @@ header {
     margin-top: 0.5rem;
     display: flex;
     flex-direction: row;
-
-    a {
-      color: white;
-      margin-right: 1rem;
-      text-decoration: none;
-
-      &:hover {
-        text-decoration: underline;
-      }
-    }
   }
 }
 

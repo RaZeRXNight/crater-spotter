@@ -14,6 +14,7 @@ export default function pinRouter(Router, db) {
   });
 
   Router.post("/pin", (req, res) => {
+    console.log(req);
     res.json({
       message: "Put up information about pin",
     });
