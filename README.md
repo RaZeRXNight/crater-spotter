@@ -61,8 +61,9 @@ and run the project in development mode.
 ## References
 
 - <https://dev.to/techcheck/creating-a-react-node-and-express-app-1ieg>
-- <https://reactrouter.com/start/declarative/routing>
+- <https://reactrouter.com/start/data/routing>
 - <https://react.dev/learn>
 - <https://visgl.github.io/react-google-maps/docs/guides/interacting-with-google-maps-api>
 - <https://axios-http.com/docs/example>
 - <https://developers.google.com/maps/documentation/javascript/reference/map#Map>
+- <https://sequelize.org/docs/v6/>
