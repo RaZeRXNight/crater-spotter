@@ -14,7 +14,7 @@ database used is SQLite, and the project may be deployed using docker.
 - [ ] Dashboard for authenticated users to view their posts and recent posts
   - [ ] Admin dashboard to view all posts and users
   - [ ] User dashboard to view their posts and recent posts.
-- [ ] Post creation form with the ability to add a pin on the map.
+- [ X ] Post creation form with the ability to add a pin on the map.
 
 ### Back-end
 
@@ -22,7 +22,7 @@ database used is SQLite, and the project may be deployed using docker.
 - [ ] CRUD operations for posting and commenting.
   - [ ] Validation for image uploads and post content.
 - [ ] Admin functionalities to manage users and posts.
-- [ ] Integration with Google Maps API to display pins and posts on the map.
+- [ X ] Integration with Google Maps API to display pins and posts on the map.
 - [ ] Database schema design for users, posts, comments, and pins.
 
 ## Features

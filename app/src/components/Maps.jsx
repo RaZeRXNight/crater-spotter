@@ -12,13 +12,14 @@ const App = ({
   OnClick,
   markerPositions,
   currentMarkerPosition,
+  startingCenter,
   defaultZoom,
 }) => {
   return (
     <APIProvider apiKey={API_KEY}>
       <Map
         style={{ width: "100%", height: "300px" }}
-        defaultCenter={DEFAULTCENTER}
+        defaultCenter={startingCenter || DEFAULTCENTER}
         defaultZoom={defaultZoom || 11}
         gestureHandling="greedy"
         disableDefaultUI

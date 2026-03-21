@@ -1,11 +1,13 @@
 import App from "../components/Maps.jsx";
+import { useLoaderData } from "react-router";
 import { useCallback, useState } from "react";
 import { useNavigate } from "react-router";
 import Pagination from "../components/paginations.jsx";
 import axios from "axios";
 import "../css/forms.css";
+import "../css/articles.css";
 
-export function CreatePost() {
+export function CreatePin() {
   const navigate = useNavigate();
   const [form, setForm] = useState({
     title: "",
@@ -33,9 +35,10 @@ export function CreatePost() {
       })
       .then(function (request) {
         if (request.data.error) {
-          console.log(request.data.error);
-        } else if (request.data.success) {
-          navigate(`/pins/${request.data.id}`);
+          console.log(request.data.message);
+        } else {
+          console.log(request.data.message);
+          navigate(`/pin/${request.data.id}`);
         }
       });
   };
@@ -85,13 +88,39 @@ export function CreatePost() {
   );
 }
 
-export function Posts(perPage = 10) {
-  const [Posts, setPosts] = useState({});
+export function Pin() {
+  const data = useLoaderData();
+  const { title, comment, lat, lng } = data;
+  const coordinates = { lat, lng };
 
   return (
     <>
-      <h1>Posts</h1>
-      <a href="/posts/create">Create Post</a>
+      <section>
+        <article>
+          <h1>{title}</h1>
+          <App
+            currentMarkerPosition={coordinates}
+            startingCenter={coordinates}
+            defaultZoom={14}
+          ></App>
+          <p>{comment}</p>
+        </article>
+      </section>
+      <section id="replies">
+        <h2>Replies</h2>
+        <ul></ul>
+      </section>
+    </>
+  );
+}
+
+export function Pins({ perPage = 10 }) {
+  const [Pins, setPosts] = useState([]);
+
+  return (
+    <>
+      <h1>Pins</h1>
+      <a href="/pin/create">Create Pin</a>
       <table id="posts">
         <thead>
           <tr></tr>

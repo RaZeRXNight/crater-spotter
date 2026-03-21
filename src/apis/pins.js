@@ -1,4 +1,4 @@
-export default function pinRouter(Router, db) {
+export default function pinRouter(Router, PinsModel) {
   // pin DB API
   // Routes
   Router.get("/pin/", (req, res) => {
@@ -7,13 +7,24 @@ export default function pinRouter(Router, db) {
     });
   });
 
-  Router.get("/pin/:id", (req, res) => {
-    res.json({
-      message: "Get pin Information by ID",
-    });
+  Router.get("/pin/:id", async (req, res) => {
+    const id = req.params.id;
+    try {
+      const data = await PinsModel.findByPk(id);
+
+      res.json({
+        error: false,
+        message: data,
+      });
+    } catch (error) {
+      res.json({
+        error: true,
+        message: `ERROR: Couldn't retrieve Pin #${id}`,
+      });
+    }
   });
 
-  Router.post("/pin", (req, res) => {
+  Router.post("/pin", async (req, res) => {
     const body = req.body;
     const { title, comment, coordinates } = body;
     const { lat, lng } = coordinates;
@@ -27,23 +38,24 @@ export default function pinRouter(Router, db) {
       }
 
       // Succeeds All Checks
+      const pin = await PinsModel.create({
+        title: title,
+        comment: comment,
+        lat: lat,
+        lng: lng,
+      });
+      const id = pin.id;
 
-      const insert = db.prepare(
-        `INSERT INTO pins (title, comment, lat, lng) VALUES (?, ?, ?, ?)`,
-      );
-      insert.run(title, comment, lat, lng);
-
-      const query = db.prepare("SELECT * FROM pins ORDER BY id DESC LIMIT 1");
-      const id = query.all()[0].id;
-      // sqlTagStore.get`INSERT INTO pins (title, comment, lat, lng) VALUES (${title}, ${comment}, ${lat}, ${lng})`;
-      // Succeeds SQL Insert
+      // Message back to Poster
       res.json({
-        success: `SUCCESS! ${title} #${id} posted successfully!`,
+        message: `SUCCESS! ${title} #${id} posted successfully!`,
+        error: false,
         id: id,
       });
     } catch (error) {
       res.json({
-        error: `ERROR: ${error.message}`,
+        error: true,
+        message: `ERROR: ${error.message}`,
       });
       console.log(error);
     }
