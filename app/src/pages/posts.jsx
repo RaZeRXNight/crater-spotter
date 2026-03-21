@@ -1,9 +1,12 @@
 import App from "../components/Maps.jsx";
 import { useCallback, useState } from "react";
+import { useNavigate } from "react-router";
+import Pagination from "../components/paginations.jsx";
 import axios from "axios";
 import "../css/forms.css";
 
 export function CreatePost() {
+  const navigate = useNavigate();
   const [form, setForm] = useState({
     title: "",
     comment: "",
@@ -12,9 +15,7 @@ export function CreatePost() {
       lng: 0,
     },
   });
-  const [markerPositions, setMarkerPositions] = useState([
-    { lat: 25.004083782806447, lng: -77.31851148610465 },
-  ]);
+
   const HandleMapClick = useCallback(
     (event) => {
       if (event.type === "click") {
@@ -24,17 +25,18 @@ export function CreatePost() {
     },
     [form],
   );
+
   const HandleSubmit = async function (event) {
-    event.preventdefault;
-    await axios
+    axios
       .post("/api/pin", form, {
         headers: { "Content-Type": "application/json" },
       })
       .then(function (request) {
-        console.log(request);
-      })
-      .catch(function (error) {
-        console.error(error);
+        if (request.data.error) {
+          console.log(request.data.error);
+        } else if (request.data.success) {
+          navigate(`/pins/${request.data.id}`);
+        }
       });
   };
 
@@ -47,13 +49,13 @@ export function CreatePost() {
             <label for="map">Map</label>
             <App
               currentMarkerPosition={form.coordinates}
-              markerPositions={markerPositions}
               OnClick={HandleMapClick}
             ></App>
           </div>
           <div>
             <label for="Title">Title</label>
             <input
+              required
               type="text"
               name="Title"
               value={form.title}
@@ -96,7 +98,7 @@ export function Posts(perPage = 10) {
         </thead>
         <tbody></tbody>
         <tfoot>
-          <tr></tr>
+          <Pagination />
         </tfoot>
       </table>
     </>

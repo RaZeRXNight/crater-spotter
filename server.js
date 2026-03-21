@@ -8,9 +8,14 @@ require("dotenv").config({
   debug: ENVIRONMENT ? true : false,
 });
 
+// Middleware
+server.use(express.json());
+
+// Env Variables
 const host = process.env.HOST;
 const port = process.env.PORT;
 
+// React Path
 const dist_path = path.join(process.cwd(), "app", "dist");
 server.use(express.static(dist_path));
 

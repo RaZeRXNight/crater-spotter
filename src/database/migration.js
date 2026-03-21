@@ -20,9 +20,24 @@ const tables = [
         primary_key: true,
       },
       {
-        name: "value",
+        name: "title",
         type: "TEXT",
-        primary_key: false,
+      },
+      {
+        name: "comment",
+        type: "TEXT",
+      },
+      {
+        name: "lat",
+        type: "REAL",
+      },
+      {
+        name: "lng",
+        type: "REAL",
+      },
+      {
+        name: "parent",
+        type: "INTEGER",
       },
     ],
   },
@@ -48,7 +63,7 @@ for (let table of tables) {
   let name = table["name"];
   let data = table["data"]
     .map((field) => {
-      let primary_key = field["primary_key"] ? "PRIMARY KEY" : "";
+      let primary_key = field.primary_key ? "PRIMARY KEY" : "";
       let name = field["name"];
       let type = field["type"];
       return `${name} ${type} ${primary_key}`;
