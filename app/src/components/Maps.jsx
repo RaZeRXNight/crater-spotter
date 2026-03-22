@@ -20,7 +20,8 @@ const App = ({
   const data = useLoaderData();
   const Navigator = useNavigate();
 
-  if (data.rows && !markerPositions) {
+  if (data && data.rows && !markerPositions) {
+    console.log(data);
     markerPositions = data.rows.map(function (row) {
       return { id: row.id, title: row.title, lat: row.lat, lng: row.lng };
     });
