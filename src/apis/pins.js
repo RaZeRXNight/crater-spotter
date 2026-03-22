@@ -1,10 +1,57 @@
 export default function pinRouter(Router, PinsModel) {
+  const LOWERLIMIT = 3;
+  const UPPERLIMIT = 10;
+  const TEXTLIMIT = 30;
   // pin DB API
   // Routes
-  Router.get("/pin/", (req, res) => {
-    res.json({
-      message: "Hello List of pins",
-    });
+  Router.get("/pin/", async (req, res) => {
+    const headers = req.headers;
+    const order = headers.order || "DESC";
+    const perPage = headers.perpage;
+    const currentPage = headers.page;
+
+    const endIndex = perPage * currentPage;
+    const startIndex = endIndex - perPage;
+    try {
+      if (headers.authorization != "User") {
+        throw new Error("ERROR: UNAUTHORIZED");
+      }
+      if (headers.accept != "application/json") {
+        throw new Error("ERROR: INCORRECT FORMAT WANTED");
+      }
+      if (order && order != "ASC" && order != "DESC") {
+        throw new ERROR("ERROR: INCORRECT ORDER ENTERED");
+      }
+      if (perPage > UPPERLIMIT) {
+        throw new Error("ERROR: INCORRECT PERPAGE WANTED");
+      }
+
+      const data = await PinsModel.findAndCountAll({
+        order: [["createdAt", order]],
+        offset: startIndex,
+        limit: perPage,
+      });
+
+      const dataRows = data.rows.map((row) => {
+        console.log(row.dataValues);
+        const tempdata = { ...row.dataValues };
+        if (tempdata.comment.length > TEXTLIMIT) {
+          tempdata.comment = tempdata.comment.slice(0, TEXTLIMIT) + "...";
+        }
+        if (tempdata.title.length > TEXTLIMIT) {
+          tempdata.title = tempdata.title.slice(0, TEXTLIMIT) + "...";
+        }
+        return tempdata;
+      });
+
+      res.json({
+        message: data,
+        rows: dataRows,
+        count: data.count,
+      });
+    } catch (error) {
+      res.json({ error: true, message: error.message });
+    }
   });
 
   Router.get("/pin/:id", async (req, res) => {

@@ -10,7 +10,7 @@ database used is SQLite, and the project may be deployed using docker.
 
 ### Front-end
 
-- [ ] Landing page with a map of pins and recent posts
+- [ X ] Landing page with a map of pins and recent posts
 - [ ] Dashboard for authenticated users to view their posts and recent posts
   - [ ] Admin dashboard to view all posts and users
   - [ ] User dashboard to view their posts and recent posts.
@@ -29,6 +29,8 @@ database used is SQLite, and the project may be deployed using docker.
 
 With the current react app, you are able to do the following:
 
+- Navigate Google Maps and Drop a pin alongside a Post.
+
 The structure of the back-end was modeled after Laravel's structure, with the
 following folders:
 
@@ -37,6 +39,14 @@ following folders:
 - `src/` - Being the essentials of how the server-side operates.
   - `src/database` - Where Databases may be migrated and defined.
   - `src/routes` - Where routes are defined.
+  - `src/models` - Where Databases are Defined for usage of APIs.
+
+### Future Features
+
+- Rework Map Pins to avoid "Clumping", Have a list display all of the pins in
+  that area.
+- Look into Open Streets' Open Source API due to <https://www.bahamaslocal.com>
+  website usage of it.
 
 ## How to Install
 

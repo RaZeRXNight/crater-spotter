@@ -1,9 +1,11 @@
-export default function Table(columns, rows, data, props) {
+import Pagination from "./paginations";
+
+export default function Table(tableHead, tbody, data, props, pagination) {
   return (
-    <table>
+    <table id="posts-table">
       <thead></thead>
-      <tbody></tbody>
-      <tfoot></tfoot>
+      {tbody}
+      <tfoot>{<Pagination />}</tfoot>
     </table>
   );
 }

@@ -8,8 +8,8 @@ export default function MainLayout() {
         <nav>
           <a href="/">Home</a>
           <a href="/pin">Posts</a>
-          <a href="#about">About</a>
-          <a href="#contact">Contact</a>
+          <a href="/#about">About</a>
+          <a href="/#contact">Contact</a>
           <a href="/auth">Login/Register</a>
         </nav>
       </header>

@@ -15,15 +15,33 @@ async function fetchPinData({ params }) {
 }
 
 async function fetchPinPageData({ params }) {
-  const perPage = 10;
-  const page = params.page;
+  const perPage = params.perPage || 3;
+  const page = params.page || 1;
+
+  let pinData = await axios
+    .get("/api/pin/", {
+      headers: {
+        Accept: "application/json",
+        Authorization: "User",
+        perPage: perPage,
+        page: page,
+      },
+    })
+    .then(function (response) {
+      const responseObject = {
+        rows: response.data.rows,
+        count: response.data.count,
+      };
+      return responseObject;
+    });
+  return pinData;
 }
 
 export const router = createBrowserRouter([
   {
     path: "/",
     element: <MainLayout />,
-    children: [{ index: true, element: <Home /> }],
+    children: [{ index: true, loader: fetchPinPageData, element: <Home /> }],
   },
   {
     path: "/auth",
