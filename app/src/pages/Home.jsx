@@ -22,7 +22,6 @@ export default function Home() {
       </section>
       <section id="posts">
         <h2>Recent Posts</h2>
-        <p>Posts will be displayed here.</p>
         <div className="flex flex-col gap-3">{<>{rowsComponents}</>}</div>
       </section>
       <section id="about">

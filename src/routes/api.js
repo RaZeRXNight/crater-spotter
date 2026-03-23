@@ -5,6 +5,7 @@
  */
 const { Sequelize } = require("sequelize");
 const { default: Pins } = require("../models/pins.js");
+const { default: Users } = require("../models/users.js");
 const db = new Sequelize({
   dialect: "sqlite",
   storage: ".sqlite3",
@@ -20,11 +21,13 @@ router.get("/", (req, res) => {
 
 // User Routes
 const userRouter = require("../apis/users.js");
-userRouter.default(router, db);
+const usersModel = Users(db);
+usersModel.sync();
+userRouter.default(router, usersModel);
 
 // Pin Routes
 const pinRouter = require("../apis/pins.js");
-const pinsModel = Pins(db);
+const pinsModel = Pins(db, usersModel);
 pinsModel.sync();
 pinRouter.default(router, pinsModel);
 

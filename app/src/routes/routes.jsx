@@ -34,7 +34,6 @@ async function fetchPinPageData({ params }) {
       };
       return responseObject;
     });
-  console.log(pinData);
   return pinData;
 }
 
@@ -44,14 +43,14 @@ export const router = createBrowserRouter([
     element: <MainLayout />,
     children: [{ index: true, loader: fetchPinPageData, element: <Home /> }],
   },
-  {
-    path: "/auth",
-    element: <AuthLayout />,
-    children: [
-      { path: "/auth/login", element: <AuthForm /> },
-      { path: "/auth/register", element: <AuthForm /> },
-    ],
-  },
+  // {
+  //   path: "/auth",
+  //   element: <AuthLayout />,
+  //   children: [
+  //     { path: "/auth/login", element: <AuthForm /> },
+  //     { path: "/auth/register", element: <AuthForm /> },
+  //   ],
+  // },
   {
     path: "/pin",
     element: <MainLayout />,

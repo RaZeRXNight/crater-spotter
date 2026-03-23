@@ -3,6 +3,7 @@ import { useLoaderData } from "react-router";
 import { useCallback, useState } from "react";
 import { useNavigate } from "react-router";
 import Pagination from "../components/paginations.jsx";
+import Card from "../components/Card.jsx";
 import axios from "axios";
 import "../css/forms.css";
 import "../css/articles.css";
@@ -115,7 +116,14 @@ export function Pin() {
 }
 
 export function Pins({ perPage = 10 }) {
-  const [Pins, setPosts] = useState([]);
+  const data = useLoaderData();
+  const { rows, count } = data;
+  let rowsComponents;
+  if (rows) {
+    rowsComponents = rows.map((row) => {
+      return <Card id={row.id} title={row.title} comment={row.comment} />;
+    });
+  }
 
   return (
     <>
@@ -125,7 +133,9 @@ export function Pins({ perPage = 10 }) {
         <thead>
           <tr></tr>
         </thead>
-        <tbody></tbody>
+        <tbody>
+          <div className="flex flex-col gap-3">{<>{rowsComponents}</>}</div>
+        </tbody>
         <tfoot>
           <Pagination />
         </tfoot>
