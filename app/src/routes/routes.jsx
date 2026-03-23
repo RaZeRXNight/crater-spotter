@@ -34,6 +34,7 @@ async function fetchPinPageData({ params }) {
       };
       return responseObject;
     });
+  console.log(pinData);
   return pinData;
 }
 

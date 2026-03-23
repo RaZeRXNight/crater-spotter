@@ -7,9 +7,12 @@ import Card from "../components/Card.jsx";
 export default function Home() {
   const data = useLoaderData();
   const { rows, count } = data;
-  const rowsComponents = rows.map((row) => {
-    return <Card id={row.id} title={row.title} comment={row.comment} />;
-  });
+  let rowsComponents;
+  if (rows) {
+    rowsComponents = rows.map((row) => {
+      return <Card id={row.id} title={row.title} comment={row.comment} />;
+    });
+  }
 
   return (
     <>
