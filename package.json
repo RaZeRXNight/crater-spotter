@@ -1,4 +1,9 @@
 {
+  "scripts": {
+    "build": "npm run --prefix app build",
+    "start": "node server.js",
+    "dev": "node server.js .env.development.local --watch"
+  },
   "dependencies": {
     "bcrypt": "^6.0.0",
     "cors": "^2.8.6",
