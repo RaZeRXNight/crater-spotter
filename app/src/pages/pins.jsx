@@ -30,8 +30,7 @@ export function CreatePin() {
   );
 
   const HandleSubmit = async function (event) {
-    submitButton = document.getElementById("submit-btn");
-    submitButton.disabled = true;
+    event.preventDefault();
     axios
       .post("/api/pin", form, {
         headers: { "Content-Type": "application/json" },
@@ -44,12 +43,11 @@ export function CreatePin() {
           navigate(`/pin/${request.data.id}`);
         }
       });
-    submitButton.disabled = false;
   };
 
   return (
     <>
-      <form method="POST" action={HandleSubmit}>
+      <form method="POST" onSubmit={HandleSubmit}>
         <fieldset>
           <legend>Required</legend>
           <div>
@@ -119,8 +117,7 @@ export function EditPin() {
   );
 
   const HandleSubmit = async function (event) {
-    submitButton = document.getElementById("submit-btn");
-    submitButton.disabled = true;
+    event.preventDefault();
     axios
       .put(`/api/pin/${id}`, form, {
         headers: { "Content-Type": "application/json" },
@@ -133,12 +130,11 @@ export function EditPin() {
           navigate(`/pin/${id}`);
         }
       });
-    submitButton.disabled = false;
   };
 
   return (
     <>
-      <form method="POST" action={HandleSubmit}>
+      <form method="POST" onSubmit={HandleSubmit}>
         <fieldset>
           <legend>Required</legend>
           <div>
