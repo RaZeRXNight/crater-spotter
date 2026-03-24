@@ -29,6 +29,6 @@ userRouter.default(router, usersModel);
 const pinRouter = require("../apis/pins.js");
 const pinsModel = Pins(db, usersModel);
 pinsModel.sync();
-pinRouter.default(router, pinsModel);
+pinRouter.default(router, pinsModel, usersModel);
 
 module.exports = router;

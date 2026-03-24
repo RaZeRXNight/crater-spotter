@@ -1,4 +1,6 @@
-export default function pinRouter(Router, PinsModel) {
+import { where } from "sequelize";
+
+export default function pinRouter(Router, PinsModel, UsersModel) {
   const LOWERLIMIT = 3;
   const UPPERLIMIT = 10;
   const TEXTLIMIT = 30;
@@ -108,16 +110,56 @@ export default function pinRouter(Router, PinsModel) {
     }
   });
 
-  Router.put("/pin", (req, res) => {
-    res.json({
-      message: "Change pin information",
-    });
+  Router.put("/pin/:id/", async (req, res) => {
+    const id = req.params.id;
+
+    try {
+      const query = await PinsModel.findOne({ where: { id: id } });
+      const oldData = query.dataValues;
+      const newData = req.body;
+
+      await PinsModel.update(
+        {
+          comment: newData.comment,
+        },
+        {
+          where: {
+            id: id,
+          },
+        },
+      );
+
+      res.json({
+        message: `SUCCESS: ID ${id} ${oldData.title} updated!`,
+      });
+    } catch (error) {
+      res.json({
+        error,
+        message: `ERROR: ID ${id} ${oldData.title} failed to update!`,
+      });
+    }
   });
 
-  Router.delete("/pin", (req, res) => {
-    res.json({
-      message: "Delete pin",
-    });
+  Router.delete("/pin/:id", async (req, res) => {
+    const id = req.params.id;
+
+    try {
+      // Perform action to delete
+      PinsModel.destroy({
+        where: {
+          id: id,
+        },
+      });
+
+      res.json({
+        message: `${id} was deleted.`,
+      });
+    } catch (error) {
+      res.json({
+        error,
+        message: "Delete pin",
+      });
+    }
   });
 
   return Router;

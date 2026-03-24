@@ -30,6 +30,8 @@ export function CreatePin() {
   );
 
   const HandleSubmit = async function (event) {
+    submitButton = document.getElementById("submit-btn");
+    submitButton.disabled = true;
     axios
       .post("/api/pin", form, {
         headers: { "Content-Type": "application/json" },
@@ -42,6 +44,7 @@ export function CreatePin() {
           navigate(`/pin/${request.data.id}`);
         }
       });
+    submitButton.disabled = false;
   };
 
   return (
@@ -77,28 +80,137 @@ export function CreatePin() {
             rows="10"
             cols="30"
             placeholder="Here is the Text"
-            value={form.detail}
+            value={form.comment}
             onChange={function (event) {
               setForm({ ...form, comment: event.target.value });
             }}
           ></textarea>
         </fieldset>
-        <button type="submit">Submit</button>
+        <button id="submit-btn" type="submit">
+          Submit
+        </button>
+      </form>
+    </>
+  );
+}
+
+export function EditPin() {
+  const data = useLoaderData();
+  const pinData = data.pin;
+  const { id, title, comment, lat, lng } = pinData;
+  const navigate = useNavigate();
+  const [form, setForm] = useState({
+    title: title,
+    comment: comment,
+    coordinates: {
+      lat: lat,
+      lng: lng,
+    },
+  });
+
+  const HandleMapClick = useCallback(
+    (event) => {
+      if (event.type === "click") {
+        const coordinates = event.detail.latLng;
+        setForm({ ...form, coordinates: coordinates });
+      }
+    },
+    [form],
+  );
+
+  const HandleSubmit = async function (event) {
+    submitButton = document.getElementById("submit-btn");
+    submitButton.disabled = true;
+    axios
+      .put(`/api/pin/${id}`, form, {
+        headers: { "Content-Type": "application/json" },
+      })
+      .then(function (request) {
+        if (request.data.error) {
+          console.log(request.data.message);
+        } else {
+          console.log(request.data.message);
+          navigate(`/pin/${id}`);
+        }
+      });
+    submitButton.disabled = false;
+  };
+
+  return (
+    <>
+      <form method="POST" action={HandleSubmit}>
+        <fieldset>
+          <legend>Required</legend>
+          <div>
+            <label for="map">Map</label>
+            <App
+              currentMarkerPosition={form.coordinates}
+              OnClick={HandleMapClick}
+            ></App>
+          </div>
+          <div>
+            <label for="Title">Title</label>
+            <input
+              required
+              type="text"
+              name="Title"
+              value={form.title}
+              onChange={(event) => {
+                setForm({ ...form, title: event.target.value });
+              }}
+              placeholder="Title"
+            ></input>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Description</legend>
+          <textarea
+            name="comment"
+            rows="10"
+            cols="30"
+            placeholder="Here is the Text"
+            value={form.comment}
+            onChange={function (event) {
+              setForm({ ...form, comment: event.target.value });
+            }}
+          ></textarea>
+        </fieldset>
+        <button id="submit-btn" type="submit">
+          Submit
+        </button>
       </form>
     </>
   );
 }
 
 export function Pin() {
+  const Navigator = useNavigate();
   const data = useLoaderData();
-  const { title, comment, lat, lng } = data;
+  const { id, title, comment, lat, lng } = data.pin;
   const coordinates = { lat, lng };
+
+  const DeletePost = async function (event) {
+    const button = event.currentTarget;
+    button.disabled = true;
+    if (window.confirm(`Are you sure you want to delete ${title} post?`)) {
+      axios.delete(`/api/pin/${id}`).then(function (response) {
+        console.log(response);
+        if (!response.data.error) {
+          Navigator("/pin/");
+        }
+      });
+    }
+  };
 
   return (
     <>
       <section>
         <article>
           <h1>{title}</h1>
+          <div>
+            <button onClick={DeletePost}>Delete</button>
+            <a href={`/pin/edit/${id}`}>Edit</a>
+          </div>
           <App
             currentMarkerPosition={coordinates}
             startingCenter={coordinates}

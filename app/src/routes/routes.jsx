@@ -4,14 +4,19 @@ import AuthLayout from "../layouts/AuthLayout.jsx";
 import MainLayout from "../layouts/MainLayout.jsx";
 import Home from "../pages/Home";
 import axios from "axios";
-import { Pins, CreatePin, Pin } from "../pages/pins.jsx";
+import { Pins, CreatePin, Pin, EditPin } from "../pages/pins.jsx";
+
+async function fetchUserData({ params }) {
+  return { id: 1 };
+}
 
 async function fetchPinData({ params }) {
   const id = params.id;
-  let pinData = await axios.get(`/api/pin/${id}`).then(function (response) {
+  const pinData = await axios.get(`/api/pin/${id}`).then(function (response) {
     return response.data.message;
   });
-  return pinData;
+  // const userData = fetchUserData();
+  return { pin: pinData };
 }
 
 async function fetchPinPageData({ params }) {
@@ -57,6 +62,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <Pins perPage={10} />, loader: fetchPinPageData },
       { path: "/pin/create", element: <CreatePin /> },
+      { path: "/pin/edit/:id", loader: fetchPinData, element: <EditPin /> },
       {
         path: "/pin/:id",
         loader: fetchPinData,
