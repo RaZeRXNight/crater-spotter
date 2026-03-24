@@ -3,10 +3,11 @@
  * These are connected to the sqlite database
  *
  */
+const { default: Comments } = require("../models/comments.js");
 const { default: Pins } = require("../models/pins.js");
 const { default: Users } = require("../models/users.js");
 
-const router = function (db) {
+const router = function (database) {
   // Home API
   const router = require("express").Router();
   router.get("/", (req, res) => {
@@ -17,15 +18,21 @@ const router = function (db) {
 
   // User Routes
   const userRouter = require("../apis/users.js");
-  const usersModel = Users(db);
+  const usersModel = Users(database);
   usersModel.sync();
   userRouter.default(router, usersModel);
 
   // Pin Routes
   const pinRouter = require("../apis/pins.js");
-  const pinsModel = Pins(db, usersModel);
+  const pinsModel = Pins(database, usersModel);
   pinsModel.sync();
   pinRouter.default(router, pinsModel, usersModel);
+
+  // Comment Routes
+  const commentRouter = require("../apis/comments.js");
+  const commentsModel = Comments(database, usersModel, pinsModel);
+  commentsModel.sync();
+  commentRouter.default(router, commentsModel, usersModel);
 
   return router;
 };
