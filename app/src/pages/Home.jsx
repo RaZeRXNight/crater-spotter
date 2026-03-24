@@ -1,52 +1,36 @@
 import "../css/Home.css";
 import App from "../components/Maps.jsx";
-import { APIProvider, Map, Marker } from "@vis.gl/react-google-maps";
+import Table from "../components/Table.jsx";
+import { useLoaderData } from "react-router";
+import Card from "../components/Card.jsx";
 
 export default function Home() {
+  const data = useLoaderData();
+  const { rows, count } = data;
+  let rowsComponents;
+  if (rows) {
+    rowsComponents = rows.map((row) => {
+      return <Card id={row.id} title={row.title} comment={row.comment} />;
+    });
+  }
+
   return (
     <>
-      <header>
-        <h1>Home</h1>
-        <nav>
-          <a href="/">Home</a>
-          <a href="#posts">Posts</a>
-          <a href="#about">About</a>
-          <a href="#contact">Contact</a>
-          <a href="/auth">Login/Register</a>
-        </nav>
-      </header>
-      <main>
-        <section>
-          <p>Welcome to the Home page!</p>
-          {/* <img */}
-          {/*   src="https://thumbs.dreamstime.com/b/map-malawi-africa-regions-blank-map-bahamas-gray-every-island-map-titles-high-quality-map-bahamas-islands-239274905.jpg" */}
-          {/*   alt="Placeholder Image" */}
-          {/* /> */}
-          <App></App>
-        </section>
-        <section id="posts">
-          <h2>Recent Posts</h2>
-          <p>Posts will be displayed here.</p>
-          <table id="posts-table">
-            <tbody>
-              <tr>
-                <td>
-                  <h3>Post Title</h3> <p>Comments Here</p>
-                </td>
-                <td>
-                  <h3>Post Title</h3> <p>Comments Here</p>
-                </td>
-                <td>
-                  <h3>Post Title</h3> <p>Comments Here</p>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </section>
-        <section id="about">
-          <p>Posts will be displayed here.</p>
-        </section>
-      </main>
+      <section>
+        <p>Welcome to the Home page!</p>
+        <App></App>
+      </section>
+      <section id="posts">
+        <h2>Recent Posts</h2>
+        <div className="flex flex-col gap-3">{<>{rowsComponents}</>}</div>
+      </section>
+      <section id="about">
+        <h2>About</h2>
+        <p></p>
+      </section>
+      <section id="contact">
+        <h2>Contact</h2>
+      </section>
     </>
   );
 }

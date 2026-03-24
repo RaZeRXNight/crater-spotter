@@ -1,0 +1,18 @@
+#post_card {
+  display: flex;
+  flex-direction: column;
+  border: 2px solid #000;
+  border-radius: 2px;
+  border-color: var(--primary-color);
+
+  div {
+    padding: 1rem;
+
+    h3 {
+      font-weight: bold;
+    }
+  }
+  &:hover {
+    cursor: pointer;
+  }
+}

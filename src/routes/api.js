@@ -3,8 +3,13 @@
  * These are connected to the sqlite database
  *
  */
-const { DatabaseSync } = require("node:sqlite");
-const db = new DatabaseSync(".sqlite3");
+const { Sequelize } = require("sequelize");
+const { default: Pins } = require("../models/pins.js");
+const { default: Users } = require("../models/users.js");
+const db = new Sequelize({
+  dialect: "sqlite",
+  storage: ".sqlite3",
+});
 
 // Home API
 const router = require("express").Router();
@@ -16,10 +21,14 @@ router.get("/", (req, res) => {
 
 // User Routes
 const userRouter = require("../apis/users.js");
-userRouter.default(router, db);
+const usersModel = Users(db);
+usersModel.sync();
+userRouter.default(router, usersModel);
 
 // Pin Routes
 const pinRouter = require("../apis/pins.js");
-pinRouter.default(router, db);
+const pinsModel = Pins(db, usersModel);
+pinsModel.sync();
+pinRouter.default(router, pinsModel, usersModel);
 
 module.exports = router;

@@ -10,11 +10,11 @@ database used is SQLite, and the project may be deployed using docker.
 
 ### Front-end
 
-- [ ] Landing page with a map of pins and recent posts
+- [ X ] Landing page with a map of pins and recent posts
 - [ ] Dashboard for authenticated users to view their posts and recent posts
   - [ ] Admin dashboard to view all posts and users
   - [ ] User dashboard to view their posts and recent posts.
-- [ ] Post creation form with the ability to add a pin on the map.
+- [ X ] Post creation form with the ability to add a pin on the map.
 
 ### Back-end
 
@@ -22,12 +22,14 @@ database used is SQLite, and the project may be deployed using docker.
 - [ ] CRUD operations for posting and commenting.
   - [ ] Validation for image uploads and post content.
 - [ ] Admin functionalities to manage users and posts.
-- [ ] Integration with Google Maps API to display pins and posts on the map.
+- [ X ] Integration with Google Maps API to display pins and posts on the map.
 - [ ] Database schema design for users, posts, comments, and pins.
 
 ## Features
 
 With the current react app, you are able to do the following:
+
+- Navigate Google Maps and Drop a pin alongside a Post.
 
 The structure of the back-end was modeled after Laravel's structure, with the
 following folders:
@@ -37,6 +39,14 @@ following folders:
 - `src/` - Being the essentials of how the server-side operates.
   - `src/database` - Where Databases may be migrated and defined.
   - `src/routes` - Where routes are defined.
+  - `src/models` - Where Databases are Defined for usage of APIs.
+
+### Future Features
+
+- Rework Map Pins to avoid "Clumping", Have a list display all of the pins in
+  that area.
+- Look into Open Streets' Open Source API due to <https://www.bahamaslocal.com>
+  website usage of it.
 
 ## How to Install
 
@@ -61,8 +71,9 @@ and run the project in development mode.
 ## References
 
 - <https://dev.to/techcheck/creating-a-react-node-and-express-app-1ieg>
-- <https://reactrouter.com/start/declarative/routing>
+- <https://reactrouter.com/start/data/routing>
 - <https://react.dev/learn>
 - <https://visgl.github.io/react-google-maps/docs/guides/interacting-with-google-maps-api>
 - <https://axios-http.com/docs/example>
 - <https://developers.google.com/maps/documentation/javascript/reference/map#Map>
+- <https://sequelize.org/docs/v6/>
