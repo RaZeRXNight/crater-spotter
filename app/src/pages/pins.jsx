@@ -182,7 +182,7 @@ export function EditPin() {
 export function Pin() {
   const Navigator = useNavigate();
   const data = useLoaderData();
-  const { id, title, comment, lat, lng } = data.pin;
+  const { id, authorid, title, comment, lat, lng } = data.pin;
   const coordinates = { lat, lng };
 
   const DeletePost = async function (event) {

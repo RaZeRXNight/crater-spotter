@@ -23,7 +23,7 @@ database used is SQLite, and the project may be deployed using docker.
   - [ ] Validation for image uploads and post content.
 - [ ] Admin functionalities to manage users and posts.
 - [ X ] Integration with Google Maps API to display pins and posts on the map.
-- [ ] Database schema design for users, posts, comments, and pins.
+- [ X ] Database schema design for users, comments, and pins.
 
 ## Features
 
@@ -77,3 +77,5 @@ and run the project in development mode.
 - <https://axios-http.com/docs/example>
 - <https://developers.google.com/maps/documentation/javascript/reference/map#Map>
 - <https://sequelize.org/docs/v6/>
+- <https://www.npmjs.com/package/connect-session-sequelize>
+- <https://github.com/expressjs/session?tab=readme-ov-file>

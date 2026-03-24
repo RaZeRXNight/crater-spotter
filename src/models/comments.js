@@ -1,8 +1,8 @@
 import { DataTypes } from "sequelize";
 
-export default function Pins(sequelize, userModel) {
+export default function Comments(sequelize) {
   sequelize.define(
-    "Pins",
+    "Comments",
     {
       id: { autoIncrement: true, primaryKey: true, type: DataTypes.INTEGER },
       image: { allowNull: true, type: DataTypes.STRING },
@@ -26,5 +26,5 @@ export default function Pins(sequelize, userModel) {
       updatedAt: "updateTimestamp",
     },
   );
-  return sequelize.models.Pins;
+  return sequelize.models.Comments;
 }

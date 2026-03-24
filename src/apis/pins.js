@@ -61,6 +61,7 @@ export default function pinRouter(Router, PinsModel, UsersModel) {
     try {
       const data = await PinsModel.findByPk(id);
 
+      console.log(data);
       res.json({
         error: false,
         message: data,
