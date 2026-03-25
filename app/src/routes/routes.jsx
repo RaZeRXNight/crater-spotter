@@ -1,10 +1,10 @@
 import { createBrowserRouter } from "react-router";
-import AuthForm from "../components/AuthForm.jsx";
 import AuthLayout from "../layouts/AuthLayout.jsx";
 import MainLayout from "../layouts/MainLayout.jsx";
 import Home from "../pages/Home";
 import axios from "axios";
 import { Pins, CreatePin, Pin, EditPin } from "../pages/pins.jsx";
+import Auth from "../pages/Auth.jsx";
 
 async function fetchUserData({ params }) {
   return { id: 1 };
@@ -48,14 +48,11 @@ export const router = createBrowserRouter([
     element: <MainLayout />,
     children: [{ index: true, loader: fetchPinPageData, element: <Home /> }],
   },
-  // {
-  //   path: "/auth",
-  //   element: <AuthLayout />,
-  //   children: [
-  //     { path: "/auth/login", element: <AuthForm /> },
-  //     { path: "/auth/register", element: <AuthForm /> },
-  //   ],
-  // },
+  {
+    path: "/auth",
+    element: <MainLayout />,
+    children: [{ index: true, element: <Auth /> }],
+  },
   {
     path: "/pin",
     element: <MainLayout />,

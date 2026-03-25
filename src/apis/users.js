@@ -21,13 +21,13 @@ export default function userRouter(Router, db) {
     });
   });
 
-  Router.put("/user", (req, res) => {
+  Router.put("/user/:id", (req, res) => {
     res.json({
       message: "Change user information",
     });
   });
 
-  Router.delete("/user", (req, res) => {
+  Router.delete("/user/:id", (req, res) => {
     res.json({
       message: "Delete User",
     });
