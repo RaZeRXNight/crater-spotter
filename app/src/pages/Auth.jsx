@@ -5,29 +5,48 @@ import "../css/forms.css";
 import "../css/articles.css";
 
 function RegisterForm() {
+  const Navigate = useNavigate();
   const [userAuth, setUserAuth] = useState({
-    user: "",
+    username: "",
     email: "",
     password: "",
   });
-  const HandleLoginSubmit = function (event) {};
+  const HandleRegisterSubmit = function (event) {
+    event.preventDefault();
+    axios.post("/api/user/register", userAuth).then(function (response) {
+      Navigate("/dashboard");
+    });
+  };
   return (
-    <form action="/api/user" onSubmit={HandleLoginSubmit} method="POST">
+    <form
+      action="/api/user/register"
+      onSubmit={HandleRegisterSubmit}
+      method="POST"
+    >
       <fieldset name="Auth">
         <legend>Register</legend>
         <label for="username">username</label>
         <input
+          autoFocus
           type="text"
           name="username"
-          value={userAuth.email}
+          value={userAuth.username}
+          onChange={function (event) {
+            setUserAuth({ ...userAuth, username: event.target.value });
+          }}
           placeholder="username"
           required
+          minLength={3}
+          maxlength={52}
         />
         <label for="email">email</label>
         <input
           type="email"
           name="email"
           value={userAuth.email}
+          onChange={function (event) {
+            setUserAuth({ ...userAuth, email: event.target.value });
+          }}
           placeholder="email"
           required
         />
@@ -36,7 +55,12 @@ function RegisterForm() {
           type="password"
           name="password"
           value={userAuth.password}
+          onChange={function (event) {
+            setUserAuth({ ...userAuth, password: event.target.value });
+          }}
           placeholder="password"
+          minLength={8}
+          maxlength={52}
           required
           autoComplete="current-password"
         />
@@ -62,6 +86,9 @@ function LoginForm() {
           type="email"
           name="email"
           value={userAuth.email}
+          onChange={function (event) {
+            setUserAuth({ ...userAuth, email: event.target.value });
+          }}
           placeholder="email"
           required
         />
@@ -69,7 +96,12 @@ function LoginForm() {
         <input
           type="password"
           name="password"
+          minLength={8}
+          maxlength={52}
           value={userAuth.password}
+          onChange={function (event) {
+            setUserAuth({ ...userAuth, password: event.target.value });
+          }}
           placeholder="password"
           required
           autoComplete="current-password"

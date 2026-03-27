@@ -6,9 +6,9 @@ export default function Users(sequelize) {
     {
       id: { autoIncrement: true, primaryKey: true, type: DataTypes.INTEGER },
       authLevel: { allowNull: true, type: DataTypes.INTEGER },
-      username: { allowNull: false, type: DataTypes.STRING },
-      email: { type: DataTypes.STRING },
-      password: { type: DataTypes.STRING },
+      username: { unique: true, allowNull: false, type: DataTypes.STRING },
+      email: { unique: true, type: DataTypes.STRING },
+      password: { allowNull: false, type: DataTypes.STRING },
     },
     {
       timestamps: true,

@@ -7,7 +7,7 @@ const { default: Comments } = require("../models/comments.js");
 const { default: Pins } = require("../models/pins.js");
 const { default: Users } = require("../models/users.js");
 
-const router = function (database) {
+const router = function (database, sessionStore) {
   // Home API
   const router = require("express").Router();
   router.get("/", (req, res) => {
@@ -20,7 +20,7 @@ const router = function (database) {
   const userRouter = require("../apis/users.js");
   const usersModel = Users(database);
   usersModel.sync();
-  userRouter.default(router, usersModel);
+  userRouter.default(router, usersModel, sessionStore);
 
   // Pin Routes
   const pinRouter = require("../apis/pins.js");

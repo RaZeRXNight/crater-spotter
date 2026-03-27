@@ -79,3 +79,6 @@ and run the project in development mode.
 - <https://sequelize.org/docs/v6/>
 - <https://www.npmjs.com/package/connect-session-sequelize>
 - <https://github.com/expressjs/session?tab=readme-ov-file>
+- <https://express-validator.github.io/docs/>
+- <https://www.npmjs.com/package/bcrypt>
+- <https://fkhadra.github.io/react-toastify/introduction/>

@@ -36,7 +36,7 @@ server.use(
     cookie: function (req) {
       var match = req.url.match(/^\/([^/]+)/);
       return {
-        path: match ? "/" + match[1] : "/",
+        path: "/",
         secure: req.secure || false,
         maxAge: 60000,
       };
@@ -51,7 +51,8 @@ server.use(express.static(dist_path));
 
 // APIs
 const router = require("./src/routes/api.js");
-server.use("/api", router(database));
+// Placed Session Store to pass in through here, Will Change Later.
+server.use("/api", router(database, sessionStore));
 
 // Serves the React distribution
 server.use("/", (req, res) =>

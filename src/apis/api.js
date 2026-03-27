@@ -16,6 +16,8 @@ export default function userRouter(Router, db) {
   });
 
   Router.post("/user", (req, res) => {
+    console.log(req.session);
+    console.log(req.data);
     res.json({
       message: "Put up information about user",
     });
