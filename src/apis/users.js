@@ -1,5 +1,6 @@
 import bcrypt from "bcrypt";
 import { checkSchema, body } from "express-validator";
+import { where } from "sequelize";
 
 const saltRounds = 12;
 
@@ -31,6 +32,7 @@ export default function userRouter(Router, usersModel, sessionStore) {
     });
   });
 
+  // Handle User Registration using Schema Validation, & Express-Session.
   Router.post(
     "/user/register",
     checkSchema(RegisterSchema, ["body"]),
@@ -68,6 +70,43 @@ export default function userRouter(Router, usersModel, sessionStore) {
         res.json({
           message: `Successfully Logged In, Welcome ${session.username}`,
         });
+      } catch (error) {
+        console.log(error);
+      }
+    },
+  );
+
+  Router.post(
+    "/user/login",
+    checkSchema(LoginSchema, ["body"]),
+    async (req, res) => {
+      const body = req.body;
+      const session = req.session;
+
+      try {
+        // Encrypt Password
+        const password = await bcrypt
+          .hash(body.password, saltRounds)
+          .then(function (hash) {
+            return hash;
+          });
+
+        if (!password) {
+          throw new Error("No Password");
+        }
+
+        // Create User Record
+        const User = usersModel.findOne({ where: { username: body.username } });
+        if (User.password === password) {
+          session.userid = User.id;
+          session.username = User.username;
+
+          res.json({
+            message: `Successfully Logged In, Welcome ${session.username}`,
+          });
+        } else {
+          throw new Error("ERROR: INCORRECT PASSWORD, Authentication Failed");
+        }
       } catch (error) {
         console.log(error);
       }

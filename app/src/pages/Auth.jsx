@@ -76,11 +76,16 @@ function LoginForm() {
     email: "",
     password: "",
   });
-  const HandleLoginSubmit = function (event) {};
+  const HandleLoginSubmit = function (event) {
+    event.preventDefault();
+    axios.post("/api/user/login", userAuth).then(function (response) {
+      Navigate("/dashboard");
+    });
+  };
   return (
     <form action="/api/user" onSubmit={HandleLoginSubmit} method="POST">
       <fieldset name="Auth">
-        <legend>Register</legend>
+        <legend>Login</legend>
         <label for="email">email</label>
         <input
           type="email"
@@ -114,11 +119,12 @@ function LoginForm() {
 
 export default function Auth() {
   const Navigate = useNavigate();
-  const [isRegistering, setIsRegistering] = useState(true);
+  const [isRegistering, setIsRegistering] = useState(false);
 
   const Login = function (event) {
     setIsRegistering(false);
   };
+
   const Register = function (event) {
     setIsRegistering(true);
   };
@@ -133,7 +139,7 @@ export default function Auth() {
           Register
         </button>
       </div>
-      {isRegistering ? RegisterForm() : LoginForm()}
+      {isRegistering ? <RegisterForm /> : <LoginForm />}
     </section>
   );
 }
