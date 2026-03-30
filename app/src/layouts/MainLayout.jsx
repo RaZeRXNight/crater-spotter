@@ -1,6 +1,8 @@
-import { Outlet } from "react-router";
+import { Outlet, useLoaderData } from "react-router";
 
 export default function MainLayout() {
+  const Auth = useLoaderData();
+  console.log(Auth)
   return (
     <>
       <header>

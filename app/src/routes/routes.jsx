@@ -1,13 +1,19 @@
-import { createBrowserRouter } from "react-router";
-import AuthLayout from "../layouts/AuthLayout.jsx";
+import { createBrowserRouter, createContext, RouterContextProvider, redirect, useNavigate } from "react-router";
 import MainLayout from "../layouts/MainLayout.jsx";
 import Home from "../pages/Home";
 import axios from "axios";
 import { Pins, CreatePin, Pin, EditPin } from "../pages/pins.jsx";
+import { userContext } from "../context.jsx";
 import Auth from "../pages/Auth.jsx";
 
-async function fetchUserData({ params }) {
-  return { id: 1 };
+async function getUser() {
+  const data = await axios.get("/api/auth").then(function (response) {
+    console.log(response);
+    return response.data;
+  }).catch(function (response) {
+    console.log("User Unauthenticated")
+  })
+  return data
 }
 
 async function fetchPinData({ params }) {
@@ -55,6 +61,9 @@ export const router = createBrowserRouter([
   },
   {
     path: "/pin",
+    loader: async ({ context }) => {
+      return { user: await getUser() }
+    },
     element: <MainLayout />,
     children: [
       { index: true, element: <Pins perPage={10} />, loader: fetchPinPageData },
@@ -67,4 +76,6 @@ export const router = createBrowserRouter([
       },
     ],
   },
-]);
+]
+);
+

@@ -1,6 +1,5 @@
 import bcrypt from "bcrypt";
 import { checkSchema, body } from "express-validator";
-import { where } from "sequelize";
 
 const saltRounds = 12;
 
@@ -15,7 +14,7 @@ const RegisterSchema = {
   password: { isLength: { options: { min: 8, max: 52 } } },
 };
 
-function ValidateLogin() {}
+function ValidateLogin() { }
 
 export default function userRouter(Router, usersModel, sessionStore) {
   // User DB API
@@ -32,7 +31,21 @@ export default function userRouter(Router, usersModel, sessionStore) {
     });
   });
 
+  Router.get("/auth", async (req, res) => {
+    const session = req.session;
+
+    if (session.userid) {
+      res.json({
+        id: session.userid,
+        username: session.username
+      })
+    } else {
+      res.status(401).send("ERROR: Unauthorized.")
+    }
+  })
+
   // Handle User Registration using Schema Validation, & Express-Session.
+  // User Registration
   Router.post(
     "/user/register",
     checkSchema(RegisterSchema, ["body"]),
@@ -76,28 +89,21 @@ export default function userRouter(Router, usersModel, sessionStore) {
     },
   );
 
+  // User Login
   Router.post(
     "/user/login",
     checkSchema(LoginSchema, ["body"]),
     async (req, res) => {
       const body = req.body;
       const session = req.session;
+      console.log(body)
 
       try {
-        // Encrypt Password
-        const password = await bcrypt
-          .hash(body.password, saltRounds)
-          .then(function (hash) {
-            return hash;
-          });
+        // Get User Entry
+        const User = await usersModel.findOne({ where: { username: body.username } });
 
-        if (!password) {
-          throw new Error("No Password");
-        }
-
-        // Create User Record
-        const User = usersModel.findOne({ where: { username: body.username } });
-        if (User.password === password) {
+        // Verify if Password Matches then Authenticate Session
+        if (bcrypt.compare(body.password, User.password)) {
           session.userid = User.id;
           session.username = User.username;
 
@@ -109,6 +115,7 @@ export default function userRouter(Router, usersModel, sessionStore) {
         }
       } catch (error) {
         console.log(error);
+        res.status(401).send("ERROR: Authentication Failure")
       }
     },
   );

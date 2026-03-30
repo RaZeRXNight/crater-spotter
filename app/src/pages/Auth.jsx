@@ -25,6 +25,17 @@ function RegisterForm() {
     >
       <fieldset name="Auth">
         <legend>Register</legend>
+        <label for="email">email</label>
+        <input
+          type="email"
+          name="email"
+          value={userAuth.email}
+          onChange={function (event) {
+            setUserAuth({ ...userAuth, email: event.target.value });
+          }}
+          placeholder="email"
+          required
+        />
         <label for="username">username</label>
         <input
           autoFocus
@@ -38,17 +49,6 @@ function RegisterForm() {
           required
           minLength={3}
           maxlength={52}
-        />
-        <label for="email">email</label>
-        <input
-          type="email"
-          name="email"
-          value={userAuth.email}
-          onChange={function (event) {
-            setUserAuth({ ...userAuth, email: event.target.value });
-          }}
-          placeholder="email"
-          required
         />
         <label for="password">password</label>
         <input
@@ -73,7 +73,7 @@ function RegisterForm() {
 
 function LoginForm() {
   const [userAuth, setUserAuth] = useState({
-    email: "",
+    username: "",
     password: "",
   });
   const HandleLoginSubmit = function (event) {
@@ -86,15 +86,15 @@ function LoginForm() {
     <form action="/api/user" onSubmit={HandleLoginSubmit} method="POST">
       <fieldset name="Auth">
         <legend>Login</legend>
-        <label for="email">email</label>
+        <label for="email">username</label>
         <input
-          type="email"
-          name="email"
-          value={userAuth.email}
+          type="text"
+          name="username"
+          value={userAuth.username}
           onChange={function (event) {
-            setUserAuth({ ...userAuth, email: event.target.value });
+            setUserAuth({ ...userAuth, username: event.target.value });
           }}
-          placeholder="email"
+          placeholder="username"
           required
         />
         <label for="password">password</label>
