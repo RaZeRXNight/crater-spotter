@@ -38,7 +38,7 @@ server.use(
       return {
         path: "/",
         secure: req.secure || false,
-        maxAge: 60000,
+        maxAge: 60000 * 100 * 24,
       };
     },
   }),

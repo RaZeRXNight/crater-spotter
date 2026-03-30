@@ -1,7 +1,6 @@
 import App from "../components/Maps.jsx";
-import { useLoaderData } from "react-router";
-import { useCallback, useState } from "react";
-import { useNavigate } from "react-router";
+import { useLoaderData, useNavigate, useOutletContext } from "react-router";
+import { useCallback, useState, useEffect } from "react";
 import Pagination from "../components/paginations.jsx";
 import Card from "../components/Card.jsx";
 import axios from "axios";
@@ -9,8 +8,11 @@ import "../css/forms.css";
 import "../css/articles.css";
 
 export function CreatePin() {
+  const context = useOutletContext();
   const navigate = useNavigate();
+  const user = context.user;
   const [form, setForm] = useState({
+    authorid: user.id,
     title: "",
     comment: "",
     coordinates: {
@@ -93,12 +95,15 @@ export function CreatePin() {
 }
 
 export function EditPin() {
-  const data = useLoaderData();
+  const context = useOutletContext();
+  const navigate = useNavigate();
+  const user = context.user;
   const pinData = data.pin;
   const { id, title, comment, lat, lng } = pinData;
-  const navigate = useNavigate();
+
   const [form, setForm] = useState({
     title: title,
+    authorid: user.id,
     comment: comment,
     coordinates: {
       lat: lat,

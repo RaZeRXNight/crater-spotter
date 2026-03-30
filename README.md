@@ -18,7 +18,7 @@ database used is SQLite, and the project may be deployed using docker.
 
 ### Back-end
 
-- [ ] User authentication and authorization
+- [ X ] User authentication and authorization
 - [ ] CRUD operations for posting and commenting.
   - [ ] Validation for image uploads and post content.
 - [ ] Admin functionalities to manage users and posts.
@@ -47,6 +47,7 @@ following folders:
   that area.
 - Look into Open Streets' Open Source API due to <https://www.bahamaslocal.com>
   website usage of it.
+- Implement Locking Posts and User Accounts.
 
 ## How to Install
 

@@ -13,29 +13,18 @@ function RegisterForm() {
   });
   const HandleRegisterSubmit = function (event) {
     event.preventDefault();
-    axios.post("/api/user/register", userAuth).then(function (response) {
-      Navigate("/dashboard");
+    axios.post("/api/auth/register", userAuth).then(function (response) {
+      Navigate("/");
     });
   };
   return (
     <form
-      action="/api/user/register"
+      action="/api/auth/register"
       onSubmit={HandleRegisterSubmit}
       method="POST"
     >
       <fieldset name="Auth">
         <legend>Register</legend>
-        <label for="email">email</label>
-        <input
-          type="email"
-          name="email"
-          value={userAuth.email}
-          onChange={function (event) {
-            setUserAuth({ ...userAuth, email: event.target.value });
-          }}
-          placeholder="email"
-          required
-        />
         <label for="username">username</label>
         <input
           autoFocus
@@ -49,6 +38,17 @@ function RegisterForm() {
           required
           minLength={3}
           maxlength={52}
+        />
+        <label for="email">email</label>
+        <input
+          type="email"
+          name="email"
+          value={userAuth.email}
+          onChange={function (event) {
+            setUserAuth({ ...userAuth, email: event.target.value });
+          }}
+          placeholder="email"
+          required
         />
         <label for="password">password</label>
         <input
@@ -72,18 +72,19 @@ function RegisterForm() {
 }
 
 function LoginForm() {
+  const Navigate = useNavigate();
   const [userAuth, setUserAuth] = useState({
     username: "",
     password: "",
   });
   const HandleLoginSubmit = function (event) {
     event.preventDefault();
-    axios.post("/api/user/login", userAuth).then(function (response) {
-      Navigate("/dashboard");
+    axios.post("/api/auth/login", userAuth).then(function (response) {
+      Navigate("/");
     });
   };
   return (
-    <form action="/api/user" onSubmit={HandleLoginSubmit} method="POST">
+    <form action="/api/auth/login" onSubmit={HandleLoginSubmit} method="POST">
       <fieldset name="Auth">
         <legend>Login</legend>
         <label for="email">username</label>
@@ -95,6 +96,7 @@ function LoginForm() {
             setUserAuth({ ...userAuth, username: event.target.value });
           }}
           placeholder="username"
+          autoFocus
           required
         />
         <label for="password">password</label>
@@ -118,7 +120,6 @@ function LoginForm() {
 }
 
 export default function Auth() {
-  const Navigate = useNavigate();
   const [isRegistering, setIsRegistering] = useState(false);
 
   const Login = function (event) {

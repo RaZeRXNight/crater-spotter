@@ -1,8 +1,21 @@
-import { Outlet, useLoaderData } from "react-router";
+import axios from "axios";
+import { Outlet, useLoaderData, useNavigate } from "react-router";
 
 export default function MainLayout() {
   const Auth = useLoaderData();
-  console.log(Auth)
+  const Navigate = useNavigate();
+
+  function HandleLogout(event) {
+    axios
+      .delete("/api/auth/logout")
+      .then(function (response) {
+        Navigate("/");
+      })
+      .catch(function (response) {
+        console.log(response);
+      });
+  }
+
   return (
     <>
       <header>
@@ -12,11 +25,15 @@ export default function MainLayout() {
           <a href="/pin">Posts</a>
           <a href="/#about">About</a>
           <a href="/#contact">Contact</a>
-          <a href="/auth">Login/Register</a>
+          {Auth.user ? (
+            <a onClick={HandleLogout}>Logout</a>
+          ) : (
+            <a href="/auth">Login/Register</a>
+          )}
         </nav>
       </header>
       <main>
-        <Outlet />
+        <Outlet context={Auth} />
       </main>
     </>
   );

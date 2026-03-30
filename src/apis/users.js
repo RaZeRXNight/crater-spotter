@@ -14,8 +14,6 @@ const RegisterSchema = {
   password: { isLength: { options: { min: 8, max: 52 } } },
 };
 
-function ValidateLogin() { }
-
 export default function userRouter(Router, usersModel, sessionStore) {
   // User DB API
   // Routes
@@ -31,23 +29,37 @@ export default function userRouter(Router, usersModel, sessionStore) {
     });
   });
 
+  Router.put("/user/:id", (req, res) => {
+    res.json({
+      message: "Change user information",
+    });
+  });
+
+  Router.delete("/user/:id", (req, res) => {
+    res.json({
+      message: "Delete User",
+    });
+  });
+
+  // User Authentication & Session Handling
+  // Authenticate User
   Router.get("/auth", async (req, res) => {
     const session = req.session;
 
     if (session.userid) {
       res.json({
         id: session.userid,
-        username: session.username
-      })
+        username: session.username,
+      });
     } else {
-      res.status(401).send("ERROR: Unauthorized.")
+      res.status(401).send("ERROR: Unauthorized.");
     }
-  })
+  });
 
   // Handle User Registration using Schema Validation, & Express-Session.
   // User Registration
   Router.post(
-    "/user/register",
+    "/auth/register",
     checkSchema(RegisterSchema, ["body"]),
     async (req, res) => {
       const body = req.body;
@@ -91,16 +103,18 @@ export default function userRouter(Router, usersModel, sessionStore) {
 
   // User Login
   Router.post(
-    "/user/login",
+    "/auth/login",
     checkSchema(LoginSchema, ["body"]),
     async (req, res) => {
       const body = req.body;
       const session = req.session;
-      console.log(body)
+      console.log(body);
 
       try {
         // Get User Entry
-        const User = await usersModel.findOne({ where: { username: body.username } });
+        const User = await usersModel.findOne({
+          where: { username: body.username },
+        });
 
         // Verify if Password Matches then Authenticate Session
         if (bcrypt.compare(body.password, User.password)) {
@@ -115,21 +129,21 @@ export default function userRouter(Router, usersModel, sessionStore) {
         }
       } catch (error) {
         console.log(error);
-        res.status(401).send("ERROR: Authentication Failure")
+        res.status(401).send("ERROR: Authentication Failure");
       }
     },
   );
 
-  Router.put("/user/:id", (req, res) => {
-    res.json({
-      message: "Change user information",
-    });
-  });
+  // Logs User Out
+  Router.delete("/auth/logout", (req, res) => {
+    const session = req.session;
+    if (session.userid) {
+      session.destroy();
 
-  Router.delete("/user/:id", (req, res) => {
-    res.json({
-      message: "Delete User",
-    });
+      res.json({
+        message: `Logged Out, Bye ${session.username}`,
+      });
+    }
   });
 
   return Router;

@@ -18,3 +18,10 @@
 
 - The `app/src/components/Map.jsx` component has the default lat & lng built-in
   to it (I should consider moving it to ENV).
+
+Implement User Dashboard allowing simple actions such as:
+
+- Delete account
+- View recently submitted posts and replies.
+
+- Create Profile to view user posts and replies.

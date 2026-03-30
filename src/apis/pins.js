@@ -74,22 +74,38 @@ export default function pinRouter(Router, PinsModel, UsersModel) {
     }
   });
 
+  // Creates a new pin based on the submitted
+  // Body Containing: title, authorid, comment, cooordinates and Image.
   Router.post("/pin", async (req, res) => {
+    const session = req.session;
     const body = req.body;
-    const { title, comment, coordinates } = body;
+    const { title, image, authorid, comment, coordinates } = body;
     const { lat, lng } = coordinates;
 
-    // Performing basic Checks
     try {
+      // Performing basic Checks
       if (title.length === 0) {
         throw new Error("A Title is Needed");
       } else if (lat === 0 && lng === 0) {
         throw new Error("Coordinates are Needed");
       }
 
+      if (!authorid) {
+        throw new Error("An Account is needed");
+      }
+
+      if (authorid != session.userid) {
+        throw new Error("User ID not Valid");
+      }
+
+      // if (!image) {
+      //   throw new Error("An image is needed");
+      // }
+
       // Succeeds All Checks
       const pin = await PinsModel.create({
         title: title,
+        authorid: authorid,
         comment: comment,
         lat: lat,
         lng: lng,
