@@ -1,11 +1,42 @@
 import App from "../components/Maps.jsx";
 import { useLoaderData, useNavigate, useOutletContext } from "react-router";
-import { useCallback, useState, useEffect } from "react";
-import Pagination from "../components/paginations.jsx";
+import { useCallback, useState } from "react";
+import { getUser } from "./Profile.jsx";
+import { Pagination } from "../components/paginations.jsx";
 import Card from "../components/Card.jsx";
 import axios from "axios";
 import "../css/forms.css";
 import "../css/articles.css";
+
+function isAuthorized(pin, user) {
+  if (pin && pin.authorid && user && user.id) {
+    return pin.authorid == user.id;
+  }
+  return false;
+}
+
+export async function fetchPinPageData({ params, context }) {
+  const perPage = params.perPage || 3;
+  const page = params.page || 1;
+
+  let pinData = await axios
+    .get("/api/pin/", {
+      headers: {
+        Accept: "application/json",
+        Authorization: "User",
+        perPage: perPage,
+        page: page,
+      },
+    })
+    .then(function (response) {
+      const responseObject = {
+        rows: response.data.rows,
+        count: response.data.count,
+      };
+      return responseObject;
+    });
+  return { pins: pinData, user: await getUser() };
+}
 
 export function CreatePin() {
   const context = useOutletContext();
@@ -95,9 +126,9 @@ export function CreatePin() {
 }
 
 export function EditPin() {
-  const context = useOutletContext();
+  const data = useLoaderData();
   const navigate = useNavigate();
-  const user = context.user;
+  const user = data.user;
   const pinData = data.pin;
   const { id, title, comment, lat, lng } = pinData;
 
@@ -188,6 +219,7 @@ export function Pin() {
   const Navigator = useNavigate();
   const data = useLoaderData();
   const { id, authorid, title, comment, lat, lng } = data.pin;
+  const user = data.user;
   const coordinates = { lat, lng };
 
   const DeletePost = async function (event) {
@@ -208,10 +240,12 @@ export function Pin() {
       <section>
         <article>
           <h1>{title}</h1>
-          <div>
-            <button onClick={DeletePost}>Delete</button>
-            <a href={`/pin/edit/${id}`}>Edit</a>
-          </div>
+          {isAuthorized(data.pin, user) ? (
+            <div>
+              <button onClick={DeletePost}>Delete</button>
+              <a href={`/pin/edit/${id}`}>Edit</a>
+            </div>
+          ) : undefined}
           <App
             currentMarkerPosition={coordinates}
             startingCenter={coordinates}
@@ -230,11 +264,22 @@ export function Pin() {
 
 export function Pins({ perPage = 10 }) {
   const data = useLoaderData();
-  const { rows, count } = data;
+  const { pins, user } = data;
+  const { rows, count } = pins;
+  const { page, setPage } = useState(1);
   let rowsComponents;
   if (rows) {
     rowsComponents = rows.map((row) => {
-      return <Card id={row.id} title={row.title} comment={row.comment} />;
+      return (
+        <Card
+          id={row.id}
+          title={row.title}
+          comment={row.comment}
+          authorid={row.authorid}
+          interactive={true}
+          admin={isAuthorized(row, user)}
+        />
+      );
     });
   }
 

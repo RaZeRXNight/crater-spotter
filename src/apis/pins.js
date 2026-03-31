@@ -14,6 +14,7 @@ export default function pinRouter(Router, PinsModel, UsersModel) {
 
     const endIndex = perPage * currentPage;
     const startIndex = endIndex - perPage;
+
     try {
       if (headers.authorization != "User") {
         throw new Error("ERROR: UNAUTHORIZED");
@@ -35,7 +36,6 @@ export default function pinRouter(Router, PinsModel, UsersModel) {
       });
 
       const dataRows = data.rows.map((row) => {
-        console.log(row.dataValues);
         const tempdata = { ...row.dataValues };
         if (tempdata.comment.length > TEXTLIMIT) {
           tempdata.comment = tempdata.comment.slice(0, TEXTLIMIT) + "...";
@@ -61,7 +61,6 @@ export default function pinRouter(Router, PinsModel, UsersModel) {
     try {
       const data = await PinsModel.findByPk(id);
 
-      console.log(data);
       res.json({
         error: false,
         message: data,
@@ -129,11 +128,16 @@ export default function pinRouter(Router, PinsModel, UsersModel) {
 
   Router.put("/pin/:id/", async (req, res) => {
     const id = req.params.id;
+    const session = req.session;
 
     try {
       const query = await PinsModel.findOne({ where: { id: id } });
       const oldData = query.dataValues;
       const newData = req.body;
+
+      if (session.userid != query.authorid) {
+        throw new Error("ERROR: UNAUTHORIZED");
+      }
 
       await PinsModel.update(
         {
@@ -159,9 +163,16 @@ export default function pinRouter(Router, PinsModel, UsersModel) {
 
   Router.delete("/pin/:id", async (req, res) => {
     const id = req.params.id;
+    const session = req.session;
 
     try {
       // Perform action to delete
+      const query = await PinsModel.findOne({ where: { id: id } });
+
+      if (query.authorid != session.userid) {
+        throw new Error("ERROR: UNAUTHORIZED");
+      }
+
       PinsModel.destroy({
         where: {
           id: id,

@@ -1,6 +1,6 @@
 import axios from "axios";
 import { useState } from "react";
-import { useNavigate } from "react-router";
+import { useLoaderData, useNavigate } from "react-router";
 import "../css/forms.css";
 import "../css/articles.css";
 
@@ -119,8 +119,36 @@ function LoginForm() {
   );
 }
 
+function Logout() {
+  function HandleLogout(event) {
+    axios
+      .delete("/api/auth/logout")
+      .then(function (response) {
+        Navigate("/");
+      })
+      .catch(function (response) {
+        console.log(response);
+      });
+  }
+  return (
+    <section className="h-1/3 w-1/3 self-center flex flex-col justify-center">
+      <p>Are you sure you want to log out?</p>
+      <button onClick={HandleLogout}>Logout</button>
+    </section>
+  );
+}
+
 export default function Auth() {
   const [isRegistering, setIsRegistering] = useState(false);
+  const auth = useLoaderData();
+
+  function isLoggedIn() {
+    if (auth && auth.user) {
+      return <Logout />;
+    } else {
+      return isRegistering ? <RegisterForm /> : <LoginForm />;
+    }
+  }
 
   const Login = function (event) {
     setIsRegistering(false);
@@ -140,7 +168,7 @@ export default function Auth() {
           Register
         </button>
       </div>
-      {isRegistering ? <RegisterForm /> : <LoginForm />}
+      {isLoggedIn(auth, isRegistering)}
     </section>
   );
 }

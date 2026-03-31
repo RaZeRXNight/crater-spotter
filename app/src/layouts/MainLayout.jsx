@@ -1,19 +1,21 @@
 import axios from "axios";
+import { useState } from "react";
 import { Outlet, useLoaderData, useNavigate } from "react-router";
 
 export default function MainLayout() {
   const Auth = useLoaderData();
   const Navigate = useNavigate();
 
-  function HandleLogout(event) {
-    axios
-      .delete("/api/auth/logout")
-      .then(function (response) {
-        Navigate("/");
-      })
-      .catch(function (response) {
-        console.log(response);
-      });
+  const [isVisible, setIsVisible] = useState(false);
+
+  function HandleVisibility(event) {
+    const type = event.type;
+
+    if (type == "mouseenter") {
+      setIsVisible(true);
+    } else if (type == "mouseleave") {
+      setIsVisible(false);
+    }
   }
 
   return (
@@ -26,7 +28,15 @@ export default function MainLayout() {
           <a href="/#about">About</a>
           <a href="/#contact">Contact</a>
           {Auth.user ? (
-            <a onClick={HandleLogout}>Logout</a>
+            <>
+              <a
+                onMouseLeave={HandleVisibility}
+                onMouseEnter={HandleVisibility}
+                href="/dashboard"
+              >
+                Dashboard
+              </a>
+            </>
           ) : (
             <a href="/auth">Login/Register</a>
           )}

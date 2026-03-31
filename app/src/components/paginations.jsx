@@ -1,4 +1,4 @@
-export default function Pagination({ pages = 1, data = [], maxPages = 1 }) {
+export function Pagination({ page, setPage, data = [], maxPages = 1 }) {
   return (
     <div>
       <button type="">Back</button>

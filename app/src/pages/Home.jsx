@@ -6,7 +6,8 @@ import Card from "../components/Card.jsx";
 
 export default function Home() {
   const data = useLoaderData();
-  const { rows, count } = data;
+  const { pins, user } = data;
+  const { rows, count } = pins;
   let rowsComponents;
   if (rows) {
     rowsComponents = rows.map((row) => {

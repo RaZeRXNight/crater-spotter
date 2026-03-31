@@ -9,56 +9,28 @@ import MainLayout from "../layouts/MainLayout.jsx";
 import Home from "../pages/Home";
 import axios from "axios";
 import { Pins, CreatePin, Pin, EditPin } from "../pages/pins.jsx";
+import { getUser } from "../pages/Profile.jsx";
+import { fetchPinPageData } from "../pages/pins.jsx";
 import Auth from "../pages/Auth.jsx";
+import Dashboard from "../pages/Dashboard.jsx";
 
-async function getUser() {
-  const data = await axios
-    .get("/api/auth")
-    .then(function (response) {
-      return response.data;
-    })
-    .catch(function (response) {
-      return null;
-    });
-  return data;
-}
+// Fetch
 
+// Loaders
 async function getUserLoader({ context }) {
   return { user: await getUser() };
 }
 
-async function fetchPinData({ params }) {
+async function PinDataLoader({ params }) {
   const id = params.id;
   const pinData = await axios.get(`/api/pin/${id}`).then(function (response) {
     return response.data.message;
   });
-  // const userData = fetchUserData();
-  return { pin: pinData };
+  const userData = await getUser();
+  return { pin: pinData, user: userData };
 }
 
-async function fetchPinPageData({ params }) {
-  const perPage = params.perPage || 3;
-  const page = params.page || 1;
-
-  let pinData = await axios
-    .get("/api/pin/", {
-      headers: {
-        Accept: "application/json",
-        Authorization: "User",
-        perPage: perPage,
-        page: page,
-      },
-    })
-    .then(function (response) {
-      const responseObject = {
-        rows: response.data.rows,
-        count: response.data.count,
-      };
-      return responseObject;
-    });
-  return pinData;
-}
-
+// Routes
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -81,12 +53,18 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <Pins perPage={10} />, loader: fetchPinPageData },
       { path: "/pin/create", element: <CreatePin /> },
-      { path: "/pin/edit/:id", loader: fetchPinData, element: <EditPin /> },
+      { path: "/pin/edit/:id", loader: PinDataLoader, element: <EditPin /> },
       {
         path: "/pin/:id",
-        loader: fetchPinData,
+        loader: PinDataLoader,
         element: <Pin />,
       },
     ],
+  },
+  {
+    path: "/dashboard",
+    loader: getUserLoader,
+    element: <MainLayout />,
+    children: [{ index: true, loader: getUserLoader, element: <Dashboard /> }],
   },
 ]);
