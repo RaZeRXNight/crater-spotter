@@ -9,12 +9,9 @@ import MainLayout from "../layouts/MainLayout.jsx";
 import Home from "../pages/Home";
 import axios from "axios";
 import { Pins, CreatePin, Pin, EditPin } from "../pages/pins.jsx";
-import { getUser } from "../pages/Profile.jsx";
+import { getUser, Dashboard, getUserPins } from "../pages/Profile.jsx";
 import { fetchPinPageData } from "../pages/pins.jsx";
 import Auth from "../pages/Auth.jsx";
-import Dashboard from "../pages/Dashboard.jsx";
-
-// Fetch
 
 // Loaders
 async function getUserLoader({ context }) {
@@ -65,6 +62,17 @@ export const router = createBrowserRouter([
     path: "/dashboard",
     loader: getUserLoader,
     element: <MainLayout />,
-    children: [{ index: true, loader: getUserLoader, element: <Dashboard /> }],
+    children: [
+      {
+        index: true,
+        loader: async ({ context }) => {
+          return {
+            user: await getUser(),
+            startingPins: await getUserPins({ page: 2, perPage: 3 }),
+          };
+        },
+        element: <Dashboard />,
+      },
+    ],
   },
 ]);

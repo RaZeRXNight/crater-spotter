@@ -146,5 +146,36 @@ export default function userRouter(Router, usersModel, sessionStore) {
     }
   });
 
+  Router.delete("/auth/delete", async (req, res) => {
+    const session = req.session;
+    const id = session.userid;
+
+    try {
+      // Perform action to delete
+      const query = await usersModel.findOne({ where: { id: id } });
+
+      if (query.id != session.userid) {
+        throw new Error("ERROR: UNAUTHORIZED");
+      }
+
+      usersModel.destroy({
+        where: {
+          id: id,
+        },
+      });
+
+      session.destroy();
+
+      res.json({
+        message: `${id} was deleted.`,
+      });
+    } catch (error) {
+      res.json({
+        error,
+        message: "Delete pin",
+      });
+    }
+  });
+
   return Router;
 }

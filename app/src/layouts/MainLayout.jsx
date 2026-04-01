@@ -1,6 +1,7 @@
 import axios from "axios";
 import { useState } from "react";
 import { Outlet, useLoaderData, useNavigate } from "react-router";
+import { ToastContainer } from "react-toastify";
 
 export default function MainLayout() {
   const Auth = useLoaderData();
@@ -43,6 +44,7 @@ export default function MainLayout() {
         </nav>
       </header>
       <main>
+        <ToastContainer />
         <Outlet context={Auth} />
       </main>
     </>

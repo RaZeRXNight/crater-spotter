@@ -7,8 +7,9 @@ import Card from "../components/Card.jsx";
 import axios from "axios";
 import "../css/forms.css";
 import "../css/articles.css";
+import { toast } from "react-toastify";
 
-function isAuthorized(pin, user) {
+export function isAuthorized(pin, user) {
   if (pin && pin.authorid && user && user.id) {
     return pin.authorid == user.id;
   }
@@ -23,7 +24,6 @@ export async function fetchPinPageData({ params, context }) {
     .get("/api/pin/", {
       headers: {
         Accept: "application/json",
-        Authorization: "User",
         perPage: perPage,
         page: page,
       },
@@ -70,9 +70,9 @@ export function CreatePin() {
       })
       .then(function (request) {
         if (request.data.error) {
-          console.log(request.data.message);
+          toast(request.data.message);
         } else {
-          console.log(request.data.message);
+          toast(request.data.message);
           navigate(`/pin/${request.data.id}`);
         }
       });
@@ -125,6 +125,19 @@ export function CreatePin() {
   );
 }
 
+export const DeletePost = async function (event, id) {
+  const button = event.currentTarget;
+  button.disabled = true;
+  if (window.confirm(`Are you sure you want to delete ${title} post?`)) {
+    axios.delete(`/api/pin/${id}`).then(function (response) {
+      toast(response);
+      if (!response.data.error) {
+        Navigator("/pin/");
+      }
+    });
+  }
+};
+
 export function EditPin() {
   const data = useLoaderData();
   const navigate = useNavigate();
@@ -160,9 +173,9 @@ export function EditPin() {
       })
       .then(function (request) {
         if (request.data.error) {
-          console.log(request.data.message);
+          toast(request.data.message);
         } else {
-          console.log(request.data.message);
+          toast(request.data.message);
           navigate(`/pin/${id}`);
         }
       });
@@ -222,18 +235,18 @@ export function Pin() {
   const user = data.user;
   const coordinates = { lat, lng };
 
-  const DeletePost = async function (event) {
+  async function DeletePost(event) {
     const button = event.currentTarget;
     button.disabled = true;
     if (window.confirm(`Are you sure you want to delete ${title} post?`)) {
       axios.delete(`/api/pin/${id}`).then(function (response) {
-        console.log(response);
+        toast(response);
         if (!response.data.error) {
           Navigator("/pin/");
         }
       });
     }
-  };
+  }
 
   return (
     <>

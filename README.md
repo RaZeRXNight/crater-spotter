@@ -11,9 +11,8 @@ database used is SQLite, and the project may be deployed using docker.
 ### Front-end
 
 - [ X ] Landing page with a map of pins and recent posts
-- [ ] Dashboard for authenticated users to view their posts and recent posts
+- [ X ] Dashboard for authenticated users to view their posts and recent posts
   - [ ] Admin dashboard to view all posts and users
-  - [ ] User dashboard to view their posts and recent posts.
 - [ X ] Post creation form with the ability to add a pin on the map.
 
 ### Back-end

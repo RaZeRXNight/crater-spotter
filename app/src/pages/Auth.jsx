@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useLoaderData, useNavigate } from "react-router";
 import "../css/forms.css";
 import "../css/articles.css";
+import { toast } from "react-toastify";
 
 function RegisterForm() {
   const Navigate = useNavigate();
@@ -13,9 +14,15 @@ function RegisterForm() {
   });
   const HandleRegisterSubmit = function (event) {
     event.preventDefault();
-    axios.post("/api/auth/register", userAuth).then(function (response) {
-      Navigate("/");
-    });
+    axios
+      .post("/api/auth/register", userAuth)
+      .then(function (response) {
+        toast(response);
+        Navigate("/");
+      })
+      .catch(function (error) {
+        toast(error);
+      });
   };
   return (
     <form
@@ -79,9 +86,15 @@ function LoginForm() {
   });
   const HandleLoginSubmit = function (event) {
     event.preventDefault();
-    axios.post("/api/auth/login", userAuth).then(function (response) {
-      Navigate("/");
-    });
+    axios
+      .post("/api/auth/login", userAuth)
+      .then(function (response) {
+        toast(response);
+        Navigate("/");
+      })
+      .catch(function (error) {
+        toast(error);
+      });
   };
   return (
     <form action="/api/auth/login" onSubmit={HandleLoginSubmit} method="POST">
@@ -124,10 +137,11 @@ function Logout() {
     axios
       .delete("/api/auth/logout")
       .then(function (response) {
+        toast(response);
         Navigate("/");
       })
-      .catch(function (response) {
-        console.log(response);
+      .catch(function (error) {
+        toast(error);
       });
   }
   return (

@@ -1,5 +1,3 @@
-import { where } from "sequelize";
-
 export default function pinRouter(Router, PinsModel, UsersModel) {
   const LOWERLIMIT = 3;
   const UPPERLIMIT = 10;
@@ -7,6 +5,7 @@ export default function pinRouter(Router, PinsModel, UsersModel) {
   // pin DB API
   // Routes
   Router.get("/pin/", async (req, res) => {
+    const session = req.session;
     const headers = req.headers;
     const order = headers.order || "DESC";
     const perPage = headers.perpage;
@@ -16,7 +15,7 @@ export default function pinRouter(Router, PinsModel, UsersModel) {
     const startIndex = endIndex - perPage;
 
     try {
-      if (headers.authorization != "User") {
+      if (!session.userid) {
         throw new Error("ERROR: UNAUTHORIZED");
       }
       if (headers.accept != "application/json") {
@@ -29,11 +28,26 @@ export default function pinRouter(Router, PinsModel, UsersModel) {
         throw new Error("ERROR: INCORRECT PERPAGE WANTED");
       }
 
-      const data = await PinsModel.findAndCountAll({
-        order: [["createdAt", order]],
-        offset: startIndex,
-        limit: perPage,
-      });
+      let data;
+
+      if (headers.authorization && headers.authorization == "User") {
+        console.log("Returning User Data");
+        console.log(perPage);
+        data = await PinsModel.findAndCountAll({
+          where: {
+            authorid: session.userid,
+          },
+          order: [["createdAt", order]],
+          offset: startIndex,
+          limit: perPage,
+        });
+      } else {
+        data = await PinsModel.findAndCountAll({
+          order: [["createdAt", order]],
+          offset: startIndex,
+          limit: perPage,
+        });
+      }
 
       const dataRows = data.rows.map((row) => {
         const tempdata = { ...row.dataValues };
@@ -52,7 +66,7 @@ export default function pinRouter(Router, PinsModel, UsersModel) {
         count: data.count,
       });
     } catch (error) {
-      res.json({ error: true, message: error.message });
+      res.send(error);
     }
   });
 
