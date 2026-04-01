@@ -3,10 +3,8 @@ import { useState, useEffect } from "react";
 import { useLoaderData, redirect, useNavigate } from "react-router";
 import { toast } from "react-toastify";
 import "../css/Home.css";
-import Card from "../components/Card";
-
+import { RenderPins } from "./pins";
 import { Pagination } from "../components/paginations";
-import { isAuthorized } from "./pins";
 
 export async function getUser() {
   const data = await axios
@@ -82,40 +80,19 @@ export function Dashboard() {
   const [pins, setPins] = useState(startingPins.rows || []);
   const perPage = 3;
 
-  function RenderPins({ rows }) {
-    return rows.map((row) => {
-      return (
-        <Card
-          key={row.id}
-          id={row.id}
-          title={row.title}
-          comment={row.comment}
-          admin={isAuthorized(user, row)}
-        />
-      );
-    });
-  }
-
-  async function HandleLogoutAndExit(event) {
-    const data = await HandleLogout(event);
-    if (data) {
-      Navigate("/");
-    }
-  }
-
-  async function HandleUserDeletionAndExit(event) {
-    const data = await HandleUserDeletion(event);
-    if (data) {
-      Navigate("/");
-    }
-  }
-
-  async function HandlePageChange(newPage) {
+  /**
+   * Handles Page Changle, calling the back-end api and retrieving the next page.
+   * returns a count of the pins retrieved.
+   */
+  async function HandlePageChange(newPage, perPage) {
     const data = await getUserPins({ page: newPage, perPage: perPage });
     setPins(data.rows);
     return data.count;
   }
 
+  /**
+   * Handles page decrementing and calls HandlePageChange
+   */
   async function HandlePrev(event) {
     const newPage = page - 1;
 
@@ -124,13 +101,16 @@ export function Dashboard() {
     }
 
     setPage(newPage);
-    const newCount = await HandlePageChange(newPage);
+    const newCount = await HandlePageChange(newPage, perPage);
 
     if (newPage > 1) {
       event.currentTarget.disabled = false;
     }
   }
 
+  /**
+   * Handles page incrementing and calls HandlePageChange
+   */
   async function HandleNext(event) {
     const newPage = page + 1;
 
@@ -140,10 +120,30 @@ export function Dashboard() {
     }
 
     setPage(newPage);
-    const newCount = await HandlePageChange(newPage);
+    const newCount = await HandlePageChange(newPage, perPage);
 
     if (newCount == perPage) {
       event.currentTarget.disabled = false;
+    }
+  }
+
+  /**
+   * Handles Logging out the user and then navigates to the home page.
+   */
+  async function HandleLogoutAndExit(event) {
+    const data = await HandleLogout(event);
+    if (data) {
+      Navigate("/");
+    }
+  }
+
+  /**
+   * Handles User Deletion and navigates the user to the home page.
+   */
+  async function HandleUserDeletionAndExit(event) {
+    const data = await HandleUserDeletion(event);
+    if (data) {
+      Navigate("/");
     }
   }
 
@@ -152,16 +152,14 @@ export function Dashboard() {
       <section>
         <h3>Recent Posts</h3>
         <div className="flex flex-col gap-3">
-          <div>{<RenderPins rows={pins} />}</div>
+          <div>{<RenderPins rows={pins} user={user} />}</div>
         </div>
-        <div>
-          <button onClick={HandlePrev} type="">
-            Back
-          </button>
-          <button onClick={HandleNext} type="">
-            Forward
-          </button>
-        </div>
+        <Pagination
+          page={page}
+          setPage={setPage}
+          HandlePageChange={HandlePageChange}
+          perPage={perPage}
+        />
       </section>
       <section>
         <button onClick={HandleLogoutAndExit} type="button">

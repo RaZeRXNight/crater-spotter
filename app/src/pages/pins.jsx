@@ -16,6 +16,34 @@ export function isAuthorized(pin, user) {
   return false;
 }
 
+/**
+ * Takes a List of Pinks as input, and returns them mapped into
+ * Card Elements.
+ *
+ * **Input**. Row: []
+ * **Return**. List of Elements
+ */
+export function RenderPins({ rows, user }) {
+  if (!rows) {
+    return null;
+  }
+  return rows.map((row) => {
+    return (
+      <Card
+        key={row.id}
+        id={row.id}
+        title={row.title}
+        comment={row.comment}
+        admin={user ? isAuthorized(user, row) : false}
+      />
+    );
+  });
+}
+
+/**
+ * Fetches the Pin Page Data and returns an object
+ * returns { pins: { rows, count } } or null on a failure
+ */
 export async function fetchPinPageData({ params, context }) {
   const perPage = params.perPage || 3;
   const page = params.page || 1;
@@ -34,8 +62,12 @@ export async function fetchPinPageData({ params, context }) {
         count: response.data.count,
       };
       return responseObject;
+    })
+    .catch(function (error) {
+      toast(error);
+      return undefined;
     });
-  return { pins: pinData, user: await getUser() };
+  return { pins: pinData };
 }
 
 export function CreatePin() {
@@ -125,11 +157,11 @@ export function CreatePin() {
   );
 }
 
-export const DeletePost = async function (event, id) {
+export const DeletePost = async function (event, pin, Navigator) {
   const button = event.currentTarget;
   button.disabled = true;
-  if (window.confirm(`Are you sure you want to delete ${title} post?`)) {
-    axios.delete(`/api/pin/${id}`).then(function (response) {
+  if (window.confirm(`Are you sure you want to delete ${pin.title} post?`)) {
+    axios.delete(`/api/pin/${pin.id}`).then(function (response) {
       toast(response);
       if (!response.data.error) {
         Navigator("/pin/");
@@ -139,9 +171,10 @@ export const DeletePost = async function (event, id) {
 };
 
 export function EditPin() {
+  const context = useOutletContext();
   const data = useLoaderData();
   const navigate = useNavigate();
-  const user = data.user;
+  const user = context.user;
   const pinData = data.pin;
   const { id, title, comment, lat, lng } = pinData;
 
@@ -231,21 +264,13 @@ export function EditPin() {
 export function Pin() {
   const Navigator = useNavigate();
   const data = useLoaderData();
+  const user = useOutletContext();
   const { id, authorid, title, comment, lat, lng } = data.pin;
-  const user = data.user;
   const coordinates = { lat, lng };
 
-  async function DeletePost(event) {
-    const button = event.currentTarget;
-    button.disabled = true;
-    if (window.confirm(`Are you sure you want to delete ${title} post?`)) {
-      axios.delete(`/api/pin/${id}`).then(function (response) {
-        toast(response);
-        if (!response.data.error) {
-          Navigator("/pin/");
-        }
-      });
-    }
+  async function HandleDeletePost(event) {
+    event.currentTarget.disabled = true;
+    DeletePost(event, data.pin, Navigator);
   }
 
   return (
@@ -255,7 +280,7 @@ export function Pin() {
           <h1>{title}</h1>
           {isAuthorized(data.pin, user) ? (
             <div>
-              <button onClick={DeletePost}>Delete</button>
+              <button onClick={HandleDeletePost}>Delete</button>
               <a href={`/pin/edit/${id}`}>Edit</a>
             </div>
           ) : undefined}

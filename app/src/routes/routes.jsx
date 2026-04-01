@@ -1,10 +1,4 @@
-import {
-  createBrowserRouter,
-  createContext,
-  RouterContextProvider,
-  redirect,
-  useNavigate,
-} from "react-router";
+import { createBrowserRouter, RouterContextProvider } from "react-router";
 import MainLayout from "../layouts/MainLayout.jsx";
 import Home from "../pages/Home";
 import axios from "axios";
@@ -12,6 +6,7 @@ import { Pins, CreatePin, Pin, EditPin } from "../pages/pins.jsx";
 import { getUser, Dashboard, getUserPins } from "../pages/Profile.jsx";
 import { fetchPinPageData } from "../pages/pins.jsx";
 import Auth from "../pages/Auth.jsx";
+import { authMiddleware } from "../middleware/authMiddleware.jsx";
 
 // Loaders
 async function getUserLoader({ context }) {
@@ -27,8 +22,14 @@ async function PinDataLoader({ params }) {
   return { pin: pinData, user: userData };
 }
 
-// Routes
-export const router = createBrowserRouter([
+async function UserPinsLoader({ context }) {
+  return {
+    user: await getUser(),
+    startingPins: await getUserPins({ page: 2, perPage: 3 }),
+  };
+}
+
+const routes = [
   {
     path: "/",
     loader: getUserLoader,
@@ -42,15 +43,35 @@ export const router = createBrowserRouter([
     children: [{ index: true, element: <Auth /> }],
   },
   {
+    path: "/dashboard",
+    loader: getUserLoader,
+    middleware: [authMiddleware],
+    element: <MainLayout />,
+    children: [
+      {
+        index: true,
+        loader: UserPinsLoader,
+        element: <Dashboard />,
+      },
+    ],
+  },
+  {
     path: "/pin",
-    loader: async ({ context }) => {
-      return { user: await getUser() };
-    },
+    loader: getUserLoader,
     element: <MainLayout />,
     children: [
       { index: true, element: <Pins perPage={10} />, loader: fetchPinPageData },
-      { path: "/pin/create", element: <CreatePin /> },
-      { path: "/pin/edit/:id", loader: PinDataLoader, element: <EditPin /> },
+      {
+        path: "/pin/create",
+        middleware: [authMiddleware],
+        element: <CreatePin />,
+      },
+      {
+        path: "/pin/edit/:id",
+        middleware: [authMiddleware],
+        loader: PinDataLoader,
+        element: <EditPin />,
+      },
       {
         path: "/pin/:id",
         loader: PinDataLoader,
@@ -58,21 +79,7 @@ export const router = createBrowserRouter([
       },
     ],
   },
-  {
-    path: "/dashboard",
-    loader: getUserLoader,
-    element: <MainLayout />,
-    children: [
-      {
-        index: true,
-        loader: async ({ context }) => {
-          return {
-            user: await getUser(),
-            startingPins: await getUserPins({ page: 2, perPage: 3 }),
-          };
-        },
-        element: <Dashboard />,
-      },
-    ],
-  },
-]);
+];
+
+// Routes
+export const router = createBrowserRouter(routes);

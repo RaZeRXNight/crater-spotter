@@ -15,9 +15,6 @@ export default function pinRouter(Router, PinsModel, UsersModel) {
     const startIndex = endIndex - perPage;
 
     try {
-      if (!session.userid) {
-        throw new Error("ERROR: UNAUTHORIZED");
-      }
       if (headers.accept != "application/json") {
         throw new Error("ERROR: INCORRECT FORMAT WANTED");
       }
@@ -30,9 +27,8 @@ export default function pinRouter(Router, PinsModel, UsersModel) {
 
       let data;
 
+      console.log(headers.authorization);
       if (headers.authorization && headers.authorization == "User") {
-        console.log("Returning User Data");
-        console.log(perPage);
         data = await PinsModel.findAndCountAll({
           where: {
             authorid: session.userid,
@@ -66,7 +62,7 @@ export default function pinRouter(Router, PinsModel, UsersModel) {
         count: data.count,
       });
     } catch (error) {
-      res.send(error);
+      console.log(error);
     }
   });
 

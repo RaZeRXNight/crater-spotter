@@ -1,23 +1,8 @@
-import axios from "axios";
-import { useState } from "react";
-import { Outlet, useLoaderData, useNavigate } from "react-router";
+import { Outlet, useLoaderData } from "react-router";
 import { ToastContainer } from "react-toastify";
 
 export default function MainLayout() {
   const Auth = useLoaderData();
-  const Navigate = useNavigate();
-
-  const [isVisible, setIsVisible] = useState(false);
-
-  function HandleVisibility(event) {
-    const type = event.type;
-
-    if (type == "mouseenter") {
-      setIsVisible(true);
-    } else if (type == "mouseleave") {
-      setIsVisible(false);
-    }
-  }
 
   return (
     <>
@@ -30,13 +15,7 @@ export default function MainLayout() {
           <a href="/#contact">Contact</a>
           {Auth.user ? (
             <>
-              <a
-                onMouseLeave={HandleVisibility}
-                onMouseEnter={HandleVisibility}
-                href="/dashboard"
-              >
-                Dashboard
-              </a>
+              <a href="/dashboard">Dashboard</a>
             </>
           ) : (
             <a href="/auth">Login/Register</a>

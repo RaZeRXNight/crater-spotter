@@ -1,19 +1,14 @@
 import "../css/Home.css";
 import App from "../components/Maps.jsx";
-import Table from "../components/Table.jsx";
-import { useLoaderData } from "react-router";
-import Card from "../components/Card.jsx";
+import { useLoaderData, useOutletContext } from "react-router";
+import { RenderPins } from "./pins.jsx";
 
 export default function Home() {
+  const context = useOutletContext();
   const data = useLoaderData();
-  const { pins, user } = data;
-  const { rows, count } = pins;
-  let rowsComponents;
-  if (rows) {
-    rowsComponents = rows.map((row) => {
-      return <Card id={row.id} title={row.title} comment={row.comment} />;
-    });
-  }
+  console.log(data);
+  const { pins } = data;
+  const { rows } = pins;
 
   return (
     <>
@@ -23,7 +18,7 @@ export default function Home() {
       </section>
       <section id="posts">
         <h2>Recent Posts</h2>
-        <div className="flex flex-col gap-3">{<>{rowsComponents}</>}</div>
+        <div className="flex flex-col gap-3">{<RenderPins rows={rows} />}</div>
       </section>
       <section id="about">
         <h2>About</h2>
