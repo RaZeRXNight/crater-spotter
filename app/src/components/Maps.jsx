@@ -20,8 +20,8 @@ const App = ({
   const data = useLoaderData();
   const Navigator = useNavigate();
 
-  if (data && data.rows && !markerPositions) {
-    markerPositions = data.rows.map(function (row) {
+  if (data && data.pins && data.pins.rows && !markerPositions) {
+    markerPositions = data.pins.rows.map(function (row) {
       return { id: row.id, title: row.title, lat: row.lat, lng: row.lng };
     });
   }

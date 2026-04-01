@@ -11,19 +11,18 @@ database used is SQLite, and the project may be deployed using docker.
 ### Front-end
 
 - [ X ] Landing page with a map of pins and recent posts
-- [ ] Dashboard for authenticated users to view their posts and recent posts
+- [ X ] Dashboard for authenticated users to view their posts and recent posts
   - [ ] Admin dashboard to view all posts and users
-  - [ ] User dashboard to view their posts and recent posts.
 - [ X ] Post creation form with the ability to add a pin on the map.
 
 ### Back-end
 
-- [ ] User authentication and authorization
+- [ X ] User authentication and authorization
 - [ ] CRUD operations for posting and commenting.
   - [ ] Validation for image uploads and post content.
 - [ ] Admin functionalities to manage users and posts.
 - [ X ] Integration with Google Maps API to display pins and posts on the map.
-- [ ] Database schema design for users, posts, comments, and pins.
+- [ X ] Database schema design for users, comments, and pins.
 
 ## Features
 
@@ -47,6 +46,7 @@ following folders:
   that area.
 - Look into Open Streets' Open Source API due to <https://www.bahamaslocal.com>
   website usage of it.
+- Implement Locking Posts and User Accounts.
 
 ## How to Install
 
@@ -77,3 +77,8 @@ and run the project in development mode.
 - <https://axios-http.com/docs/example>
 - <https://developers.google.com/maps/documentation/javascript/reference/map#Map>
 - <https://sequelize.org/docs/v6/>
+- <https://www.npmjs.com/package/connect-session-sequelize>
+- <https://github.com/expressjs/session?tab=readme-ov-file>
+- <https://express-validator.github.io/docs/>
+- <https://www.npmjs.com/package/bcrypt>
+- <https://fkhadra.github.io/react-toastify/introduction/>

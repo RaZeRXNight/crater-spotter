@@ -1,5 +1,3 @@
-import { where } from "sequelize";
-
 export default function pinRouter(Router, PinsModel, UsersModel) {
   const LOWERLIMIT = 3;
   const UPPERLIMIT = 10;
@@ -7,6 +5,7 @@ export default function pinRouter(Router, PinsModel, UsersModel) {
   // pin DB API
   // Routes
   Router.get("/pin/", async (req, res) => {
+    const session = req.session;
     const headers = req.headers;
     const order = headers.order || "DESC";
     const perPage = headers.perpage;
@@ -14,10 +13,8 @@ export default function pinRouter(Router, PinsModel, UsersModel) {
 
     const endIndex = perPage * currentPage;
     const startIndex = endIndex - perPage;
+
     try {
-      if (headers.authorization != "User") {
-        throw new Error("ERROR: UNAUTHORIZED");
-      }
       if (headers.accept != "application/json") {
         throw new Error("ERROR: INCORRECT FORMAT WANTED");
       }
@@ -28,14 +25,27 @@ export default function pinRouter(Router, PinsModel, UsersModel) {
         throw new Error("ERROR: INCORRECT PERPAGE WANTED");
       }
 
-      const data = await PinsModel.findAndCountAll({
-        order: [["createdAt", order]],
-        offset: startIndex,
-        limit: perPage,
-      });
+      let data;
+
+      console.log(headers.authorization);
+      if (headers.authorization && headers.authorization == "User") {
+        data = await PinsModel.findAndCountAll({
+          where: {
+            authorid: session.userid,
+          },
+          order: [["createdAt", order]],
+          offset: startIndex,
+          limit: perPage,
+        });
+      } else {
+        data = await PinsModel.findAndCountAll({
+          order: [["createdAt", order]],
+          offset: startIndex,
+          limit: perPage,
+        });
+      }
 
       const dataRows = data.rows.map((row) => {
-        console.log(row.dataValues);
         const tempdata = { ...row.dataValues };
         if (tempdata.comment.length > TEXTLIMIT) {
           tempdata.comment = tempdata.comment.slice(0, TEXTLIMIT) + "...";
@@ -52,7 +62,7 @@ export default function pinRouter(Router, PinsModel, UsersModel) {
         count: data.count,
       });
     } catch (error) {
-      res.json({ error: true, message: error.message });
+      console.log(error);
     }
   });
 
@@ -73,22 +83,38 @@ export default function pinRouter(Router, PinsModel, UsersModel) {
     }
   });
 
+  // Creates a new pin based on the submitted
+  // Body Containing: title, authorid, comment, cooordinates and Image.
   Router.post("/pin", async (req, res) => {
+    const session = req.session;
     const body = req.body;
-    const { title, comment, coordinates } = body;
+    const { title, image, authorid, comment, coordinates } = body;
     const { lat, lng } = coordinates;
 
-    // Performing basic Checks
     try {
+      // Performing basic Checks
       if (title.length === 0) {
         throw new Error("A Title is Needed");
       } else if (lat === 0 && lng === 0) {
         throw new Error("Coordinates are Needed");
       }
 
+      if (!authorid) {
+        throw new Error("An Account is needed");
+      }
+
+      if (authorid != session.userid) {
+        throw new Error("User ID not Valid");
+      }
+
+      // if (!image) {
+      //   throw new Error("An image is needed");
+      // }
+
       // Succeeds All Checks
       const pin = await PinsModel.create({
         title: title,
+        authorid: authorid,
         comment: comment,
         lat: lat,
         lng: lng,
@@ -112,11 +138,16 @@ export default function pinRouter(Router, PinsModel, UsersModel) {
 
   Router.put("/pin/:id/", async (req, res) => {
     const id = req.params.id;
+    const session = req.session;
 
     try {
       const query = await PinsModel.findOne({ where: { id: id } });
       const oldData = query.dataValues;
       const newData = req.body;
+
+      if (session.userid != query.authorid) {
+        throw new Error("ERROR: UNAUTHORIZED");
+      }
 
       await PinsModel.update(
         {
@@ -142,9 +173,16 @@ export default function pinRouter(Router, PinsModel, UsersModel) {
 
   Router.delete("/pin/:id", async (req, res) => {
     const id = req.params.id;
+    const session = req.session;
 
     try {
       // Perform action to delete
+      const query = await PinsModel.findOne({ where: { id: id } });
+
+      if (query.authorid != session.userid) {
+        throw new Error("ERROR: UNAUTHORIZED");
+      }
+
       PinsModel.destroy({
         where: {
           id: id,

@@ -1,73 +1,85 @@
-import { createBrowserRouter } from "react-router";
-import AuthForm from "../components/AuthForm.jsx";
-import AuthLayout from "../layouts/AuthLayout.jsx";
+import { createBrowserRouter, RouterContextProvider } from "react-router";
 import MainLayout from "../layouts/MainLayout.jsx";
 import Home from "../pages/Home";
 import axios from "axios";
 import { Pins, CreatePin, Pin, EditPin } from "../pages/pins.jsx";
+import { getUser, Dashboard, getUserPins } from "../pages/Profile.jsx";
+import { fetchPinPageData } from "../pages/pins.jsx";
+import Auth from "../pages/Auth.jsx";
+import { authMiddleware } from "../middleware/authMiddleware.jsx";
 
-async function fetchUserData({ params }) {
-  return { id: 1 };
+// Loaders
+async function getUserLoader({ context }) {
+  return { user: await getUser() };
 }
 
-async function fetchPinData({ params }) {
+async function PinDataLoader({ params }) {
   const id = params.id;
   const pinData = await axios.get(`/api/pin/${id}`).then(function (response) {
     return response.data.message;
   });
-  // const userData = fetchUserData();
-  return { pin: pinData };
+  const userData = await getUser();
+  return { pin: pinData, user: userData };
 }
 
-async function fetchPinPageData({ params }) {
-  const perPage = params.perPage || 3;
-  const page = params.page || 1;
-
-  let pinData = await axios
-    .get("/api/pin/", {
-      headers: {
-        Accept: "application/json",
-        Authorization: "User",
-        perPage: perPage,
-        page: page,
-      },
-    })
-    .then(function (response) {
-      const responseObject = {
-        rows: response.data.rows,
-        count: response.data.count,
-      };
-      return responseObject;
-    });
-  return pinData;
+async function UserPinsLoader({ context }) {
+  return {
+    user: await getUser(),
+    startingPins: await getUserPins({ page: 2, perPage: 3 }),
+  };
 }
 
-export const router = createBrowserRouter([
+const routes = [
   {
     path: "/",
+    loader: getUserLoader,
     element: <MainLayout />,
     children: [{ index: true, loader: fetchPinPageData, element: <Home /> }],
   },
-  // {
-  //   path: "/auth",
-  //   element: <AuthLayout />,
-  //   children: [
-  //     { path: "/auth/login", element: <AuthForm /> },
-  //     { path: "/auth/register", element: <AuthForm /> },
-  //   ],
-  // },
+  {
+    path: "/auth",
+    loader: getUserLoader,
+    element: <MainLayout />,
+    children: [{ index: true, element: <Auth /> }],
+  },
+  {
+    path: "/dashboard",
+    loader: getUserLoader,
+    middleware: [authMiddleware],
+    element: <MainLayout />,
+    children: [
+      {
+        index: true,
+        loader: UserPinsLoader,
+        element: <Dashboard />,
+      },
+    ],
+  },
   {
     path: "/pin",
+    loader: getUserLoader,
     element: <MainLayout />,
     children: [
       { index: true, element: <Pins perPage={10} />, loader: fetchPinPageData },
-      { path: "/pin/create", element: <CreatePin /> },
-      { path: "/pin/edit/:id", loader: fetchPinData, element: <EditPin /> },
+      {
+        path: "/pin/create",
+        middleware: [authMiddleware],
+        element: <CreatePin />,
+      },
+      {
+        path: "/pin/edit/:id",
+        middleware: [authMiddleware],
+        loader: PinDataLoader,
+        element: <EditPin />,
+      },
       {
         path: "/pin/:id",
-        loader: fetchPinData,
+        loader: PinDataLoader,
         element: <Pin />,
       },
     ],
   },
-]);
+];
+
+// Routes
+export const router = createBrowserRouter(routes);

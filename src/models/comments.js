@@ -1,11 +1,12 @@
 import { DataTypes } from "sequelize";
 
-export default function Pins(sequelize, userModel) {
+export default function Comments(sequelize, userModel, pinModel) {
   sequelize.define(
-    "Pins",
+    "Comments",
     {
       id: { autoIncrement: true, primaryKey: true, type: DataTypes.INTEGER },
       image: { allowNull: true, type: DataTypes.STRING },
+      replyLevel: { allowNull: false, type: DataTypes.INTEGER },
       authorid: {
         allowNull: true,
         type: DataTypes.INTEGER,
@@ -18,7 +19,19 @@ export default function Pins(sequelize, userModel) {
       comment: { type: DataTypes.STRING },
       lat: { allowNull: false, type: DataTypes.DOUBLE },
       lng: { allowNull: false, type: DataTypes.DOUBLE },
-      parent: { type: DataTypes.INTEGER },
+      PinParent: {
+        allowNull: false,
+        type: DataTypes.INTEGER,
+        references: { model: pinModel, key: "id" },
+      },
+      CommentParent: {
+        allowNull: true,
+        type: DataTypes.INTEGER,
+        // references: {
+        //   model: sequelize.models.Comments,
+        //   key: "id",
+        // },
+      },
     },
     {
       timestamps: true,
@@ -26,5 +39,5 @@ export default function Pins(sequelize, userModel) {
       updatedAt: "updateTimestamp",
     },
   );
-  return sequelize.models.Pins;
+  return sequelize.models.Comments;
 }

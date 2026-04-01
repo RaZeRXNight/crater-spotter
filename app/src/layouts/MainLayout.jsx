@@ -1,6 +1,9 @@
-import { Outlet } from "react-router";
+import { Outlet, useLoaderData } from "react-router";
+import { ToastContainer } from "react-toastify";
 
 export default function MainLayout() {
+  const Auth = useLoaderData();
+
   return (
     <>
       <header>
@@ -10,11 +13,18 @@ export default function MainLayout() {
           <a href="/pin">Posts</a>
           <a href="/#about">About</a>
           <a href="/#contact">Contact</a>
-          <a href="/auth">Login/Register</a>
+          {Auth.user ? (
+            <>
+              <a href="/dashboard">Dashboard</a>
+            </>
+          ) : (
+            <a href="/auth">Login/Register</a>
+          )}
         </nav>
       </header>
       <main>
-        <Outlet />
+        <ToastContainer />
+        <Outlet context={Auth} />
       </main>
     </>
   );

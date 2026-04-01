@@ -1,5 +1,4 @@
-import Pagination from "./paginations";
-
+import { Pagination } from "./paginations";
 export default function Table(tableHead, tbody, data, props, pagination) {
   return (
     <table id="posts-table">
