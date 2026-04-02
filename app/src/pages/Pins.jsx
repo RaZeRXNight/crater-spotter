@@ -1,13 +1,12 @@
-import App from "../components/Maps.jsx";
-import { useLoaderData, useNavigate, useOutletContext } from "react-router";
-import { useCallback, useState } from "react";
-import { getUser } from "./Profile.jsx";
-import { Pagination } from "../components/paginations.jsx";
-import Card from "../components/Card.jsx";
 import axios from "axios";
-import "../css/forms.css";
-import "../css/articles.css";
+import { useCallback, useState } from "react";
+import { useLoaderData, useNavigate, useOutletContext } from "react-router";
 import { toast } from "react-toastify";
+import Card from "../components/Card.jsx";
+import App from "../components/Maps.jsx";
+import { Pagination } from "../components/paginations.jsx";
+import "../css/articles.css";
+import "../css/forms.css";
 
 export function isAuthorized(pin, user) {
   if (pin && pin.authorid && user && user.id) {
@@ -38,6 +37,54 @@ export function RenderPins({ rows, user }) {
       />
     );
   });
+}
+
+/**
+ * Fetches pins specific to the user that is logged in.
+ * Returns the pin data as { pins: pins, count: count} or null on error
+ */
+export async function getUserPins({ page, perPage }) {
+  const data = await axios
+    .get("/api/pin/", {
+      headers: {
+        Authorization: "User",
+        Accept: "application/json",
+        perPage: perPage || 10,
+        page: page || 1,
+      },
+    })
+    .then(function (response) {
+      return response.data.message;
+    })
+    .catch(function (error) {
+      toast(error);
+      return null;
+    });
+  return data;
+}
+
+/**
+ * Fetches pins specified by a page number and an amount perPage.
+ * input. Number page and Number perPage
+ * return. { pins, count } or null on failure
+ */
+export async function getPins({ page, perPage }) {
+  const data = await axios
+    .get("/api/pin/", {
+      headers: {
+        Accept: "application/json",
+        perPage: perPage || 10,
+        page: page || 1,
+      },
+    })
+    .then(function (response) {
+      return response.data.message;
+    })
+    .catch(function (error) {
+      toast(error);
+      return null;
+    });
+  return data;
 }
 
 /**
@@ -96,23 +143,30 @@ export function CreatePin() {
 
   const HandleSubmit = async function (event) {
     event.preventDefault();
-    axios
-      .post("/api/pin", form, {
-        headers: { "Content-Type": "application/json" },
-      })
-      .then(function (request) {
-        if (request.data.error) {
-          toast(request.data.message);
-        } else {
-          toast(request.data.message);
-          navigate(`/pin/${request.data.id}`);
-        }
-      });
+    const fileInput = document.querySelector("#file_upload");
+    const file = fileInput.files[0];
+    const formData = new FormData();
+
+    formData.append("image", file);
+    formData.append("title", form.title);
+    formData.append("authorid", form.authorid);
+    formData.append("comment", form.comment);
+    formData.append("lat", form.coordinates.lat);
+    formData.append("lng", form.coordinates.lng);
+
+    axios.post("/api/pin", formData).then(function (request) {
+      if (request.data.error) {
+        toast(request.data.message);
+      } else {
+        toast(request.data.message);
+        navigate(`/pin/${request.data.id}`);
+      }
+    });
   };
 
   return (
     <>
-      <form method="POST" onSubmit={HandleSubmit}>
+      <form encType="multipart/form-data" method="POST" onSubmit={HandleSubmit}>
         <fieldset>
           <legend>Required</legend>
           <div>
@@ -138,6 +192,12 @@ export function CreatePin() {
         </fieldset>
         <fieldset>
           <legend>Description</legend>
+          <input
+            id="file_upload"
+            type="file"
+            name="image"
+            accept="image/*"
+          ></input>
           <textarea
             name="comment"
             rows="10"
@@ -302,38 +362,41 @@ export function Pin() {
 
 export function Pins({ perPage = 10 }) {
   const data = useLoaderData();
-  const { pins, user } = data;
-  const { rows, count } = pins;
-  const { page, setPage } = useState(1);
-  let rowsComponents;
-  if (rows) {
-    rowsComponents = rows.map((row) => {
-      return (
-        <Card
-          id={row.id}
-          title={row.title}
-          comment={row.comment}
-          authorid={row.authorid}
-          interactive={true}
-          admin={isAuthorized(row, user)}
-        />
-      );
-    });
+  const [pins, setPins] = useState(data.pins.rows);
+  const [page, setPage] = useState(1);
+
+  /**
+   * Handles Page Change, calling the back-end api and retrieving the next page.
+   * returns a count of the pins retrieved.
+   */
+  async function HandlePinPageChange(newPage, perPage) {
+    const data = await getPins({ page: newPage, perPage: perPage });
+    setPins(data.rows);
+    return data.count;
   }
 
   return (
     <>
-      <h1>Pins</h1>
-      <a href="/pin/create">Create Pin</a>
+      <section className="flex flex-row justify-around">
+        <h1 className="flex-3">Pins</h1>
+        <a href="/pin/create">Create Pin</a>
+      </section>
       <table id="posts">
         <thead>
           <tr></tr>
         </thead>
         <tbody>
-          <div className="flex flex-col gap-3">{<>{rowsComponents}</>}</div>
+          <div className="flex flex-col gap-3">
+            {RenderPins({ rows: pins })}
+          </div>
         </tbody>
         <tfoot>
-          <Pagination />
+          <Pagination
+            page={page}
+            setPage={setPage}
+            perPage={perPage}
+            HandlePageChange={HandlePinPageChange}
+          />
         </tfoot>
       </table>
     </>

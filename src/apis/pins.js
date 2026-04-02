@@ -1,7 +1,20 @@
+import path from "path";
+import process from "process";
+import { unlink } from "fs";
+import { upload } from "../uploads.js";
+
 export default function pinRouter(Router, PinsModel, UsersModel) {
   const LOWERLIMIT = 3;
   const UPPERLIMIT = 10;
   const TEXTLIMIT = 30;
+  const STORAGE_PATH = path.join(process.cwd(), process.env.STORAGE_PATH);
+  const ALLOWED_MIME_TYPES = [
+    "image/jpeg",
+    "image/jpg",
+    "image/png",
+    "image/webp",
+    "image/avif",
+  ];
   // pin DB API
   // Routes
   Router.get("/pin/", async (req, res) => {
@@ -85,15 +98,21 @@ export default function pinRouter(Router, PinsModel, UsersModel) {
 
   // Creates a new pin based on the submitted
   // Body Containing: title, authorid, comment, cooordinates and Image.
-  Router.post("/pin", async (req, res) => {
+  Router.post("/pin", upload.single("image"), async (req, res, next) => {
     const session = req.session;
     const body = req.body;
-    const { title, image, authorid, comment, coordinates } = body;
-    const { lat, lng } = coordinates;
+    const file = req.file;
+    const { title, authorid, comment, lat, lng } = body;
 
     try {
-      // Performing basic Checks
+      // Image Validation
+      if (!ALLOWED_MIME_TYPES.includes(file.mimetype)) {
+        unlink(file.path);
+        throw new Error("Invalid file type");
+      }
+
       if (title.length === 0) {
+        // Performing basic Checks
         throw new Error("A Title is Needed");
       } else if (lat === 0 && lng === 0) {
         throw new Error("Coordinates are Needed");
@@ -114,6 +133,7 @@ export default function pinRouter(Router, PinsModel, UsersModel) {
       // Succeeds All Checks
       const pin = await PinsModel.create({
         title: title,
+        image: file.filename,
         authorid: authorid,
         comment: comment,
         lat: lat,

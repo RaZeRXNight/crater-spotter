@@ -1,36 +1,20 @@
 import axios from "axios";
-import { useState, useEffect } from "react";
-import { useLoaderData, redirect, useNavigate } from "react-router";
+import { useState } from "react";
+import { useLoaderData, useNavigate } from "react-router";
 import { toast } from "react-toastify";
-import "../css/Home.css";
-import { RenderPins } from "./pins";
 import { Pagination } from "../components/paginations";
+import "../css/Home.css";
+import { getUserPins, RenderPins } from "./Pins";
 
+/*
+ * Gets the current user, authenticating their session if they're logged in.
+ * Returns their user data { id, username }
+ */
 export async function getUser() {
   const data = await axios
     .get("/api/auth")
     .then(function (response) {
       return response.data;
-    })
-    .catch(function (error) {
-      toast(error);
-      return null;
-    });
-  return data;
-}
-
-export async function getUserPins({ page, perPage }) {
-  const data = await axios
-    .get("/api/pin/", {
-      headers: {
-        Authorization: "User",
-        Accept: "application/json",
-        perPage: perPage || 10,
-        page: page || 1,
-      },
-    })
-    .then(function (response) {
-      return response.data.message;
     })
     .catch(function (error) {
       toast(error);
@@ -57,6 +41,7 @@ export async function HandleLogout(event) {
 export async function HandleUserDeletion(event) {
   const button = event.currentTarget;
   button.disabled = true;
+
   if (window.confirm(`Are you sure you want to delete this account?`)) {
     const data = await axios
       .delete(`/api/auth/delete`)
@@ -81,50 +66,13 @@ export function Dashboard() {
   const perPage = 3;
 
   /**
-   * Handles Page Changle, calling the back-end api and retrieving the next page.
+   * Handles Page Change, calling the back-end api and retrieving the next page.
    * returns a count of the pins retrieved.
    */
-  async function HandlePageChange(newPage, perPage) {
+  async function HandlePinPageChange(newPage, perPage) {
     const data = await getUserPins({ page: newPage, perPage: perPage });
     setPins(data.rows);
     return data.count;
-  }
-
-  /**
-   * Handles page decrementing and calls HandlePageChange
-   */
-  async function HandlePrev(event) {
-    const newPage = page - 1;
-
-    if (!newPage) {
-      return null;
-    }
-
-    setPage(newPage);
-    const newCount = await HandlePageChange(newPage, perPage);
-
-    if (newPage > 1) {
-      event.currentTarget.disabled = false;
-    }
-  }
-
-  /**
-   * Handles page incrementing and calls HandlePageChange
-   */
-  async function HandleNext(event) {
-    const newPage = page + 1;
-
-    if (!newPage) {
-      event.currentTarget.disabled = true;
-      return null;
-    }
-
-    setPage(newPage);
-    const newCount = await HandlePageChange(newPage, perPage);
-
-    if (newCount == perPage) {
-      event.currentTarget.disabled = false;
-    }
   }
 
   /**
@@ -157,7 +105,7 @@ export function Dashboard() {
         <Pagination
           page={page}
           setPage={setPage}
-          HandlePageChange={HandlePageChange}
+          HandlePageChange={HandlePinPageChange}
           perPage={perPage}
         />
       </section>

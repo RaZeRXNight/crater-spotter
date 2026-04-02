@@ -1,7 +1,7 @@
-import "../css/Home.css";
-import App from "../components/Maps.jsx";
 import { useLoaderData, useOutletContext } from "react-router";
-import { RenderPins } from "./pins.jsx";
+import App from "../components/Maps.jsx";
+import "../css/Home.css";
+import { RenderPins } from "./Pins.jsx";
 
 export default function Home() {
   const context = useOutletContext();
