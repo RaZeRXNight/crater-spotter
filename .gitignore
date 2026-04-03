@@ -4,6 +4,7 @@
 # Important Files
 .env
 !.env.example
+public/storage/*
 
 # dotenv environment variable files
 .env

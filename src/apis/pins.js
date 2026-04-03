@@ -1,7 +1,24 @@
+import path from "path";
+import process from "process";
+import { existsSync, unlink } from "fs";
+import multer from "multer";
+export const upload = multer({
+  limits: { fieldSize: 1048576 * 8 },
+  dest: process.env.STORAGE_PATH,
+});
+
 export default function pinRouter(Router, PinsModel, UsersModel) {
   const LOWERLIMIT = 3;
   const UPPERLIMIT = 10;
   const TEXTLIMIT = 30;
+  const STORAGE_PATH = path.join(process.cwd(), process.env.STORAGE_PATH);
+  const ALLOWED_MIME_TYPES = [
+    "image/jpeg",
+    "image/jpg",
+    "image/png",
+    "image/webp",
+    "image/avif",
+  ];
   // pin DB API
   // Routes
   Router.get("/pin/", async (req, res) => {
@@ -57,7 +74,6 @@ export default function pinRouter(Router, PinsModel, UsersModel) {
       });
 
       res.json({
-        message: data,
         rows: dataRows,
         count: data.count,
       });
@@ -85,15 +101,21 @@ export default function pinRouter(Router, PinsModel, UsersModel) {
 
   // Creates a new pin based on the submitted
   // Body Containing: title, authorid, comment, cooordinates and Image.
-  Router.post("/pin", async (req, res) => {
+  Router.post("/pin", upload.single("image"), async (req, res, next) => {
     const session = req.session;
     const body = req.body;
-    const { title, image, authorid, comment, coordinates } = body;
-    const { lat, lng } = coordinates;
+    const file = req.file;
+    const { title, authorid, comment, lat, lng } = body;
 
     try {
-      // Performing basic Checks
+      // Image Validation
+      if (!ALLOWED_MIME_TYPES.includes(file.mimetype)) {
+        unlink(file.path);
+        throw new Error("Invalid file type");
+      }
+
       if (title.length === 0) {
+        // Performing basic Checks
         throw new Error("A Title is Needed");
       } else if (lat === 0 && lng === 0) {
         throw new Error("Coordinates are Needed");
@@ -114,6 +136,7 @@ export default function pinRouter(Router, PinsModel, UsersModel) {
       // Succeeds All Checks
       const pin = await PinsModel.create({
         title: title,
+        image: file.filename,
         authorid: authorid,
         comment: comment,
         lat: lat,
@@ -181,6 +204,11 @@ export default function pinRouter(Router, PinsModel, UsersModel) {
 
       if (query.authorid != session.userid) {
         throw new Error("ERROR: UNAUTHORIZED");
+      }
+
+      const file_path = path.join(STORAGE_PATH, query.image);
+      if (query.image && existsSync(file_path)) {
+        unlink(file_path);
       }
 
       PinsModel.destroy({

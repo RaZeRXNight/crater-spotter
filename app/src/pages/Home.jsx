@@ -1,14 +1,12 @@
-import "../css/Home.css";
-import App from "../components/Maps.jsx";
 import { useLoaderData, useOutletContext } from "react-router";
-import { RenderPins } from "./pins.jsx";
+import App from "../components/Maps.jsx";
+import "../css/Home.css";
+import { RenderPins } from "./Pins.jsx";
 
 export default function Home() {
-  const context = useOutletContext();
   const data = useLoaderData();
-  console.log(data);
-  const { pins } = data;
-  const { rows } = pins;
+  const pins = data.pins;
+  const rows = pins ? pins.rows : undefined;
 
   return (
     <>

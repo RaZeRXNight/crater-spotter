@@ -18,13 +18,18 @@ text {
 }
 
 a {
-  color: white;
-  margin-right: 1rem;
+  color: var(--primary-color);
   text-decoration: none;
+  font-size: large;
 
   &:hover {
     text-decoration: underline;
-    color: var(--primary-color);
+    color: var(--text-color);
+  }
+
+  &:active {
+    transform: scale(0.8);
+    box-shadow: 0 5px #666;
   }
 }
 
@@ -44,9 +49,27 @@ button {
   width: auto;
   color: var(--primary-color);
   background-color: var(--background-color);
+  justify-content: center;
+  text-align: center;
 
   padding: 12px;
   border: 1px dashed #000;
   border-style: solid;
   border-radius: 1rem;
+
+  a {
+    font-size: medium;
+    color: var(--text-color);
+  }
+
+  &:hover {
+    background: var(--primary-color);
+    color: var(--secondary-color);
+    cursor: pointer;
+  }
+
+  &:active {
+    transform: scale(0.8);
+    box-shadow: 0 5px #666;
+  }
 }

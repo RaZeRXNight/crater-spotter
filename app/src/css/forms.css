@@ -23,15 +23,22 @@ form {
       flex-direction: column;
     }
   }
+}
 
-  button {
-    justify-content: center;
-    text-align: center;
-    background: var(--background-color);
-  }
-  button:hover {
-    background: var(--primary-color);
-    color: var(--secondary-color);
-    cursor: pointer;
-  }
+label {
+  color: var(--primary-color);
+  font-size: larger;
+  font-weight: bolder;
+}
+
+input {
+  border: 2px solid var(--primary-color);
+  border-radius: 5px;
+  padding: 10px;
+}
+
+textarea {
+  border: 2px solid var(--primary-color);
+  border-radius: 5px;
+  padding: 10px;
 }

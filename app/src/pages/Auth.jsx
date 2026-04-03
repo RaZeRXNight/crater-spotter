@@ -1,9 +1,9 @@
 import axios from "axios";
 import { useState } from "react";
 import { useLoaderData, useNavigate } from "react-router";
-import "../css/forms.css";
-import "../css/articles.css";
 import { toast } from "react-toastify";
+import "../css/articles.css";
+import "../css/forms.css";
 
 function RegisterForm() {
   const Navigate = useNavigate();
@@ -133,7 +133,7 @@ function LoginForm() {
 }
 
 function Logout() {
-  function HandleLogout(event) {
+  function HandleLogout(_event) {
     axios
       .delete("/api/auth/logout")
       .then(function (response) {
@@ -164,11 +164,11 @@ export default function Auth() {
     }
   }
 
-  const Login = function (event) {
+  const Login = function (_event) {
     setIsRegistering(false);
   };
 
-  const Register = function (event) {
+  const Register = function (_event) {
     setIsRegistering(true);
   };
 

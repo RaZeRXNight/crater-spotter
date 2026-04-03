@@ -18,8 +18,7 @@ database used is SQLite, and the project may be deployed using docker.
 ### Back-end
 
 - [ X ] User authentication and authorization
-- [ ] CRUD operations for posting and commenting.
-  - [ ] Validation for image uploads and post content.
+  - [ X ] Validation for image uploads and post content.
 - [ ] Admin functionalities to manage users and posts.
 - [ X ] Integration with Google Maps API to display pins and posts on the map.
 - [ X ] Database schema design for users, comments, and pins.
