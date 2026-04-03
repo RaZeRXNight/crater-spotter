@@ -27,11 +27,11 @@ export async function HandleLogout(event) {
   event.currentTarget.disabled = true;
   const data = await axios
     .delete("/api/auth/logout")
-    .then(function (response) {
+    .then(function () {
       toast("Logged Out");
       return true;
     })
-    .catch(function (error) {
+    .catch(function () {
       toast(response);
       return false;
     });
@@ -45,7 +45,7 @@ export async function HandleUserDeletion(event) {
   if (window.confirm(`Are you sure you want to delete this account?`)) {
     const data = await axios
       .delete(`/api/auth/delete`)
-      .then(function (response) {
+      .then(function () {
         toast("Deleted User");
         return true;
       })
@@ -62,7 +62,7 @@ export function Dashboard() {
   const Navigate = useNavigate();
   const { user, startingPins } = data;
   const [page, setPage] = useState(1);
-  const [pins, setPins] = useState(startingPins.rows || []);
+  const [pins, setPins] = useState(startingPins ? startingPins.rows : []);
   const perPage = 3;
 
   /**
@@ -98,7 +98,7 @@ export function Dashboard() {
   return (
     <>
       <section>
-        <h3>Recent Posts</h3>
+        <h2>Recent Posts</h2>
         <div className="flex flex-col gap-3">
           <div>{<RenderPins rows={pins} user={user} />}</div>
         </div>

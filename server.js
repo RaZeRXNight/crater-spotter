@@ -45,6 +45,10 @@ server.use(
 );
 sessionStore.sync();
 
+// Public Storage Path
+const storage_path = path.join(process.cwd(), process.env.STORAGE_PATH);
+server.use(`/${process.env.STORAGE_PATH}`, express.static(storage_path));
+
 // React Path
 const dist_path = path.join(process.cwd(), "app", "dist");
 server.use(express.static(dist_path));

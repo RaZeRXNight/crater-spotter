@@ -1,7 +1,11 @@
 import path from "path";
 import process from "process";
-import { unlink } from "fs";
-import { upload } from "../uploads.js";
+import { existsSync, unlink } from "fs";
+import multer from "multer";
+export const upload = multer({
+  limits: { fieldSize: 1048576 * 8 },
+  dest: process.env.STORAGE_PATH,
+});
 
 export default function pinRouter(Router, PinsModel, UsersModel) {
   const LOWERLIMIT = 3;
@@ -70,7 +74,6 @@ export default function pinRouter(Router, PinsModel, UsersModel) {
       });
 
       res.json({
-        message: data,
         rows: dataRows,
         count: data.count,
       });
@@ -201,6 +204,11 @@ export default function pinRouter(Router, PinsModel, UsersModel) {
 
       if (query.authorid != session.userid) {
         throw new Error("ERROR: UNAUTHORIZED");
+      }
+
+      const file_path = path.join(STORAGE_PATH, query.image);
+      if (query.image && existsSync(file_path)) {
+        unlink(file_path);
       }
 
       PinsModel.destroy({

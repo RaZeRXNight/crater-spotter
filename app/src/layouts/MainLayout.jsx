@@ -1,5 +1,6 @@
 import { Outlet, useLoaderData } from "react-router";
 import { ToastContainer } from "react-toastify";
+import "../css/Home.css";
 
 export default function MainLayout() {
   const Auth = useLoaderData();
@@ -13,7 +14,7 @@ export default function MainLayout() {
           <a href="/pin">Posts</a>
           <a href="/#about">About</a>
           <a href="/#contact">Contact</a>
-          {Auth.user ? (
+          {Auth.user && Auth.user.id ? (
             <>
               <a href="/dashboard">Dashboard</a>
             </>
@@ -22,8 +23,8 @@ export default function MainLayout() {
           )}
         </nav>
       </header>
+      <ToastContainer />
       <main>
-        <ToastContainer />
         <Outlet context={Auth} />
       </main>
     </>

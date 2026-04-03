@@ -24,7 +24,7 @@ export function isAuthorized(pin, user) {
  */
 export function RenderPins({ rows, user }) {
   if (!rows) {
-    return null;
+    return undefined;
   }
   return rows.map((row) => {
     return (
@@ -78,7 +78,11 @@ export async function getPins({ page, perPage }) {
       },
     })
     .then(function (response) {
-      return response.data.message;
+      const responseObject = {
+        rows: response.data.rows,
+        count: response.data.count,
+      };
+      return responseObject;
     })
     .catch(function (error) {
       toast(error);
@@ -91,29 +95,12 @@ export async function getPins({ page, perPage }) {
  * Fetches the Pin Page Data and returns an object
  * returns { pins: { rows, count } } or null on a failure
  */
-export async function fetchPinPageData({ params, context }) {
+export async function fetchPinPageData({ params }) {
   const perPage = params.perPage || 3;
   const page = params.page || 1;
 
-  let pinData = await axios
-    .get("/api/pin/", {
-      headers: {
-        Accept: "application/json",
-        perPage: perPage,
-        page: page,
-      },
-    })
-    .then(function (response) {
-      const responseObject = {
-        rows: response.data.rows,
-        count: response.data.count,
-      };
-      return responseObject;
-    })
-    .catch(function (error) {
-      toast(error);
-      return undefined;
-    });
+  const pinData = await getPins({ perPage: perPage, page: page });
+
   return { pins: pinData };
 }
 
@@ -141,6 +128,22 @@ export function CreatePin() {
     [form],
   );
 
+  async function HandleSetCurrentLocation(event) {
+    navigator.geolocation.getCurrentPosition(
+      function (position) {
+        const coords = position.coords;
+        setForm({
+          ...form,
+          coordinates: {
+            lat: coords.latitude,
+            lng: coords.longitude,
+          },
+        });
+      },
+      (error) => console.error(error),
+    );
+  }
+
   const HandleSubmit = async function (event) {
     event.preventDefault();
     const fileInput = document.querySelector("#file_upload");
@@ -166,16 +169,9 @@ export function CreatePin() {
 
   return (
     <>
-      <form encType="multipart/form-data" method="POST" onSubmit={HandleSubmit}>
+      <form method="POST" onSubmit={HandleSubmit}>
         <fieldset>
           <legend>Required</legend>
-          <div>
-            <label for="map">Map</label>
-            <App
-              currentMarkerPosition={form.coordinates}
-              OnClick={HandleMapClick}
-            ></App>
-          </div>
           <div>
             <label for="Title">Title</label>
             <input
@@ -189,15 +185,30 @@ export function CreatePin() {
               placeholder="Title"
             ></input>
           </div>
+          <div>
+            <label for="map">Map</label>
+            <App
+              currentMarkerPosition={form.coordinates}
+              OnClick={HandleMapClick}
+            ></App>
+            <div className="flex flex-row justify-end">
+              <button onClick={HandleSetCurrentLocation} type="button">
+                Use Current Location
+              </button>
+            </div>
+          </div>
         </fieldset>
         <fieldset>
-          <legend>Description</legend>
+          <legend>Optional</legend>
+          <label for="image">Image</label>
           <input
             id="file_upload"
             type="file"
             name="image"
             accept="image/*"
+            capture="environment"
           ></input>
+          <label for="comment">Comment</label>
           <textarea
             name="comment"
             rows="10"
@@ -324,13 +335,14 @@ export function EditPin() {
 export function Pin() {
   const Navigator = useNavigate();
   const data = useLoaderData();
-  const user = useOutletContext();
-  const { id, authorid, title, comment, lat, lng } = data.pin;
+  const user = useOutletContext().user;
+  const { id, image, title, comment, lat, lng } = data.pin;
   const coordinates = { lat, lng };
 
   async function HandleDeletePost(event) {
     event.currentTarget.disabled = true;
     DeletePost(event, data.pin, Navigator);
+    event.currentTarget.disabled = false;
   }
 
   return (
@@ -339,9 +351,11 @@ export function Pin() {
         <article>
           <h1>{title}</h1>
           {isAuthorized(data.pin, user) ? (
-            <div>
+            <div className="flex flex-row justify-end gap-3">
               <button onClick={HandleDeletePost}>Delete</button>
-              <a href={`/pin/edit/${id}`}>Edit</a>
+              <button type="button">
+                <a href={`/pin/edit/${id}`}>Edit</a>
+              </button>
             </div>
           ) : undefined}
           <App
@@ -350,19 +364,20 @@ export function Pin() {
             defaultZoom={14}
           ></App>
           <p>{comment}</p>
+          <img src={`/public/storage/${image}`} alt=""></img>
         </article>
       </section>
-      <section id="replies">
-        <h2>Replies</h2>
-        <ul></ul>
-      </section>
+      {/* <section id="replies"> */}
+      {/*   <h2>Replies</h2> */}
+      {/*   <ul></ul> */}
+      {/* </section> */}
     </>
   );
 }
 
 export function Pins({ perPage = 10 }) {
   const data = useLoaderData();
-  const [pins, setPins] = useState(data.pins.rows);
+  const [pins, setPins] = useState(data.pins ? data.pins.rows : undefined);
   const [page, setPage] = useState(1);
 
   /**
@@ -379,26 +394,17 @@ export function Pins({ perPage = 10 }) {
     <>
       <section className="flex flex-row justify-around">
         <h1 className="flex-3">Pins</h1>
-        <a href="/pin/create">Create Pin</a>
+        <button type="button">
+          <a href="/pin/create">Create Pin</a>
+        </button>
       </section>
-      <table id="posts">
-        <thead>
-          <tr></tr>
-        </thead>
-        <tbody>
-          <div className="flex flex-col gap-3">
-            {RenderPins({ rows: pins })}
-          </div>
-        </tbody>
-        <tfoot>
-          <Pagination
-            page={page}
-            setPage={setPage}
-            perPage={perPage}
-            HandlePageChange={HandlePinPageChange}
-          />
-        </tfoot>
-      </table>
+      <div className="flex flex-col gap-3">{RenderPins({ rows: pins })}</div>
+      <Pagination
+        page={page}
+        setPage={setPage}
+        perPage={perPage}
+        HandlePageChange={HandlePinPageChange}
+      />
     </>
   );
 }

@@ -19,6 +19,7 @@ header {
 
   nav {
     margin-top: 0.5rem;
+    gap: 1rem;
     display: flex;
     flex-direction: row;
     justify-content: space-around;
@@ -46,7 +47,7 @@ main {
   }
 }
 
-section {
+main section {
   margin-bottom: 2rem;
   padding-bottom: 1rem;
   border-bottom: 1px solid var(--primary-color);

@@ -11,6 +11,7 @@ import {
   Pin,
   Pins,
   getUserPins,
+  getPins,
 } from "../pages/Pins.jsx";
 import { Dashboard, getUser } from "../pages/Profile.jsx";
 
@@ -66,7 +67,13 @@ const routes = [
     loader: getUserLoader,
     element: <MainLayout />,
     children: [
-      { index: true, element: <Pins perPage={10} />, loader: fetchPinPageData },
+      {
+        index: true,
+        element: <Pins perPage={10} />,
+        loader: async () => {
+          return { pins: await getPins({ perPage: 10, page: 1 }) };
+        },
+      },
       {
         path: "/pin/create",
         middleware: [authMiddleware],
