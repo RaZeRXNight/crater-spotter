@@ -2,13 +2,26 @@ import path from "path";
 import process from "process";
 import { existsSync, unlink } from "fs";
 import multer from "multer";
+import { checkSchema } from "express-validator";
 export const upload = multer({
   limits: { fieldSize: 1048576 * 8 },
   dest: process.env.STORAGE_PATH,
 });
 
-export default function pinRouter(Router, PinsModel, UsersModel) {
-  const LOWERLIMIT = 3;
+const PinSchema = {
+  authorid: { notEmpty: true },
+  lat: { notEmpty: true },
+  lng: { notEmpty: true },
+  title: {
+    isLength: {
+      options: { min: 3, max: 52 },
+      errorMessage: "Password must be atleast 8 characters.",
+    },
+  },
+  comment: { optional: true },
+};
+
+export default function pinRouter(Router, PinsModel) {
   const UPPERLIMIT = 10;
   const TEXTLIMIT = 30;
   const STORAGE_PATH = path.join(process.cwd(), process.env.STORAGE_PATH);
@@ -25,9 +38,10 @@ export default function pinRouter(Router, PinsModel, UsersModel) {
     const session = req.session;
     const headers = req.headers;
     const order = headers.order || "DESC";
+
+    // Pagination Variables
     const perPage = headers.perpage;
     const currentPage = headers.page;
-
     const endIndex = perPage * currentPage;
     const startIndex = endIndex - perPage;
 
@@ -42,9 +56,8 @@ export default function pinRouter(Router, PinsModel, UsersModel) {
         throw new Error("ERROR: INCORRECT PERPAGE WANTED");
       }
 
+      // Determines whether we send user specific data or general data.
       let data;
-
-      console.log(headers.authorization);
       if (headers.authorization && headers.authorization == "User") {
         data = await PinsModel.findAndCountAll({
           where: {
@@ -62,8 +75,10 @@ export default function pinRouter(Router, PinsModel, UsersModel) {
         });
       }
 
+      // Limits amount of characters
       const dataRows = data.rows.map((row) => {
         const tempdata = { ...row.dataValues };
+
         if (tempdata.comment.length > TEXTLIMIT) {
           tempdata.comment = tempdata.comment.slice(0, TEXTLIMIT) + "...";
         }
@@ -101,98 +116,107 @@ export default function pinRouter(Router, PinsModel, UsersModel) {
 
   // Creates a new pin based on the submitted
   // Body Containing: title, authorid, comment, cooordinates and Image.
-  Router.post("/pin", upload.single("image"), async (req, res, next) => {
-    const session = req.session;
-    const body = req.body;
-    const file = req.file;
-    const { title, authorid, comment, lat, lng } = body;
+  Router.post(
+    "/pin",
+    checkSchema(PinSchema, ["body"]),
+    upload.single("image"),
+    async (req, res) => {
+      const session = req.session;
+      const body = req.body;
+      const file = req.file;
+      const { title, authorid, comment, lat, lng } = body;
 
-    try {
-      // Image Validation
-      if (!ALLOWED_MIME_TYPES.includes(file.mimetype)) {
-        unlink(file.path);
-        throw new Error("Invalid file type");
+      try {
+        // Image Validation
+        if (!ALLOWED_MIME_TYPES.includes(file.mimetype)) {
+          unlink(file.path);
+          throw new Error("Invalid file type");
+        }
+
+        if (title.length === 0) {
+          // Performing basic Checks
+          throw new Error("A Title is Needed");
+        } else if (lat === 0 && lng === 0) {
+          throw new Error("Coordinates are Needed");
+        }
+
+        if (!authorid) {
+          throw new Error("An Account is needed");
+        }
+
+        if (authorid != session.userid) {
+          throw new Error("User ID not Valid");
+        }
+
+        // if (!image) {
+        //   throw new Error("An image is needed");
+        // }
+
+        // Succeeds All Checks
+        const pin = await PinsModel.create({
+          title: title,
+          image: file.filename,
+          authorid: authorid,
+          comment: comment,
+          lat: lat,
+          lng: lng,
+        });
+        const id = pin.id;
+
+        // Message back to Poster
+        res.json({
+          message: `SUCCESS! ${title} #${id} posted successfully!`,
+          error: false,
+          id: id,
+        });
+      } catch (error) {
+        res.json({
+          error: true,
+          message: `ERROR: ${error.message}`,
+        });
+        console.log(error);
       }
+    },
+  );
 
-      if (title.length === 0) {
-        // Performing basic Checks
-        throw new Error("A Title is Needed");
-      } else if (lat === 0 && lng === 0) {
-        throw new Error("Coordinates are Needed");
-      }
+  Router.put(
+    "/pin/:id/",
+    checkSchema(PinSchema, ["body"]),
+    async (req, res) => {
+      const id = req.params.id;
+      const session = req.session;
 
-      if (!authorid) {
-        throw new Error("An Account is needed");
-      }
+      try {
+        const query = await PinsModel.findOne({ where: { id: id } });
+        const oldData = query.dataValues;
+        const newData = req.body;
 
-      if (authorid != session.userid) {
-        throw new Error("User ID not Valid");
-      }
+        if (session.userid != query.authorid) {
+          throw new Error("ERROR: UNAUTHORIZED");
+        }
 
-      // if (!image) {
-      //   throw new Error("An image is needed");
-      // }
-
-      // Succeeds All Checks
-      const pin = await PinsModel.create({
-        title: title,
-        image: file.filename,
-        authorid: authorid,
-        comment: comment,
-        lat: lat,
-        lng: lng,
-      });
-      const id = pin.id;
-
-      // Message back to Poster
-      res.json({
-        message: `SUCCESS! ${title} #${id} posted successfully!`,
-        error: false,
-        id: id,
-      });
-    } catch (error) {
-      res.json({
-        error: true,
-        message: `ERROR: ${error.message}`,
-      });
-      console.log(error);
-    }
-  });
-
-  Router.put("/pin/:id/", async (req, res) => {
-    const id = req.params.id;
-    const session = req.session;
-
-    try {
-      const query = await PinsModel.findOne({ where: { id: id } });
-      const oldData = query.dataValues;
-      const newData = req.body;
-
-      if (session.userid != query.authorid) {
-        throw new Error("ERROR: UNAUTHORIZED");
-      }
-
-      await PinsModel.update(
-        {
-          comment: newData.comment,
-        },
-        {
-          where: {
-            id: id,
+        await PinsModel.update(
+          {
+            comment: newData.comment,
           },
-        },
-      );
+          {
+            where: {
+              id: id,
+            },
+          },
+        );
 
-      res.json({
-        message: `SUCCESS: ID ${id} ${oldData.title} updated!`,
-      });
-    } catch (error) {
-      res.json({
-        error,
-        message: `ERROR: ID ${id} ${oldData.title} failed to update!`,
-      });
-    }
-  });
+        res.json({
+          message: `SUCCESS: ID ${id} ${oldData.title} updated!`,
+        });
+      } catch (error) {
+        res.json({
+          error,
+          message: `ERROR: ID ${id} ${oldData.title} failed to update!`,
+        });
+      }
+    },
+  );
 
   Router.delete("/pin/:id", async (req, res) => {
     const id = req.params.id;

@@ -398,6 +398,15 @@ export function Pins({ perPage = 10 }) {
           <a href="/pin/create">Create Pin</a>
         </button>
       </section>
+      <section>
+        <App markerPositions={pins} />
+      </section>
+      <Pagination
+        page={page}
+        setPage={setPage}
+        perPage={perPage}
+        HandlePageChange={HandlePinPageChange}
+      />
       <div className="flex flex-col gap-3">{RenderPins({ rows: pins })}</div>
       <Pagination
         page={page}

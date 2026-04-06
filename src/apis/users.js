@@ -1,5 +1,5 @@
 import bcrypt from "bcrypt";
-import { checkSchema, body } from "express-validator";
+import { checkSchema } from "express-validator";
 
 const saltRounds = 12;
 

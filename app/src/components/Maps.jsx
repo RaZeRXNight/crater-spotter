@@ -10,17 +10,17 @@ const DEFAULTCENTER = { lat: 25.033328, lng: -77.421165 };
  * It returns a Map returned by Google's APIProvider
  */
 const App = ({
-  OnClick,
+  OnClick = function () {},
   style = { width: "100%", height: "300px" },
   markerPositions,
   currentMarkerPosition,
   startingCenter,
-  defaultZoom,
+  defaultZoom = 11,
 }) => {
   const data = useLoaderData();
   const Navigator = useNavigate();
 
-  if (data && data.pins && data.pins.rows && !markerPositions) {
+  if (!markerPositions && data && data.pins && data.pins.rows) {
     markerPositions = data.pins.rows.map(function (row) {
       return { id: row.id, title: row.title, lat: row.lat, lng: row.lng };
     });
@@ -30,7 +30,7 @@ const App = ({
       <Map
         style={style}
         defaultCenter={startingCenter || DEFAULTCENTER}
-        defaultZoom={defaultZoom || 11}
+        defaultZoom={defaultZoom}
         gestureHandling="greedy"
         disableDefaultUI
         onClick={OnClick}
