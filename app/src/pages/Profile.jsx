@@ -1,6 +1,6 @@
 import axios from "axios";
 import { useState } from "react";
-import { useLoaderData, useNavigate } from "react-router";
+import { useLoaderData, useNavigate, useOutletContext } from "react-router";
 import { toast } from "react-toastify";
 import { Pagination } from "../components/paginations";
 import "../css/Home.css";
@@ -60,6 +60,7 @@ export async function HandleUserDeletion(event) {
 export function Dashboard() {
   const data = useLoaderData();
   const Navigate = useNavigate();
+  console.log(data);
   const { user, startingPins } = data;
   const [page, setPage] = useState(1);
   const [pins, setPins] = useState(startingPins ? startingPins.rows : []);
@@ -117,6 +118,22 @@ export function Dashboard() {
         <button onClick={HandleUserDeletionAndExit} type="button">
           Delete Account
         </button>
+      </section>
+    </>
+  );
+}
+
+export function UserProfile() {
+  const userdata = useLoaderData();
+  const context = useOutletContext();
+
+  return (
+    <>
+      <section>
+        <h1> Profile</h1>
+      </section>
+      <section>
+        <h2>User Posts</h2>
       </section>
     </>
   );

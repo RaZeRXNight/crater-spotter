@@ -54,7 +54,7 @@ export async function getUserPins({ page, perPage }) {
       },
     })
     .then(function (response) {
-      return response.data.message;
+      return response.data;
     })
     .catch(function (error) {
       toast(error);
@@ -68,11 +68,12 @@ export async function getUserPins({ page, perPage }) {
  * input. Number page and Number perPage
  * return. { pins, count } or null on failure
  */
-export async function getPins({ page, perPage }) {
+export async function getPins({ userid = null, page, perPage }) {
   const data = await axios
     .get("/api/pin/", {
       headers: {
         Accept: "application/json",
+        userid: userid,
         perPage: perPage || 10,
         page: page || 1,
       },

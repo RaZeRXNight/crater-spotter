@@ -37,6 +37,7 @@ export default function pinRouter(Router, PinsModel) {
   Router.get("/pin/", async (req, res) => {
     const session = req.session;
     const headers = req.headers;
+    const userid = headers.userid;
     const order = headers.order || "DESC";
 
     // Pagination Variables
@@ -69,11 +70,13 @@ export default function pinRouter(Router, PinsModel) {
         });
       } else {
         data = await PinsModel.findAndCountAll({
+          where: userid ? { authorid: userid } : null,
           order: [["createdAt", order]],
           offset: startIndex,
           limit: perPage,
         });
       }
+      console.log("-------------------- Sent ----------------");
 
       // Limits amount of characters
       const dataRows = data.rows.map((row) => {
