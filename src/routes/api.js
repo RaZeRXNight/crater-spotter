@@ -34,6 +34,11 @@ const router = function (database, sessionStore) {
   commentsModel.sync();
   commentRouter.default(router, commentsModel, usersModel);
 
+  // Relationships
+  usersModel.hasMany(pinsModel, {
+    foreignKey: "authorid",
+  });
+
   return router;
 };
 

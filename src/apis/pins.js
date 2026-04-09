@@ -3,6 +3,8 @@ import process from "process";
 import { existsSync, unlink } from "fs";
 import multer from "multer";
 import { checkSchema } from "express-validator";
+import { Sequelize } from "sequelize";
+
 export const upload = multer({
   limits: { fieldSize: 1048576 * 8 },
   dest: process.env.STORAGE_PATH,
@@ -35,6 +37,10 @@ export default function pinRouter(Router, PinsModel) {
   // pin DB API
   // Routes
   Router.get("/pin/", async (req, res) => {
+    const sequelizeInstance = PinsModel.sequelize;
+    const userModel = sequelizeInstance.models.Users;
+
+    // Cookie Session & Headers
     const session = req.session;
     const headers = req.headers;
     const userid = headers.userid;
@@ -76,7 +82,6 @@ export default function pinRouter(Router, PinsModel) {
           limit: perPage,
         });
       }
-      console.log("-------------------- Sent ----------------");
 
       // Limits amount of characters
       const dataRows = data.rows.map((row) => {
@@ -103,17 +108,18 @@ export default function pinRouter(Router, PinsModel) {
   Router.get("/pin/:id", async (req, res) => {
     const id = req.params.id;
     try {
+      const userModel = PinsModel.sequelize.models.Users;
       const data = await PinsModel.findByPk(id);
+      const authorid = data.dataValues.authorid;
+      const author = await userModel.findByPk(authorid);
+      const username = author.dataValues.username;
 
       res.json({
-        error: false,
-        message: data,
+        message: { ...data.dataValues, authorName: username },
       });
     } catch (error) {
-      res.json({
-        error: true,
-        message: `ERROR: Couldn't retrieve Pin #${id}`,
-      });
+      console.error(error);
+      res.status(500).send(`ERROR: Couldn't retrieve Pin #${id}`);
     }
   });
 

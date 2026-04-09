@@ -101,7 +101,21 @@ export async function fetchPinPageData({ params }) {
   const page = params.page || 1;
 
   const pinData = await getPins({ perPage: perPage, page: page });
+  console.log(pinData);
 
+  return { pins: pinData };
+}
+
+export async function fetchUserPinPageData({ params }) {
+  const perPage = params.perPage || 10;
+  const page = params.page || 1;
+  const userid = params.authorid;
+
+  const pinData = await getPins({
+    userid: userid,
+    perPage: perPage,
+    page: page,
+  });
   return { pins: pinData };
 }
 
@@ -337,7 +351,8 @@ export function Pin() {
   const Navigator = useNavigate();
   const data = useLoaderData();
   const user = useOutletContext().user;
-  const { id, image, title, comment, lat, lng } = data.pin;
+  const { id, authorid, authorName, image, title, comment, lat, lng } =
+    data.pin;
   const coordinates = { lat, lng };
 
   async function HandleDeletePost(event) {
@@ -350,7 +365,10 @@ export function Pin() {
     <>
       <section>
         <article>
-          <h1>{title}</h1>
+          <div>
+            <h1>{title}</h1>
+            <a href={`/profile/${authorid}`}>{authorName}</a>
+          </div>
           {isAuthorized(data.pin, user) ? (
             <div className="flex flex-row justify-end gap-3">
               <button onClick={HandleDeletePost}>Delete</button>

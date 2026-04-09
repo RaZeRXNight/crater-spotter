@@ -13,7 +13,7 @@ import {
   getUserPins,
   getPins,
 } from "../pages/Pins.jsx";
-import { Dashboard, getUser } from "../pages/Profile.jsx";
+import { Dashboard, getUser, UserProfile } from "../pages/Profile.jsx";
 
 // Loaders
 async function getUserLoader({ context }) {
@@ -22,17 +22,33 @@ async function getUserLoader({ context }) {
 
 async function PinDataLoader({ params }) {
   const id = params.id;
-  const pinData = await axios.get(`/api/pin/${id}`).then(function (response) {
-    return response.data.message;
-  });
+  console.log("hello world");
+  const pinData = await axios
+    .get(`/api/pin/${id}`)
+    .then(function (response) {
+      const data = response.data.message;
+      console.log(data);
+      return data;
+    })
+    .catch(function (error) {
+      console.log(error);
+    });
   const userData = await getUser();
   return { pin: pinData, user: userData };
 }
 
-async function UserPinsLoader({ context }) {
+async function UserPinsLoader() {
   return {
     user: await getUser(),
     startingPins: await getUserPins({ page: 1, perPage: 3 }),
+  };
+}
+
+async function UserProfileLoader({ params }) {
+  const userid = params.id;
+  return {
+    user: await getUser(),
+    startingPins: await getPins({ userid, page: 1, perPage: 10 }),
   };
 }
 
@@ -91,6 +107,12 @@ const routes = [
         element: <Pin />,
       },
     ],
+  },
+  {
+    path: "/profile/:id",
+    loader: UserProfileLoader,
+    element: <MainLayout />,
+    children: [{ index: true, element: <UserProfile /> }],
   },
 ];
 
