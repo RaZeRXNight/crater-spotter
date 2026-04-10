@@ -1,25 +1,29 @@
 import axios from "axios";
 import { useState } from "react";
-import { useLoaderData, useNavigate, useOutletContext } from "react-router";
+import { useLoaderData, useNavigate } from "react-router";
 import { toast } from "react-toastify";
 import { Pagination } from "../components/paginations";
 import "../css/Home.css";
-import { getUserPins, RenderPins } from "./Pins";
+import { getPins, getUserPins, RenderPins } from "./Pins";
 
 /*
  * Gets the current user, authenticating their session if they're logged in.
  * Returns their user data { id, username }
  */
-export async function getUser() {
+export async function getUser(userid = null) {
+  const apiURL = userid ? `/api/user/${userid}` : "/api/auth";
+  const apiHeader = { headers: { userid: userid } };
+
   const data = await axios
-    .get("/api/auth")
+    .get(apiURL, userid ? apiHeader : {})
     .then(function (response) {
       return response.data;
     })
     .catch(function (error) {
+      console.error(error);
       toast(error);
-      return null;
     });
+
   return data;
 }
 
@@ -60,7 +64,6 @@ export async function HandleUserDeletion(event) {
 export function Dashboard() {
   const data = useLoaderData();
   const Navigate = useNavigate();
-  console.log(data);
   const { user, startingPins } = data;
   const [page, setPage] = useState(1);
   const [pins, setPins] = useState(startingPins ? startingPins.rows : []);
@@ -98,7 +101,7 @@ export function Dashboard() {
 
   return (
     <>
-      <section>
+      <section id="posts">
         <h2>Recent Posts</h2>
         <div className="flex flex-col gap-3">
           <div>{<RenderPins rows={pins} user={user} />}</div>
@@ -125,15 +128,44 @@ export function Dashboard() {
 
 export function UserProfile() {
   const userdata = useLoaderData();
-  const context = useOutletContext();
+
+  const { user, startingPins } = userdata;
+  const [pins, setPins] = useState(startingPins.rows);
+  const [page, setPage] = useState(1);
+  const perPage = 3;
+
+  async function HandlePinPageChange(newPage, perPage) {
+    const data = await getPins({
+      userid: user.id,
+      page: newPage,
+      perPage: perPage,
+    });
+    setPins(data.rows);
+    return data.count;
+  }
 
   return (
     <>
       <section>
-        <h1> Profile</h1>
+        <h2>{user ? user.username : "Unknown"}'s Profile</h2>
       </section>
-      <section>
+      <section id="posts" className={"flex flex-col gap-3"}>
         <h2>User Posts</h2>
+        <Pagination
+          page={page}
+          setPage={setPage}
+          HandlePageChange={HandlePinPageChange}
+          perPage={perPage}
+        />
+        <div className="flex flex-col gap-3">
+          {<RenderPins rows={pins} user={user} />}
+        </div>
+        <Pagination
+          page={page}
+          setPage={setPage}
+          HandlePageChange={HandlePinPageChange}
+          perPage={perPage}
+        />
       </section>
     </>
   );

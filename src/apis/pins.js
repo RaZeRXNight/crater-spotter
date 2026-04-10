@@ -53,6 +53,7 @@ export default function pinRouter(Router, PinsModel) {
     const startIndex = endIndex - perPage;
 
     try {
+      // Validation
       if (headers.accept != "application/json") {
         throw new Error("ERROR: INCORRECT FORMAT WANTED");
       }
@@ -81,6 +82,10 @@ export default function pinRouter(Router, PinsModel) {
           offset: startIndex,
           limit: perPage,
         });
+      }
+
+      if (!data) {
+        throw new ERROR("ERROR: NO DATA FOUND");
       }
 
       // Limits amount of characters

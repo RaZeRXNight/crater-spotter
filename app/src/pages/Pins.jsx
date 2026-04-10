@@ -101,7 +101,6 @@ export async function fetchPinPageData({ params }) {
   const page = params.page || 1;
 
   const pinData = await getPins({ perPage: perPage, page: page });
-  console.log(pinData);
 
   return { pins: pinData };
 }

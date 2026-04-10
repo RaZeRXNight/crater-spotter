@@ -23,10 +23,29 @@ export default function userRouter(Router, usersModel, sessionStore) {
     });
   });
 
-  Router.get("/user/:id", (req, res) => {
-    res.json({
-      message: "Get User Information by ID",
-    });
+  Router.get("/user/:id", async (req, res) => {
+    const userid = req.headers.userid;
+
+    try {
+      if (!userid) {
+        res.status(400).send("Invalid user id");
+        throw new ERROR("ERROR: NO USERID PROVIDED");
+      }
+
+      const user = await usersModel.findByPk(userid);
+
+      if (!user) {
+        res.status(404).send("ERROR: USER NOT FOUND");
+        throw new ERROR("ERROR: USER NOT FOUND:where");
+      }
+
+      res.json({
+        id: user.id,
+        username: user.username,
+      });
+    } catch (error) {
+      console.error(error);
+    }
   });
 
   Router.put("/user/:id", (req, res) => {

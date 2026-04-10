@@ -22,12 +22,11 @@ async function getUserLoader({ context }) {
 
 async function PinDataLoader({ params }) {
   const id = params.id;
-  console.log("hello world");
+
   const pinData = await axios
     .get(`/api/pin/${id}`)
     .then(function (response) {
       const data = response.data.message;
-      console.log(data);
       return data;
     })
     .catch(function (error) {
@@ -38,17 +37,23 @@ async function PinDataLoader({ params }) {
 }
 
 async function UserPinsLoader() {
+  const user = await getUser();
+  const startingPins = await getUserPins({ page: 1, perPage: 3 });
+
   return {
-    user: await getUser(),
-    startingPins: await getUserPins({ page: 1, perPage: 3 }),
+    user,
+    startingPins,
   };
 }
 
 async function UserProfileLoader({ params }) {
   const userid = params.id;
+  const user = await getUser(userid);
+  const startingPins = await getPins({ userid, page: 1, perPage: 3 });
+
   return {
-    user: await getUser(),
-    startingPins: await getPins({ userid, page: 1, perPage: 10 }),
+    user,
+    startingPins,
   };
 }
 
@@ -109,10 +114,16 @@ const routes = [
     ],
   },
   {
-    path: "/profile/:id",
-    loader: UserProfileLoader,
+    path: "/profile",
+    loader: getUserLoader,
     element: <MainLayout />,
-    children: [{ index: true, element: <UserProfile /> }],
+    children: [
+      {
+        path: "/profile/:id",
+        loader: UserProfileLoader,
+        element: <UserProfile />,
+      },
+    ],
   },
 ];
 
