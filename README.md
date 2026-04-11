@@ -81,3 +81,4 @@ and run the project in development mode.
 - <https://express-validator.github.io/docs/>
 - <https://www.npmjs.com/package/bcrypt>
 - <https://fkhadra.github.io/react-toastify/introduction/>
+- <https://www.npmjs.com/package/multer>

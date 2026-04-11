@@ -17,11 +17,11 @@ function RegisterForm() {
     axios
       .post("/api/auth/register", userAuth)
       .then(function (response) {
-        toast(response);
+        toast(response.data.message);
         Navigate("/");
       })
       .catch(function (error) {
-        toast(error);
+        toast(error.message);
       });
   };
   return (
@@ -89,11 +89,17 @@ function LoginForm() {
     axios
       .post("/api/auth/login", userAuth)
       .then(function (response) {
-        toast(response);
+        toast(response.data.message);
         Navigate("/");
       })
       .catch(function (error) {
-        toast(error);
+        const statusCode = error.status;
+
+        if (statusCode == 404) {
+          toast("User not Found");
+        } else if (statusCode == 401) {
+          toast("Authenitcation Failed");
+        }
       });
   };
   return (
@@ -141,7 +147,7 @@ function Logout() {
         Navigate("/");
       })
       .catch(function (error) {
-        toast(error);
+        toast(error.message);
       });
   }
   return (

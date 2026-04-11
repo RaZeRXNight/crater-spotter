@@ -10,19 +10,20 @@ require("dotenv").config({
   debug: ENVIRONMENT ? true : false,
 });
 
+// Env Variables
+const databaseLocation = process.env.DATABASE;
+const sessionSecret = process.env.SESSION_SECRET;
+const host = process.env.HOST;
+const port = process.env.PORT;
+
 const database = new Sequelize({
   dialect: "sqlite",
-  storage: ".sqlite3",
+  storage: databaseLocation,
 });
 
 const sessionStore = new SequelizeStore({
   db: database,
 });
-
-// Env Variables
-const sessionSecret = process.env.SESSION_SECRET;
-const host = process.env.HOST;
-const port = process.env.PORT;
 
 const server = express();
 // Middleware
@@ -55,6 +56,7 @@ server.use(express.static(dist_path));
 
 // APIs
 const router = require("./src/routes/api.js");
+
 // Placed Session Store to pass in through here, Will Change Later.
 server.use("/api", router(database, sessionStore));
 

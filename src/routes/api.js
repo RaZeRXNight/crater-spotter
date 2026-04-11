@@ -6,6 +6,7 @@
 const { default: Comments } = require("../models/comments.js");
 const { default: Pins } = require("../models/pins.js");
 const { default: Users } = require("../models/users.js");
+const { CheckAndMakeDefaultAdminAccount } = require("../services/admin.js");
 
 const router = function (database, sessionStore) {
   // Home API
@@ -32,12 +33,15 @@ const router = function (database, sessionStore) {
   const commentRouter = require("../apis/comments.js");
   const commentsModel = Comments(database);
   commentsModel.sync();
-  commentRouter.default(router, commentsModel, usersModel);
+  commentRouter.default(router, commentsModel);
 
   // Relationships
   usersModel.hasMany(pinsModel, {
     foreignKey: "authorid",
   });
+
+  // Extra Functionality
+  CheckAndMakeDefaultAdminAccount(database);
 
   return router;
 };

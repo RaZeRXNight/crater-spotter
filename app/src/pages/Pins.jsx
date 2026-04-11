@@ -58,7 +58,7 @@ export async function getUserPins({ page, perPage }) {
       return response.data;
     })
     .catch(function (error) {
-      toast(error);
+      toast.error(error);
       return null;
     });
   return data;
@@ -87,7 +87,7 @@ export async function getPins({ userid = null, page, perPage }) {
       return responseObject;
     })
     .catch(function (error) {
-      toast(error);
+      toast.error(error.message);
       return null;
     });
   return data;
@@ -123,12 +123,17 @@ export const DeletePost = async function (event, pin, Navigator) {
   const button = event.currentTarget;
   button.disabled = true;
   if (window.confirm(`Are you sure you want to delete ${pin.title} post?`)) {
-    axios.delete(`/api/pin/${pin.id}`).then(function (response) {
-      toast(response);
-      if (!response.data.error) {
-        Navigator("/pin/");
-      }
-    });
+    axios
+      .delete(`/api/pin/${pin.id}`)
+      .then(function (response) {
+        toast.success(response);
+        if (!response.data.error) {
+          Navigator("/pin/");
+        }
+      })
+      .catch(function (error) {
+        toast.error(error.message);
+      });
   }
 };
 
@@ -187,9 +192,9 @@ export function CreatePin() {
 
     axios.post("/api/pin", formData).then(function (request) {
       if (request.data.error) {
-        toast(request.data.message);
+        toast.success(request.data.message);
       } else {
-        toast(request.data.message);
+        toast.error(request.data.message);
         navigate(`/pin/${request.data.id}`);
       }
     });
@@ -292,9 +297,9 @@ export function EditPin() {
       })
       .then(function (request) {
         if (request.data.error) {
-          toast(request.data.message);
+          toast.error(request.data.message);
         } else {
-          toast(request.data.message);
+          toast.success(request.data.message);
           navigate(`/pin/${id}`);
         }
       });

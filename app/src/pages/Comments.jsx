@@ -12,10 +12,10 @@ export function CreateComment({
       .post("/api/comment", commentForm)
       .then(function (response) {
         console.log(response);
-        toast(response.data);
+        toast.success(response.data);
       })
       .catch(function (error) {
-        toast(error.message);
+        toast.error(error.message);
       });
   }
 

@@ -23,7 +23,12 @@ export default function MainLayout() {
           )}
         </nav>
       </header>
-      <ToastContainer />
+      <ToastContainer
+        position={"bottom-center"}
+        closeOnClick={true}
+        pauseOnFocusLoss={false}
+        theme="dark"
+      />
       <main>
         <Outlet context={Auth} />
       </main>

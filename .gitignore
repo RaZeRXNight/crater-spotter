@@ -14,7 +14,7 @@ public/storage/*
 .env.local
 
 node_modules
-.sqlite3
+.sqlite3*
 
 logs
 *.log

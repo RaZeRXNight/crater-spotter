@@ -20,8 +20,10 @@ export async function getUser(userid = null) {
       return response.data;
     })
     .catch(function (error) {
-      console.error(error);
-      toast(error);
+      if (apiURL != "/api/auth") {
+        console.error(error);
+        toast.error(error.message);
+      }
     });
 
   return data;
@@ -32,11 +34,11 @@ export async function HandleLogout(event) {
   const data = await axios
     .delete("/api/auth/logout")
     .then(function () {
-      toast("Logged Out");
+      toast.success("Logged Out");
       return true;
     })
-    .catch(function () {
-      toast(response);
+    .catch(function (error) {
+      toast.error(response.message);
       return false;
     });
   return data;
@@ -50,11 +52,11 @@ export async function HandleUserDeletion(event) {
     const data = await axios
       .delete(`/api/auth/delete`)
       .then(function () {
-        toast("Deleted User");
+        toast.success("Deleted User");
         return true;
       })
       .catch(function (error) {
-        toast(error);
+        toast.error(error.message);
         return false;
       });
     return data;

@@ -97,7 +97,6 @@ export default function userRouter(Router, usersModel, sessionStore) {
           });
 
         if (!password) {
-          console.log(body.password);
           throw new Error("No Password");
         }
 
@@ -115,7 +114,7 @@ export default function userRouter(Router, usersModel, sessionStore) {
           message: `Successfully Logged In, Welcome ${session.username}`,
         });
       } catch (error) {
-        console.log(error);
+        console.error(error);
       }
     },
   );
@@ -127,7 +126,6 @@ export default function userRouter(Router, usersModel, sessionStore) {
     async (req, res) => {
       const body = req.body;
       const session = req.session;
-      console.log(body);
 
       try {
         // Get User Entry
@@ -135,20 +133,29 @@ export default function userRouter(Router, usersModel, sessionStore) {
           where: { username: body.username },
         });
 
+        // Throws if no valid user is found
+        if (!User) {
+          res.status(404).json({ message: "ERROR: USER DOES NOT EXIST" });
+          throw new Error("ERROR: USER DOES NOT EXIST");
+        }
+
         // Verify if Password Matches then Authenticate Session
         if (bcrypt.compare(body.password, User.password)) {
           session.userid = User.id;
           session.username = User.username;
 
+          // response
           res.json({
             message: `Successfully Logged In, Welcome ${session.username}`,
           });
         } else {
+          res
+            .status(401)
+            .send("ERROR: INCORRECT PASSWORD, Authentication Failed");
           throw new Error("ERROR: INCORRECT PASSWORD, Authentication Failed");
         }
       } catch (error) {
-        console.log(error);
-        res.status(401).send("ERROR: Authentication Failure");
+        console.error(error);
       }
     },
   );
@@ -173,7 +180,13 @@ export default function userRouter(Router, usersModel, sessionStore) {
       // Perform action to delete
       const query = await usersModel.findOne({ where: { id: id } });
 
+      if (!query) {
+        res.status(404).send("ERROR: USER DOES NOT EXIST");
+        throw new Error("ERROR: USER DOES NOT EXIST");
+      }
+
       if (query.id != session.userid) {
+        res.status(401).send("ERROR: UNAUTHORIZED");
         throw new Error("ERROR: UNAUTHORIZED");
       }
 

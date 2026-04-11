@@ -1,6 +1,8 @@
 import { DataTypes } from "sequelize";
 
-export default function Comments(sequelize, userModel, pinModel) {
+export default function Comments(sequelize) {
+  const userModel = sequelize.models.Users;
+  const pinModel = sequelize.models.Pins;
   sequelize.define(
     "Comments",
     {
@@ -23,10 +25,6 @@ export default function Comments(sequelize, userModel, pinModel) {
       CommentParent: {
         allowNull: true,
         type: DataTypes.INTEGER,
-        // references: {
-        //   model: sequelize.models.Comments,
-        //   key: "id",
-        // },
       },
     },
     {
