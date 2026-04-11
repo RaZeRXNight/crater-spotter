@@ -6,6 +6,7 @@ export function CreateComment({
   HandleFormSubmission,
 }) {
   async function HandleCommentFormSubmission(event) {
+    event.currentTarget.disabled = true;
     event.preventDefault();
 
     axios
@@ -17,6 +18,7 @@ export function CreateComment({
       .catch(function (error) {
         toast.error(error.message);
       });
+    event.currentTarget.disabled = false;
   }
 
   return (

@@ -4,6 +4,7 @@ import "../css/Home.css";
 
 export default function MainLayout() {
   const Auth = useLoaderData();
+  const user = Auth.user;
 
   return (
     <>
@@ -14,9 +15,9 @@ export default function MainLayout() {
           <a href="/pin">Posts</a>
           <a href="/#about">About</a>
           <a href="/#contact">Contact</a>
-          {Auth.user && Auth.user.id ? (
+          {user && user.id ? (
             <>
-              <a href="/dashboard">Dashboard</a>
+              <a href="/dashboard">{user.username}</a>
             </>
           ) : (
             <a href="/auth">Login/Register</a>

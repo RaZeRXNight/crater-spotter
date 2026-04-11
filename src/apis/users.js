@@ -42,6 +42,7 @@ export default function userRouter(Router, usersModel, sessionStore) {
       res.json({
         id: user.id,
         username: user.username,
+        authLevel: user.authLevel,
       });
     } catch (error) {
       console.error(error);
@@ -69,6 +70,7 @@ export default function userRouter(Router, usersModel, sessionStore) {
       res.json({
         id: session.userid,
         username: session.username,
+        authLevel: session.authLevel,
       });
     } else {
       res.status(401).send("ERROR: Unauthorized.");
@@ -104,14 +106,16 @@ export default function userRouter(Router, usersModel, sessionStore) {
         const newUser = await usersModel.create({
           username: username,
           email: email,
+          authLevel: 0,
           password: password,
         });
 
         session.userid = newUser.id;
         session.username = newUser.username;
+        session.authLevel = newUser.authLevel;
 
         res.json({
-          message: `Successfully Logged In, Welcome ${session.username}`,
+          message: `Welcome ${session.username}!`,
         });
       } catch (error) {
         console.error(error);
@@ -143,10 +147,11 @@ export default function userRouter(Router, usersModel, sessionStore) {
         if (bcrypt.compare(body.password, User.password)) {
           session.userid = User.id;
           session.username = User.username;
+          session.authLevel = User.authLevel;
 
           // response
           res.json({
-            message: `Successfully Logged In, Welcome ${session.username}`,
+            message: `Welcome back ${session.username}!`,
           });
         } else {
           res

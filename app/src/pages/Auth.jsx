@@ -85,6 +85,7 @@ function LoginForm() {
     password: "",
   });
   const HandleLoginSubmit = function (event) {
+    event.currentTarget.disabled = true;
     event.preventDefault();
     axios
       .post("/api/auth/login", userAuth)
@@ -101,6 +102,7 @@ function LoginForm() {
           toast("Authenitcation Failed");
         }
       });
+    event.currentTarget.disabled = false;
   };
   return (
     <form action="/api/auth/login" onSubmit={HandleLoginSubmit} method="POST">
@@ -139,7 +141,8 @@ function LoginForm() {
 }
 
 function Logout() {
-  function HandleLogout(_event) {
+  function HandleLogout(event) {
+    event.currentTarget.disabled = true;
     axios
       .delete("/api/auth/logout")
       .then(function (response) {
@@ -149,6 +152,7 @@ function Logout() {
       .catch(function (error) {
         toast(error.message);
       });
+    event.currentTarget.disabled = false;
   }
   return (
     <section className="h-1/3 w-1/3 self-center flex flex-col justify-center">

@@ -9,11 +9,16 @@ import "../css/articles.css";
 import "../css/forms.css";
 import { CreateComment } from "./Comments.jsx";
 
+/**
+ *
+ * Returns true if the user id is the same as the pin.authorid
+ * also returns true if the user authLevel is greater than 1
+ *
+ */
 export function isAuthorized(pin, user) {
   if (pin && pin.authorid && user && user.id) {
-    return pin.authorid == user.id;
+    return pin.authorid == user.id || user.authLevel > 1;
   }
-  return false;
 }
 
 /**
@@ -120,8 +125,8 @@ export async function fetchUserPinPageData({ params }) {
 }
 
 export const DeletePost = async function (event, pin, Navigator) {
-  const button = event.currentTarget;
-  button.disabled = true;
+  event.currentTarget.disabled = true;
+
   if (window.confirm(`Are you sure you want to delete ${pin.title} post?`)) {
     axios
       .delete(`/api/pin/${pin.id}`)
@@ -135,6 +140,7 @@ export const DeletePost = async function (event, pin, Navigator) {
         toast.error(error.message);
       });
   }
+  event.currentTarget.disabled = false;
 };
 
 export function CreatePin() {
@@ -178,6 +184,7 @@ export function CreatePin() {
   }
 
   const HandleSubmit = async function (event) {
+    event.currentTarget.disabled = true;
     event.preventDefault();
     const fileInput = document.querySelector("#file_upload");
     const file = fileInput.files[0];
@@ -198,6 +205,7 @@ export function CreatePin() {
         navigate(`/pin/${request.data.id}`);
       }
     });
+    event.currentTarget.disabled = false;
   };
 
   return (
@@ -290,6 +298,7 @@ export function EditPin() {
   );
 
   const HandleSubmit = async function (event) {
+    event.currentTarget.disabled = true;
     event.preventDefault();
     axios
       .put(`/api/pin/${id}`, form, {
@@ -303,6 +312,7 @@ export function EditPin() {
           navigate(`/pin/${id}`);
         }
       });
+    event.currentTarget.disabled = false;
   };
 
   return (
@@ -390,9 +400,9 @@ export function Pin() {
           {isAuthorized(data.pin, user) ? (
             <div className="flex flex-row justify-end gap-3">
               <button onClick={HandleDeletePost}>Delete</button>
-              <button type="button">
-                <a href={`/pin/edit/${id}`}>Edit</a>
-              </button>
+              <a href={`/pin/edit/${id}`}>
+                <button type="button">Edit</button>
+              </a>
             </div>
           ) : undefined}
           <App
@@ -400,7 +410,7 @@ export function Pin() {
             startingCenter={coordinates}
             defaultZoom={14}
           ></App>
-          <p>{commentForm.comment}</p>
+          <p>{comment}</p>
           <img src={`/public/storage/${image}`} alt=""></img>
         </article>
       </section>
@@ -443,9 +453,9 @@ export function Pins({ perPage = 10 }) {
     <>
       <section className="flex flex-row justify-around">
         <h1 className="flex-3">Pins</h1>
-        <button type="button">
-          <a href="/pin/create">Create Pin</a>
-        </button>
+        <a href="/pin/create">
+          <button type="button">Create Pin</button>
+        </a>
       </section>
       <section>
         <App markerPositions={pins} />

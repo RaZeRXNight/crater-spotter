@@ -149,7 +149,7 @@ export default function pinRouter(Router, PinsModel) {
 
       try {
         // Image Validation
-        if (!ALLOWED_MIME_TYPES.includes(file.mimetype)) {
+        if (file && !ALLOWED_MIME_TYPES.includes(file.mimetype)) {
           unlink(file.path);
           throw new Error("Invalid file type");
         }
@@ -176,7 +176,7 @@ export default function pinRouter(Router, PinsModel) {
         // Succeeds All Checks
         const pin = await PinsModel.create({
           title: title,
-          image: file.filename,
+          image: file ? file.filename : "",
           authorid: authorid,
           comment: comment,
           lat: lat,
@@ -204,15 +204,18 @@ export default function pinRouter(Router, PinsModel) {
     "/pin/:id/",
     checkSchema(PinSchema, ["body"]),
     async (req, res) => {
+      const userModel = PinsModel.sequelize.models.Users;
       const id = req.params.id;
       const session = req.session;
 
       try {
         const query = await PinsModel.findOne({ where: { id: id } });
+        const userQuery = await userModel.findByPk(session.userid);
         const oldData = query.dataValues;
         const newData = req.body;
 
-        if (session.userid != query.authorid) {
+        if (session.userid != query.authorid && userQuery.authLevel < 2) {
+          res.json({ error: true, message: "ERROR: UNAUTHORIZED" });
           throw new Error("ERROR: UNAUTHORIZED");
         }
 
@@ -231,23 +234,22 @@ export default function pinRouter(Router, PinsModel) {
           message: `SUCCESS: ID ${id} ${oldData.title} updated!`,
         });
       } catch (error) {
-        res.json({
-          error,
-          message: `ERROR: ID ${id} ${oldData.title} failed to update!`,
-        });
+        console.error(error);
       }
     },
   );
 
   Router.delete("/pin/:id", async (req, res) => {
+    const userModel = PinsModel.sequelize.models.Users;
     const id = req.params.id;
     const session = req.session;
 
     try {
       // Perform action to delete
       const query = await PinsModel.findOne({ where: { id: id } });
+      const userQuery = await userModel.findByPk(session.userid);
 
-      if (query.authorid != session.userid) {
+      if (query.authorid != session.userid && userQuery.authLevel < 1) {
         throw new Error("ERROR: UNAUTHORIZED");
       }
 
