@@ -36,6 +36,22 @@ async function PinDataLoader({ params }) {
   return { pin: pinData, user: userData };
 }
 
+async function PinCommentDataLoader({ params }) {
+  const id = params.id;
+
+  const pinData = await axios
+    .get(`/api/pin/${id}`)
+    .then(function (response) {
+      const data = response.data.message;
+      return data;
+    })
+    .catch(function (error) {
+      console.log(error);
+    });
+  const userData = await getUser();
+  return { pin: pinData, user: userData, comments: null };
+}
+
 async function UserPinsLoader() {
   const user = await getUser();
   const startingPins = await getUserPins({ page: 1, perPage: 3 });
@@ -108,7 +124,7 @@ const routes = [
       },
       {
         path: "/pin/:id",
-        loader: PinDataLoader,
+        loader: PinCommentDataLoader,
         element: <Pin />,
       },
     ],

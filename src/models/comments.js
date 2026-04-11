@@ -5,7 +5,6 @@ export default function Comments(sequelize, userModel, pinModel) {
     "Comments",
     {
       id: { autoIncrement: true, primaryKey: true, type: DataTypes.INTEGER },
-      image: { allowNull: true, type: DataTypes.STRING },
       replyLevel: { allowNull: false, type: DataTypes.INTEGER },
       authorid: {
         allowNull: true,
@@ -15,10 +14,7 @@ export default function Comments(sequelize, userModel, pinModel) {
           key: "id",
         },
       },
-      title: { allowNull: false, type: DataTypes.STRING },
       comment: { type: DataTypes.STRING },
-      lat: { allowNull: false, type: DataTypes.DOUBLE },
-      lng: { allowNull: false, type: DataTypes.DOUBLE },
       PinParent: {
         allowNull: false,
         type: DataTypes.INTEGER,

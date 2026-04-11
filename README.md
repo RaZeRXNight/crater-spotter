@@ -12,14 +12,12 @@ database used is SQLite, and the project may be deployed using docker.
 
 - [ X ] Landing page with a map of pins and recent posts
 - [ X ] Dashboard for authenticated users to view their posts and recent posts
-  - [ ] Admin dashboard to view all posts and users
 - [ X ] Post creation form with the ability to add a pin on the map.
 
 ### Back-end
 
 - [ X ] User authentication and authorization
   - [ X ] Validation for image uploads and post content.
-- [ ] Admin functionalities to manage users and posts.
 - [ X ] Integration with Google Maps API to display pins and posts on the map.
 - [ X ] Database schema design for users, comments, and pins.
 
@@ -46,6 +44,8 @@ following folders:
 - Look into Open Streets' Open Source API due to <https://www.bahamaslocal.com>
   website usage of it.
 - Implement Locking Posts and User Accounts.
+- Implement Administration Dashboard and Features.
+- Nested Comments and Replies.
 
 ## How to Install
 

@@ -106,19 +106,26 @@ export default function pinRouter(Router, PinsModel) {
         count: data.count,
       });
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   });
 
   Router.get("/pin/:id", async (req, res) => {
     const id = req.params.id;
+    const header = req.headers;
+
     try {
+      // Models
       const userModel = PinsModel.sequelize.models.Users;
+      const CommentModel = PinsModel.sequelize.models.Comments;
+
+      // Variables
       const data = await PinsModel.findByPk(id);
       const authorid = data.dataValues.authorid;
       const author = await userModel.findByPk(authorid);
       const username = author.dataValues.username;
 
+      // Response
       res.json({
         message: { ...data.dataValues, authorName: username },
       });

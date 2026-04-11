@@ -7,6 +7,7 @@ import App from "../components/Maps.jsx";
 import { Pagination } from "../components/paginations.jsx";
 import "../css/articles.css";
 import "../css/forms.css";
+import { CreateComment } from "./Comments.jsx";
 
 export function isAuthorized(pin, user) {
   if (pin && pin.authorid && user && user.id) {
@@ -117,6 +118,19 @@ export async function fetchUserPinPageData({ params }) {
   });
   return { pins: pinData };
 }
+
+export const DeletePost = async function (event, pin, Navigator) {
+  const button = event.currentTarget;
+  button.disabled = true;
+  if (window.confirm(`Are you sure you want to delete ${pin.title} post?`)) {
+    axios.delete(`/api/pin/${pin.id}`).then(function (response) {
+      toast(response);
+      if (!response.data.error) {
+        Navigator("/pin/");
+      }
+    });
+  }
+};
 
 export function CreatePin() {
   const context = useOutletContext();
@@ -242,19 +256,6 @@ export function CreatePin() {
   );
 }
 
-export const DeletePost = async function (event, pin, Navigator) {
-  const button = event.currentTarget;
-  button.disabled = true;
-  if (window.confirm(`Are you sure you want to delete ${pin.title} post?`)) {
-    axios.delete(`/api/pin/${pin.id}`).then(function (response) {
-      toast(response);
-      if (!response.data.error) {
-        Navigator("/pin/");
-      }
-    });
-  }
-};
-
 export function EditPin() {
   const context = useOutletContext();
   const data = useLoaderData();
@@ -350,14 +351,27 @@ export function Pin() {
   const Navigator = useNavigate();
   const data = useLoaderData();
   const user = useOutletContext().user;
+
+  // Pin Data
   const { id, authorid, authorName, image, title, comment, lat, lng } =
     data.pin;
   const coordinates = { lat, lng };
+
+  const [commentVisibility, setCommentVisibility] = useState(false);
+  const [commentForm, setCommentForm] = useState({
+    PinParent: id,
+    replyLevel: 0,
+    comment: "",
+  });
 
   async function HandleDeletePost(event) {
     event.currentTarget.disabled = true;
     DeletePost(event, data.pin, Navigator);
     event.currentTarget.disabled = false;
+  }
+
+  async function HandleCommentVisibility(event) {
+    setCommentVisibility(!commentVisibility);
   }
 
   return (
@@ -381,14 +395,26 @@ export function Pin() {
             startingCenter={coordinates}
             defaultZoom={14}
           ></App>
-          <p>{comment}</p>
+          <p>{commentForm.comment}</p>
           <img src={`/public/storage/${image}`} alt=""></img>
         </article>
       </section>
-      {/* <section id="replies"> */}
-      {/*   <h2>Replies</h2> */}
-      {/*   <ul></ul> */}
-      {/* </section> */}
+      <section id="Comments" className={"flex flex-col gap-3"}>
+        <div className={"flex flex-row justify-between"}>
+          <h2>Comments</h2>
+          <button type="button" onClick={HandleCommentVisibility}>
+            Comment
+          </button>
+        </div>
+
+        {commentVisibility ? (
+          <CreateComment
+            commentForm={commentForm}
+            setCommentFormState={setCommentForm}
+          />
+        ) : undefined}
+        <div className={"flex flex-col gap-3"}></div>
+      </section>
     </>
   );
 }
