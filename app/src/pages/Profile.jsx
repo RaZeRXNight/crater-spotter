@@ -1,10 +1,16 @@
 import axios from "axios";
 import { useState } from "react";
-import { useLoaderData, useNavigate } from "react-router";
+import { useLoaderData, useNavigate, useOutletContext } from "react-router";
 import { toast } from "react-toastify";
 import { Pagination } from "../components/paginations";
 import "../css/Home.css";
 import { getPins, getUserPins, RenderPins } from "./Pins";
+
+export function isAuthorized(primaryUser, otherUser) {
+  if (primaryUser.id && otherUser.id) {
+    return primaryUser.id == otherUser.id || otherUser.authLevel > 1;
+  }
+}
 
 /*
  * Gets the current user, authenticating their session if they're logged in.
@@ -130,15 +136,16 @@ export function Dashboard() {
 
 export function UserProfile() {
   const userdata = useLoaderData();
+  const user = useOutletContext();
 
-  const { user, startingPins } = userdata;
+  const { user: userProfile, startingPins } = userdata;
   const [pins, setPins] = useState(startingPins.rows);
   const [page, setPage] = useState(1);
   const perPage = 3;
 
   async function HandlePinPageChange(newPage, perPage) {
     const data = await getPins({
-      userid: user.id,
+      userid: userProfile.id,
       page: newPage,
       perPage: perPage,
     });
@@ -146,10 +153,36 @@ export function UserProfile() {
     return data.count;
   }
 
+  async function HandleProfileSuspension(event) {}
+
+  async function HandleProfileDeletion() {}
+
   return (
     <>
       <section>
-        <h2>{user ? user.username : "Unknown"}'s Profile</h2>
+        <h2>{userProfile ? userProfile.username : "Unknown"}'s Profile</h2>
+        {isAuthorized(userProfile, user.user)
+          ? (function () {
+              return (
+                <>
+                  <button
+                    onClick={HandleProfileSuspension}
+                    color="red"
+                    type="button"
+                  >
+                    {!userProfile.authLevel ? "Unsuspend" : "Suspend"}
+                  </button>
+                  <button
+                    onClick={HandleProfileDeletion}
+                    color="red"
+                    type="button"
+                  >
+                    Delete
+                  </button>
+                </>
+              );
+            })()
+          : undefined}
       </section>
       <section id="posts" className={"flex flex-col gap-3"}>
         <h2>User Posts</h2>
@@ -160,7 +193,7 @@ export function UserProfile() {
           perPage={perPage}
         />
         <div className="flex flex-col gap-3">
-          {<RenderPins rows={pins} user={user} />}
+          {<RenderPins rows={pins} user={userProfile} />}
         </div>
         <Pagination
           page={page}

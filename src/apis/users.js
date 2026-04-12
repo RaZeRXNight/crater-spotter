@@ -55,10 +55,43 @@ export default function userRouter(Router, usersModel, sessionStore) {
     });
   });
 
-  Router.delete("/user/:id", (req, res) => {
-    res.json({
-      message: "Delete User",
-    });
+  Router.delete("/user/:id", async (req, res) => {
+    const session = req.session;
+    const sessionUserID = session.userid;
+    const id = req.headers.userid;
+    try {
+      // Perform action to delete
+      const query = await usersModel.findOne({ where: { id: id } });
+      const userQuery = await usersModel.findOne({
+        where: { id: sessionUserID },
+      });
+
+      if (!query) {
+        res.status(404).send("ERROR: USER DOES NOT EXIST");
+        throw new Error("ERROR: USER DOES NOT EXIST");
+      }
+
+      // Check if user is admin or authenticated user.
+      if (query.id != session.userid && userQuery.authLevel < 2) {
+        res.status(401).send("ERROR: UNAUTHORIZED");
+        throw new Error("ERROR: UNAUTHORIZED");
+      }
+
+      usersModel.destroy({
+        where: {
+          id: id,
+        },
+      });
+
+      res.json({
+        message: `${id} was deleted.`,
+      });
+    } catch (error) {
+      res.json({
+        error: true,
+        message: "ERROR: FAILED TO DELETE USER",
+      });
+    }
   });
 
   // User Authentication & Session Handling
@@ -106,7 +139,7 @@ export default function userRouter(Router, usersModel, sessionStore) {
         const newUser = await usersModel.create({
           username: username,
           email: email,
-          authLevel: 0,
+          authLevel: 1,
           password: password,
         });
 
@@ -208,8 +241,8 @@ export default function userRouter(Router, usersModel, sessionStore) {
       });
     } catch (error) {
       res.json({
-        error,
-        message: "Delete pin",
+        error: true,
+        message: "ERROR: FAILED TO DELETE USER",
       });
     }
   });

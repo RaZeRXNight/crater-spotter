@@ -19,3 +19,19 @@ export async function CheckAndMakeDefaultAdminAccount(database) {
     console.error(error);
   }
 }
+
+export async function BasicAuth(sequelize, session) {
+  const userModel = sequelize.models.Users;
+
+  if (!session.userid) {
+    return false;
+  }
+
+  const user = await userModel.findByPk(session.userid);
+
+  if (user.authLevel < 1) {
+    return false;
+  }
+
+  return true;
+}

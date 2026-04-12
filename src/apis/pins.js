@@ -3,7 +3,7 @@ import process from "process";
 import { existsSync, unlink } from "fs";
 import multer from "multer";
 import { checkSchema } from "express-validator";
-import { Sequelize } from "sequelize";
+import { BasicAuth } from "../services/admin.js";
 
 export const upload = multer({
   limits: { fieldSize: 1048576 * 8 },
@@ -34,6 +34,7 @@ export default function pinRouter(Router, PinsModel) {
     "image/webp",
     "image/avif",
   ];
+
   // pin DB API
   // Routes
   Router.get("/pin/", async (req, res) => {
@@ -161,6 +162,12 @@ export default function pinRouter(Router, PinsModel) {
           throw new Error("Coordinates are Needed");
         }
 
+        const auth = BasicAuth(PinsModel.sequelize, session);
+
+        if (!auth) {
+          throw new Error("ERROR: UNAUTHORIZED");
+        }
+
         if (!authorid) {
           throw new Error("An Account is needed");
         }
@@ -214,6 +221,12 @@ export default function pinRouter(Router, PinsModel) {
         const oldData = query.dataValues;
         const newData = req.body;
 
+        const auth = BasicAuth(PinsModel.sequelize, session);
+
+        if (!auth) {
+          throw new Error("ERROR: UNAUTHORIZED");
+        }
+
         if (session.userid != query.authorid && userQuery.authLevel < 2) {
           res.json({ error: true, message: "ERROR: UNAUTHORIZED" });
           throw new Error("ERROR: UNAUTHORIZED");
@@ -248,6 +261,12 @@ export default function pinRouter(Router, PinsModel) {
       // Perform action to delete
       const query = await PinsModel.findOne({ where: { id: id } });
       const userQuery = await userModel.findByPk(session.userid);
+
+      const auth = BasicAuth(PinsModel.sequelize, session);
+
+      if (!auth) {
+        throw new Error("ERROR: UNAUTHORIZED");
+      }
 
       if (query.authorid != session.userid && userQuery.authLevel < 1) {
         throw new Error("ERROR: UNAUTHORIZED");

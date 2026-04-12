@@ -12,8 +12,11 @@ import {
   Pins,
   getUserPins,
   getPins,
+  getPin,
 } from "../pages/Pins.jsx";
 import { Dashboard, getUser, UserProfile } from "../pages/Profile.jsx";
+import { toast } from "react-toastify";
+import { getComments } from "../pages/Comments.jsx";
 
 // Loaders
 async function getUserLoader({ context }) {
@@ -39,17 +42,10 @@ async function PinDataLoader({ params }) {
 async function PinCommentDataLoader({ params }) {
   const id = params.id;
 
-  const pinData = await axios
-    .get(`/api/pin/${id}`)
-    .then(function (response) {
-      const data = response.data.message;
-      return data;
-    })
-    .catch(function (error) {
-      console.log(error);
-    });
+  const pinData = await getPin({ id });
+  const commentData = await getComments({ id });
   const userData = await getUser();
-  return { pin: pinData, user: userData, comments: null };
+  return { pin: pinData, user: userData, comments: commentData };
 }
 
 async function UserPinsLoader() {
