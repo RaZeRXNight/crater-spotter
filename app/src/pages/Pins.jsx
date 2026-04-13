@@ -7,7 +7,12 @@ import App from "../components/Maps.jsx";
 import { Pagination } from "../components/paginations.jsx";
 import "../css/articles.css";
 import "../css/forms.css";
-import { CreateComment, RenderComments, getComments } from "./Comments.jsx";
+import {
+  CreateComment,
+  HandleCommentFormSubmission,
+  RenderComments,
+  getComments,
+} from "./Comments.jsx";
 
 /**
  *
@@ -394,9 +399,9 @@ export function Pin() {
     comment: "",
   });
   const [page, setPage] = useState(1);
-  const [count, setCount] = useState(data.comments.count);
   const [comments, setComments] = useState(data.comments.rows || []);
   const [viewMoreVisibility, setViewMoreVisibility] = useState(true);
+  const [commentCoolDown, setCommentCoolDown] = useState(false);
 
   async function HandleDeletePost(event) {
     event.currentTarget.disabled = true;
@@ -424,8 +429,31 @@ export function Pin() {
 
     setComments([...comments, ...commentFetch.rows]);
     setPage(page + 1);
-    setCount(count + commentFetch.count);
     button.disabled = false;
+  }
+
+  async function HandleCommentForm(event) {
+    if (!commentCoolDown) {
+      setCommentCoolDown(true);
+
+      await HandleCommentFormSubmission(event, commentForm);
+
+      setTimeout(async function () {
+        const commentFetch = await getComments({ id, page: 1, perPage });
+        console.log(commentFetch);
+
+        if (1 * perPage > commentFetch.count) {
+          setViewMoreVisibility(false);
+        }
+
+        if (!commentFetch.count) {
+          return;
+        }
+
+        setComments([...commentFetch.rows]);
+        setPage(1);
+      }, 3000);
+    }
   }
 
   return (
@@ -434,7 +462,14 @@ export function Pin() {
         <article>
           <div>
             <h1>{title}</h1>
-            <a href={`/profile/${authorid}`}>{authorName}</a>
+            {
+              // if there isa valid id, we provide a link to the profile.
+              authorid ? (
+                <a href={`/profile/${authorid}`}>{authorName}</a>
+              ) : (
+                <h2>{authorName}</h2>
+              )
+            }
           </div>
           {
             // Shows User Edit and Delete if the User is Authorized
@@ -463,7 +498,7 @@ export function Pin() {
             // Shows the Comment Button if the user is logged in
             user ? (
               <button type="button" onClick={HandleCommentVisibility}>
-                Comment
+                New Comment
               </button>
             ) : undefined
           }
@@ -475,6 +510,7 @@ export function Pin() {
               <CreateComment
                 commentForm={commentForm}
                 setCommentFormState={setCommentForm}
+                HandleFormSubmission={HandleCommentForm}
               />
             ) : undefined
           }

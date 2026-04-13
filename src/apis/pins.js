@@ -113,18 +113,17 @@ export default function pinRouter(Router, PinsModel) {
 
   Router.get("/pin/:id", async (req, res) => {
     const id = req.params.id;
-    const header = req.headers;
 
     try {
       // Models
       const userModel = PinsModel.sequelize.models.Users;
-      const CommentModel = PinsModel.sequelize.models.Comments;
 
       // Variables
       const data = await PinsModel.findByPk(id);
       const authorid = data.dataValues.authorid;
       const author = await userModel.findByPk(authorid);
-      const username = author.dataValues.username;
+
+      const username = author ? author.dataValues.username : "Deleted User";
 
       // Response
       res.json({
@@ -202,7 +201,7 @@ export default function pinRouter(Router, PinsModel) {
           error: true,
           message: `ERROR: ${error.message}`,
         });
-        console.log(error);
+        console.error(error);
       }
     },
   );

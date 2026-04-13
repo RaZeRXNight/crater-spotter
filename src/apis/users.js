@@ -1,5 +1,7 @@
 import bcrypt from "bcrypt";
 import { checkSchema } from "express-validator";
+import { AdminAuth, BasicAuth } from "../services/admin.js";
+import { Op } from "sequelize";
 
 const saltRounds = 12;
 
@@ -36,7 +38,7 @@ export default function userRouter(Router, usersModel, sessionStore) {
 
       if (!user) {
         res.status(404).send("ERROR: USER NOT FOUND");
-        throw new ERROR("ERROR: USER NOT FOUND:where");
+        throw new ERROR("ERROR: USER NOT FOUND");
       }
 
       res.json({
@@ -49,16 +51,50 @@ export default function userRouter(Router, usersModel, sessionStore) {
     }
   });
 
-  Router.put("/user/:id", (req, res) => {
-    res.json({
-      message: "Change user information",
-    });
+  Router.put("/user/:id", async (req, res) => {
+    const session = req.session;
+    const headers = req.headers;
+    const action = headers.action;
+    const userid = req.params.id;
+
+    try {
+      const auth = await BasicAuth(usersModel.sequelize, session);
+      const adminAuth = await AdminAuth(usersModel.sequelize, session);
+
+      if (!auth) {
+        throw new Error("ERROR: UNAUTHORIZED");
+      }
+
+      const user = await usersModel.findByPk(userid);
+      if (adminAuth && action == "suspend" && user.authLevel < 2) {
+        const newAuthLevel = user.authLevel ? 0 : 1;
+
+        const updatedUser = await user.update({ authLevel: newAuthLevel });
+        res.json({
+          message: "Successfully Updated User",
+          authLevel: newAuthLevel,
+        });
+        return;
+      } else {
+        throw new Error("ERROR: UNAUTHORIZED");
+      }
+    } catch (error) {
+      res.json({
+        error: true,
+        message: error.message,
+      });
+      console.error(error);
+    }
   });
 
   Router.delete("/user/:id", async (req, res) => {
     const session = req.session;
     const sessionUserID = session.userid;
-    const id = req.headers.userid;
+    const id = req.params.id;
+
+    // Models
+    const sessionModel = usersModel.sequelize.models.Session;
+
     try {
       // Perform action to delete
       const query = await usersModel.findOne({ where: { id: id } });
@@ -67,15 +103,18 @@ export default function userRouter(Router, usersModel, sessionStore) {
       });
 
       if (!query) {
-        res.status(404).send("ERROR: USER DOES NOT EXIST");
         throw new Error("ERROR: USER DOES NOT EXIST");
       }
 
       // Check if user is admin or authenticated user.
       if (query.id != session.userid && userQuery.authLevel < 2) {
-        res.status(401).send("ERROR: UNAUTHORIZED");
         throw new Error("ERROR: UNAUTHORIZED");
       }
+
+      const userIdString = `\"userid\": ${id},`;
+      const sessions = await sessionModel.findAll({
+        where: { data: { [Op.like]: userIdString } },
+      });
 
       usersModel.destroy({
         where: {
@@ -89,8 +128,9 @@ export default function userRouter(Router, usersModel, sessionStore) {
     } catch (error) {
       res.json({
         error: true,
-        message: "ERROR: FAILED TO DELETE USER",
+        message: error.message,
       });
+      console.error(error);
     }
   });
 
@@ -99,14 +139,28 @@ export default function userRouter(Router, usersModel, sessionStore) {
   Router.get("/auth", async (req, res) => {
     const session = req.session;
 
-    if (session.userid) {
-      res.json({
-        id: session.userid,
-        username: session.username,
-        authLevel: session.authLevel,
-      });
-    } else {
-      res.status(401).send("ERROR: Unauthorized.");
+    const sessionModel = usersModel.sequelize.models.Session;
+
+    try {
+      const user = await usersModel.findByPk(session.userid);
+
+      if (!user) {
+        session.destroy();
+        res.status(404).send("ERROR: ACCOUNT NOT FOUND.");
+        throw new Error("ERROR: ACCOUNT NOT FOUND");
+      }
+
+      if (session.userid) {
+        res.json({
+          id: session.userid,
+          username: session.username,
+          authLevel: session.authLevel,
+        });
+      } else {
+        res.status(401).send("ERROR: Unauthorized.");
+      }
+    } catch (error) {
+      console.error(error);
     }
   });
 

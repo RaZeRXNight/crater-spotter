@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { AxiosHeaders } from "axios";
 import { useState } from "react";
 import { useLoaderData, useNavigate, useOutletContext } from "react-router";
 import { toast } from "react-toastify";
@@ -7,6 +7,8 @@ import "../css/Home.css";
 import { getPins, getUserPins, RenderPins } from "./Pins";
 
 export function isAuthorized(primaryUser, otherUser) {
+  console.log(primaryUser);
+  console.log(otherUser);
   if (primaryUser.id && otherUser.id) {
     return primaryUser.id == otherUser.id || otherUser.authLevel > 1;
   }
@@ -137,10 +139,12 @@ export function Dashboard() {
 export function UserProfile() {
   const userdata = useLoaderData();
   const user = useOutletContext();
+  const navigate = useNavigate();
 
   const { user: userProfile, startingPins } = userdata;
   const [pins, setPins] = useState(startingPins.rows);
   const [page, setPage] = useState(1);
+  const [profile, setProfile] = useState(userProfile);
   const perPage = 3;
 
   async function HandlePinPageChange(newPage, perPage) {
@@ -153,15 +157,61 @@ export function UserProfile() {
     return data.count;
   }
 
-  async function HandleProfileSuspension(event) {}
+  async function HandleProfileSuspension(event) {
+    event.target.disabled = true;
+    const res = axios
+      .put(
+        `/api/user/${profile.id}`,
+        {
+          username: profile.username,
+          authLevel: profile.authLevel,
+        },
+        {
+          headers: {
+            action: "suspend",
+          },
+        },
+      )
+      .then(function (response) {
+        const data = response.data.message;
+        if (response.data.error) {
+          toast.error(data);
+          return;
+        }
+        toast.success(data);
+        setProfile({ ...profile, authLevel: response.data.authLevel });
+        return response;
+      });
+    setTimeout(() => {
+      event.target.disabled = false;
+    }, 1000);
+  }
 
-  async function HandleProfileDeletion() {}
+  async function HandleProfileDeletion(event) {
+    if (
+      window.confirm(
+        `Are you sure you want to delete #${profile.id} ${profile.username}'s account?`,
+      )
+    ) {
+      axios.delete(`/api/user/${profile.id}`).then(function (params) {
+        const data = params.data.message;
+        if (params.data.error) {
+          toast.error(data);
+          return;
+        }
+        toast.success(data);
+        setTimeout(() => {
+          navigate("/");
+        }, 2000);
+      });
+    }
+  }
 
   return (
     <>
       <section>
-        <h2>{userProfile ? userProfile.username : "Unknown"}'s Profile</h2>
-        {isAuthorized(userProfile, user.user)
+        <h2>{profile ? profile.username : "Unknown"}'s Profile</h2>
+        {isAuthorized(profile, user.user)
           ? (function () {
               return (
                 <>
@@ -170,7 +220,7 @@ export function UserProfile() {
                     color="red"
                     type="button"
                   >
-                    {!userProfile.authLevel ? "Unsuspend" : "Suspend"}
+                    {!profile.authLevel ? "Unsuspend" : "Suspend"}
                   </button>
                   <button
                     onClick={HandleProfileDeletion}
@@ -193,7 +243,7 @@ export function UserProfile() {
           perPage={perPage}
         />
         <div className="flex flex-col gap-3">
-          {<RenderPins rows={pins} user={userProfile} />}
+          {<RenderPins rows={pins} user={profile} />}
         </div>
         <Pagination
           page={page}

@@ -1,5 +1,11 @@
 import axios from "axios";
-import { createBrowserRouter } from "react-router";
+import {
+  createBrowserRouter,
+  isRouteErrorResponse,
+  useLoaderData,
+  useNavigate,
+  useRouteError,
+} from "react-router";
 import MainLayout from "../layouts/MainLayout.jsx";
 import { authMiddleware } from "../middleware/authMiddleware.jsx";
 import Auth from "../pages/Auth.jsx";
@@ -15,7 +21,6 @@ import {
   getPin,
 } from "../pages/Pins.jsx";
 import { Dashboard, getUser, UserProfile } from "../pages/Profile.jsx";
-import { toast } from "react-toastify";
 import { getComments } from "../pages/Comments.jsx";
 
 // Loaders
@@ -69,74 +74,128 @@ async function UserProfileLoader({ params }) {
   };
 }
 
+function RootErrorBoundary() {
+  const navigate = useNavigate();
+  let error = useRouteError();
+  let data = useLoaderData();
+  if (isRouteErrorResponse(error)) {
+    return (
+      <>
+        <h1>
+          {error.status} {error.statusText}
+        </h1>
+        {data ? (
+          <>
+            {Object.keys(data).map(function (item) {
+              return <p>{item} not found</p>;
+            })}
+          </>
+        ) : undefined}
+      </>
+    );
+  } else if (error instanceof Error) {
+    return (
+      <div>
+        <h1>Error</h1>
+        {data ? (
+          <>
+            {Object.keys(data).map(function (item) {
+              if (!data[item]) {
+                return <p>{item.toUpperCase()} Was not Found</p>;
+              }
+            })}
+          </>
+        ) : undefined}
+        <button
+          onClick={function (params) {
+            navigate(-1);
+          }}
+          type="button"
+        >
+          Go Back
+        </button>
+      </div>
+    );
+  } else {
+    return <h1>Unknown Error</h1>;
+  }
+}
+
+const authRoutes = {
+  path: "/auth",
+  loader: getUserLoader,
+  element: <MainLayout />,
+  children: [{ index: true, element: <Auth /> }],
+};
+
+const pinRoutes = {
+  path: "/pin",
+  children: [
+    {
+      index: true,
+      element: <Pins perPage={10} />,
+      loader: async () => {
+        return { pins: await getPins({ perPage: 10, page: 1 }) };
+      },
+    },
+    {
+      path: "/pin/create",
+      middleware: [authMiddleware],
+      element: <CreatePin />,
+    },
+    {
+      path: "/pin/edit/:id",
+      middleware: [authMiddleware],
+      loader: PinDataLoader,
+      element: <EditPin />,
+    },
+    {
+      path: "/pin/:id",
+      ErrorBoundary: RootErrorBoundary,
+      loader: PinCommentDataLoader,
+      element: <Pin />,
+    },
+  ],
+};
+
+const dashboardRoutes = {
+  path: "/dashboard",
+  middleware: [authMiddleware],
+  children: [
+    {
+      index: true,
+      loader: UserPinsLoader,
+      element: <Dashboard />,
+    },
+  ],
+};
+
+const profileRoutes = {
+  path: "/profile",
+  children: [
+    {
+      path: "/profile/:id",
+      ErrorBoundary: RootErrorBoundary,
+      loader: UserProfileLoader,
+      element: <UserProfile />,
+    },
+  ],
+};
+
 const routes = [
   {
     path: "/",
-    loader: getUserLoader,
-    element: <MainLayout />,
-    children: [{ index: true, loader: fetchPinPageData, element: <Home /> }],
-  },
-  {
-    path: "/auth",
-    loader: getUserLoader,
-    element: <MainLayout />,
-    children: [{ index: true, element: <Auth /> }],
-  },
-  {
-    path: "/dashboard",
-    loader: getUserLoader,
-    middleware: [authMiddleware],
-    element: <MainLayout />,
-    children: [
-      {
-        index: true,
-        loader: UserPinsLoader,
-        element: <Dashboard />,
-      },
-    ],
-  },
-  {
-    path: "/pin",
+    ErrorBoundary: RootErrorBoundary,
     loader: getUserLoader,
     element: <MainLayout />,
     children: [
-      {
-        index: true,
-        element: <Pins perPage={10} />,
-        loader: async () => {
-          return { pins: await getPins({ perPage: 10, page: 1 }) };
-        },
-      },
-      {
-        path: "/pin/create",
-        middleware: [authMiddleware],
-        element: <CreatePin />,
-      },
-      {
-        path: "/pin/edit/:id",
-        middleware: [authMiddleware],
-        loader: PinDataLoader,
-        element: <EditPin />,
-      },
-      {
-        path: "/pin/:id",
-        loader: PinCommentDataLoader,
-        element: <Pin />,
-      },
+      { index: true, loader: fetchPinPageData, element: <Home /> },
+      dashboardRoutes,
+      pinRoutes,
+      profileRoutes,
     ],
   },
-  {
-    path: "/profile",
-    loader: getUserLoader,
-    element: <MainLayout />,
-    children: [
-      {
-        path: "/profile/:id",
-        loader: UserProfileLoader,
-        element: <UserProfile />,
-      },
-    ],
-  },
+  authRoutes,
 ];
 
 // Routes

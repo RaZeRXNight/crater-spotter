@@ -32,10 +32,18 @@ following folders:
 
 - `storage/` - For storing uploaded images and files.
 - `app/` - Being the front-end of the project, containing all of the react code.
+  - `src/components` - Components are created and defined here.
+  - `src/css` - CSS is defined within this folder.
+  - `src/layouts` - layouts like `/layouts/MainLayout` are defined here.
+  - `src/middleware` - Where middleware services are defined
+  - `src/pages` - Pages and their functionality is defined.
+  - `src/routes` - front-end routes are defined
 - `src/` - Being the essentials of how the server-side operates.
   - `src/database` - Where Databases may be migrated and defined.
   - `src/routes` - Where routes are defined.
   - `src/models` - Where Databases are Defined for usage of APIs.
+  - `src/apis` - API endpoints are defined here.
+  - `src/services` - where functions are defined for ease of use.
 
 ### Future Features
 
