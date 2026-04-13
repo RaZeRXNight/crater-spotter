@@ -282,13 +282,13 @@ export default function userRouter(Router, usersModel, sessionStore) {
         throw new Error("ERROR: UNAUTHORIZED");
       }
 
-      usersModel.destroy({
+      await usersModel.destroy({
         where: {
           id: id,
         },
       });
 
-      session.destroy();
+      await session.destroy();
 
       res.json({
         message: `${id} was deleted.`,
