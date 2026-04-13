@@ -17,11 +17,11 @@ function RegisterForm() {
     axios
       .post("/api/auth/register", userAuth)
       .then(function (response) {
-        toast(response);
+        toast(response.data.message);
         Navigate("/");
       })
       .catch(function (error) {
-        toast(error);
+        toast(error.message);
       });
   };
   return (
@@ -85,16 +85,24 @@ function LoginForm() {
     password: "",
   });
   const HandleLoginSubmit = function (event) {
+    event.currentTarget.disabled = true;
     event.preventDefault();
     axios
       .post("/api/auth/login", userAuth)
       .then(function (response) {
-        toast(response);
+        toast(response.data.message);
         Navigate("/");
       })
       .catch(function (error) {
-        toast(error);
+        const statusCode = error.status;
+
+        if (statusCode == 404) {
+          toast("User not Found");
+        } else if (statusCode == 401) {
+          toast("Authenitcation Failed");
+        }
       });
+    event.currentTarget.disabled = false;
   };
   return (
     <form action="/api/auth/login" onSubmit={HandleLoginSubmit} method="POST">
@@ -133,7 +141,8 @@ function LoginForm() {
 }
 
 function Logout() {
-  function HandleLogout(_event) {
+  function HandleLogout(event) {
+    event.currentTarget.disabled = true;
     axios
       .delete("/api/auth/logout")
       .then(function (response) {
@@ -141,8 +150,9 @@ function Logout() {
         Navigate("/");
       })
       .catch(function (error) {
-        toast(error);
+        toast(error.message);
       });
+    event.currentTarget.disabled = false;
   }
   return (
     <section className="h-1/3 w-1/3 self-center flex flex-col justify-center">

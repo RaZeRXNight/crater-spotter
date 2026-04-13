@@ -30,9 +30,14 @@ const router = function (database, sessionStore) {
 
   // Comment Routes
   const commentRouter = require("../apis/comments.js");
-  const commentsModel = Comments(database, usersModel, pinsModel);
+  const commentsModel = Comments(database);
   commentsModel.sync();
-  commentRouter.default(router, commentsModel, usersModel);
+  commentRouter.default(router, commentsModel);
+
+  // Relationships
+  usersModel.hasMany(pinsModel, {
+    foreignKey: "authorid",
+  });
 
   return router;
 };

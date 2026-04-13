@@ -7,12 +7,23 @@ import App from "../components/Maps.jsx";
 import { Pagination } from "../components/paginations.jsx";
 import "../css/articles.css";
 import "../css/forms.css";
+import {
+  CreateComment,
+  HandleCommentFormSubmission,
+  RenderComments,
+  getComments,
+} from "./Comments.jsx";
 
-export function isAuthorized(pin, user) {
-  if (pin && pin.authorid && user && user.id) {
-    return pin.authorid == user.id;
+/**
+ *
+ * Returns true if the user id is the same as the pin.authorid
+ * also returns true if the user authLevel is greater than 1
+ *
+ */
+export function isAuthorized(item, user) {
+  if (item && item.authorid && user && user.id) {
+    return item.authorid == user.id || user.authLevel > 1;
   }
-  return false;
 }
 
 /**
@@ -54,10 +65,10 @@ export async function getUserPins({ page, perPage }) {
       },
     })
     .then(function (response) {
-      return response.data.message;
+      return response.data;
     })
     .catch(function (error) {
-      toast(error);
+      toast.error(error);
       return null;
     });
   return data;
@@ -68,11 +79,12 @@ export async function getUserPins({ page, perPage }) {
  * input. Number page and Number perPage
  * return. { pins, count } or null on failure
  */
-export async function getPins({ page, perPage }) {
+export async function getPins({ userid = null, page, perPage }) {
   const data = await axios
     .get("/api/pin/", {
       headers: {
         Accept: "application/json",
+        userid: userid,
         perPage: perPage || 10,
         page: page || 1,
       },
@@ -85,8 +97,21 @@ export async function getPins({ page, perPage }) {
       return responseObject;
     })
     .catch(function (error) {
-      toast(error);
+      toast.error(error.message);
       return null;
+    });
+  return data;
+}
+
+export async function getPin({ id }) {
+  const data = await axios
+    .get(`/api/pin/${id}`)
+    .then(function (response) {
+      const data = response.data.message;
+      return data;
+    })
+    .catch(function (error) {
+      console.log(error);
     });
   return data;
 }
@@ -103,6 +128,38 @@ export async function fetchPinPageData({ params }) {
 
   return { pins: pinData };
 }
+
+/**
+ * fetches the User Pin Page Data and returns an object
+ */
+export async function fetchUserPinPageData({ params }) {
+  const perPage = params.perPage || 10;
+  const page = params.page || 1;
+  const userid = params.authorid;
+
+  const pinData = await getPins({
+    userid: userid,
+    perPage: perPage,
+    page: page,
+  });
+  return { pins: pinData };
+}
+
+export const DeletePost = async function (event, pin, Navigator) {
+  if (window.confirm(`Are you sure you want to delete ${pin.title} post?`)) {
+    axios
+      .delete(`/api/pin/${pin.id}`)
+      .then(function (response) {
+        toast.success(response);
+        if (!response.data.error) {
+          Navigator("/pin/");
+        }
+      })
+      .catch(function (error) {
+        toast.error(error.message);
+      });
+  }
+};
 
 export function CreatePin() {
   const context = useOutletContext();
@@ -128,7 +185,7 @@ export function CreatePin() {
     [form],
   );
 
-  async function HandleSetCurrentLocation(event) {
+  async function HandleSetCurrentLocation() {
     navigator.geolocation.getCurrentPosition(
       function (position) {
         const coords = position.coords;
@@ -145,6 +202,7 @@ export function CreatePin() {
   }
 
   const HandleSubmit = async function (event) {
+    event.currentTarget.disabled = true;
     event.preventDefault();
     const fileInput = document.querySelector("#file_upload");
     const file = fileInput.files[0];
@@ -159,12 +217,13 @@ export function CreatePin() {
 
     axios.post("/api/pin", formData).then(function (request) {
       if (request.data.error) {
-        toast(request.data.message);
+        toast.error(request.data.message);
       } else {
-        toast(request.data.message);
+        toast.success(request.data.message);
         navigate(`/pin/${request.data.id}`);
       }
     });
+    event.currentTarget.disabled = false;
   };
 
   return (
@@ -228,19 +287,6 @@ export function CreatePin() {
   );
 }
 
-export const DeletePost = async function (event, pin, Navigator) {
-  const button = event.currentTarget;
-  button.disabled = true;
-  if (window.confirm(`Are you sure you want to delete ${pin.title} post?`)) {
-    axios.delete(`/api/pin/${pin.id}`).then(function (response) {
-      toast(response);
-      if (!response.data.error) {
-        Navigator("/pin/");
-      }
-    });
-  }
-};
-
 export function EditPin() {
   const context = useOutletContext();
   const data = useLoaderData();
@@ -270,6 +316,7 @@ export function EditPin() {
   );
 
   const HandleSubmit = async function (event) {
+    event.currentTarget.disabled = true;
     event.preventDefault();
     axios
       .put(`/api/pin/${id}`, form, {
@@ -277,12 +324,13 @@ export function EditPin() {
       })
       .then(function (request) {
         if (request.data.error) {
-          toast(request.data.message);
+          toast.error(request.data.message);
         } else {
-          toast(request.data.message);
+          toast.success(request.data.message);
           navigate(`/pin/${id}`);
         }
       });
+    event.currentTarget.disabled = false;
   };
 
   return (
@@ -336,8 +384,24 @@ export function Pin() {
   const Navigator = useNavigate();
   const data = useLoaderData();
   const user = useOutletContext().user;
-  const { id, image, title, comment, lat, lng } = data.pin;
+  const perPage = 10;
+
+  // Pin Data
+  const { id, authorid, authorName, image, title, comment, lat, lng } =
+    data.pin;
   const coordinates = { lat, lng };
+
+  const [commentVisibility, setCommentVisibility] = useState(false);
+  const [commentForm, setCommentForm] = useState({
+    PinParent: id,
+    CommentParent: null,
+    replyLevel: 0,
+    comment: "",
+  });
+  const [page, setPage] = useState(1);
+  const [comments, setComments] = useState(data.comments.rows || []);
+  const [viewMoreVisibility, setViewMoreVisibility] = useState(true);
+  const [commentCoolDown, setCommentCoolDown] = useState(false);
 
   async function HandleDeletePost(event) {
     event.currentTarget.disabled = true;
@@ -345,19 +409,80 @@ export function Pin() {
     event.currentTarget.disabled = false;
   }
 
+  async function HandleCommentVisibility() {
+    setCommentVisibility(!commentVisibility);
+  }
+
+  async function HandleCommentFetch(event) {
+    const button = event.currentTarget;
+    button.disabled = true;
+
+    const commentFetch = await getComments({ id, page: page + 1, perPage });
+
+    if ((page + 1) * perPage > commentFetch.count) {
+      setViewMoreVisibility(false);
+    }
+
+    if (!commentFetch.count) {
+      return;
+    }
+
+    setComments([...comments, ...commentFetch.rows]);
+    setPage(page + 1);
+    button.disabled = false;
+  }
+
+  async function HandleCommentForm(event) {
+    if (!commentCoolDown) {
+      setCommentCoolDown(true);
+
+      await HandleCommentFormSubmission(event, commentForm);
+      HandleCommentVisibility();
+
+      setTimeout(async function () {
+        const commentFetch = await getComments({ id, page: 1, perPage });
+        console.log(commentFetch);
+
+        if (1 * perPage > commentFetch.count) {
+          setViewMoreVisibility(false);
+        }
+
+        if (!commentFetch.count) {
+          return;
+        }
+
+        setComments([...commentFetch.rows]);
+        setPage(1);
+      }, 1000);
+    }
+  }
+
   return (
     <>
       <section>
         <article>
-          <h1>{title}</h1>
-          {isAuthorized(data.pin, user) ? (
-            <div className="flex flex-row justify-end gap-3">
-              <button onClick={HandleDeletePost}>Delete</button>
-              <button type="button">
-                <a href={`/pin/edit/${id}`}>Edit</a>
-              </button>
-            </div>
-          ) : undefined}
+          <div>
+            <h1>{title}</h1>
+            {
+              // if there isa valid id, we provide a link to the profile.
+              authorid ? (
+                <a href={`/profile/${authorid}`}>{authorName}</a>
+              ) : (
+                <h2>{authorName}</h2>
+              )
+            }
+          </div>
+          {
+            // Shows User Edit and Delete if the User is Authorized
+            isAuthorized(data.pin, user) ? (
+              <div className="flex flex-row justify-end gap-3">
+                <button onClick={HandleDeletePost}>Delete</button>
+                <a href={`/pin/edit/${id}`}>
+                  <button type="button">Edit</button>
+                </a>
+              </div>
+            ) : undefined
+          }
           <App
             currentMarkerPosition={coordinates}
             startingCenter={coordinates}
@@ -367,10 +492,43 @@ export function Pin() {
           <img src={`/public/storage/${image}`} alt=""></img>
         </article>
       </section>
-      {/* <section id="replies"> */}
-      {/*   <h2>Replies</h2> */}
-      {/*   <ul></ul> */}
-      {/* </section> */}
+      <section id="Comments" className={"flex flex-col gap-3"}>
+        <div className={"flex flex-row justify-between"}>
+          <h2>Comments</h2>
+          {
+            // Shows the Comment Button if the user is logged in
+            user ? (
+              <button type="button" onClick={HandleCommentVisibility}>
+                New Comment
+              </button>
+            ) : undefined
+          }
+        </div>
+        <div>
+          {
+            // Shows the Comment Form if the button is pressed
+            commentVisibility ? (
+              <CreateComment
+                commentForm={commentForm}
+                setCommentFormState={setCommentForm}
+                HandleFormSubmission={HandleCommentForm}
+              />
+            ) : undefined
+          }
+        </div>
+
+        <div id="comment-section" className={"flex flex-col gap-3"}>
+          {comments ? RenderComments({ rows: comments, user }) : undefined}
+          {
+            // Shows the button to view more if the count isn't 0
+            viewMoreVisibility ? (
+              <button onClick={HandleCommentFetch} type="button">
+                View More
+              </button>
+            ) : undefined
+          }
+        </div>
+      </section>
     </>
   );
 }
@@ -394,9 +552,9 @@ export function Pins({ perPage = 10 }) {
     <>
       <section className="flex flex-row justify-around">
         <h1 className="flex-3">Pins</h1>
-        <button type="button">
-          <a href="/pin/create">Create Pin</a>
-        </button>
+        <a href="/pin/create">
+          <button type="button">Create Pin</button>
+        </a>
       </section>
       <section>
         <App markerPositions={pins} />

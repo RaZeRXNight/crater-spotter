@@ -3,6 +3,8 @@ import process from "process";
 import { existsSync, unlink } from "fs";
 import multer from "multer";
 import { checkSchema } from "express-validator";
+import { BasicAuth } from "../services/admin.js";
+
 export const upload = multer({
   limits: { fieldSize: 1048576 * 8 },
   dest: process.env.STORAGE_PATH,
@@ -32,11 +34,17 @@ export default function pinRouter(Router, PinsModel) {
     "image/webp",
     "image/avif",
   ];
+
   // pin DB API
   // Routes
   Router.get("/pin/", async (req, res) => {
+    const sequelizeInstance = PinsModel.sequelize;
+    const userModel = sequelizeInstance.models.Users;
+
+    // Cookie Session & Headers
     const session = req.session;
     const headers = req.headers;
+    const userid = headers.userid;
     const order = headers.order || "DESC";
 
     // Pagination Variables
@@ -46,6 +54,7 @@ export default function pinRouter(Router, PinsModel) {
     const startIndex = endIndex - perPage;
 
     try {
+      // Validation
       if (headers.accept != "application/json") {
         throw new Error("ERROR: INCORRECT FORMAT WANTED");
       }
@@ -69,10 +78,15 @@ export default function pinRouter(Router, PinsModel) {
         });
       } else {
         data = await PinsModel.findAndCountAll({
+          where: userid ? { authorid: userid } : null,
           order: [["createdAt", order]],
           offset: startIndex,
           limit: perPage,
         });
+      }
+
+      if (!data) {
+        throw new ERROR("ERROR: NO DATA FOUND");
       }
 
       // Limits amount of characters
@@ -93,24 +107,31 @@ export default function pinRouter(Router, PinsModel) {
         count: data.count,
       });
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   });
 
   Router.get("/pin/:id", async (req, res) => {
     const id = req.params.id;
-    try {
-      const data = await PinsModel.findByPk(id);
 
+    try {
+      // Models
+      const userModel = PinsModel.sequelize.models.Users;
+
+      // Variables
+      const data = await PinsModel.findByPk(id);
+      const authorid = data.dataValues.authorid;
+      const author = await userModel.findByPk(authorid);
+
+      const username = author ? author.dataValues.username : "Deleted User";
+
+      // Response
       res.json({
-        error: false,
-        message: data,
+        message: { ...data.dataValues, authorName: username },
       });
     } catch (error) {
-      res.json({
-        error: true,
-        message: `ERROR: Couldn't retrieve Pin #${id}`,
-      });
+      console.error(error);
+      res.status(500).send(`ERROR: Couldn't retrieve Pin #${id}`);
     }
   });
 
@@ -128,7 +149,7 @@ export default function pinRouter(Router, PinsModel) {
 
       try {
         // Image Validation
-        if (!ALLOWED_MIME_TYPES.includes(file.mimetype)) {
+        if (file && !ALLOWED_MIME_TYPES.includes(file.mimetype)) {
           unlink(file.path);
           throw new Error("Invalid file type");
         }
@@ -138,6 +159,12 @@ export default function pinRouter(Router, PinsModel) {
           throw new Error("A Title is Needed");
         } else if (lat === 0 && lng === 0) {
           throw new Error("Coordinates are Needed");
+        }
+
+        const auth = BasicAuth(PinsModel.sequelize, session);
+
+        if (!auth) {
+          throw new Error("ERROR: UNAUTHORIZED");
         }
 
         if (!authorid) {
@@ -155,7 +182,7 @@ export default function pinRouter(Router, PinsModel) {
         // Succeeds All Checks
         const pin = await PinsModel.create({
           title: title,
-          image: file.filename,
+          image: file ? file.filename : "",
           authorid: authorid,
           comment: comment,
           lat: lat,
@@ -174,7 +201,7 @@ export default function pinRouter(Router, PinsModel) {
           error: true,
           message: `ERROR: ${error.message}`,
         });
-        console.log(error);
+        console.error(error);
       }
     },
   );
@@ -183,15 +210,24 @@ export default function pinRouter(Router, PinsModel) {
     "/pin/:id/",
     checkSchema(PinSchema, ["body"]),
     async (req, res) => {
+      const userModel = PinsModel.sequelize.models.Users;
       const id = req.params.id;
       const session = req.session;
 
       try {
         const query = await PinsModel.findOne({ where: { id: id } });
+        const userQuery = await userModel.findByPk(session.userid);
         const oldData = query.dataValues;
         const newData = req.body;
 
-        if (session.userid != query.authorid) {
+        const auth = BasicAuth(PinsModel.sequelize, session);
+
+        if (!auth) {
+          throw new Error("ERROR: UNAUTHORIZED");
+        }
+
+        if (session.userid != query.authorid && userQuery.authLevel < 1) {
+          res.json({ error: true, message: "ERROR: UNAUTHORIZED" });
           throw new Error("ERROR: UNAUTHORIZED");
         }
 
@@ -210,23 +246,28 @@ export default function pinRouter(Router, PinsModel) {
           message: `SUCCESS: ID ${id} ${oldData.title} updated!`,
         });
       } catch (error) {
-        res.json({
-          error,
-          message: `ERROR: ID ${id} ${oldData.title} failed to update!`,
-        });
+        console.error(error);
       }
     },
   );
 
   Router.delete("/pin/:id", async (req, res) => {
+    const userModel = PinsModel.sequelize.models.Users;
     const id = req.params.id;
     const session = req.session;
 
     try {
       // Perform action to delete
       const query = await PinsModel.findOne({ where: { id: id } });
+      const userQuery = await userModel.findByPk(session.userid);
 
-      if (query.authorid != session.userid) {
+      const auth = BasicAuth(PinsModel.sequelize, session);
+
+      if (!auth) {
+        throw new Error("ERROR: UNAUTHORIZED");
+      }
+
+      if (query.authorid != session.userid && userQuery.authLevel < 1) {
         throw new Error("ERROR: UNAUTHORIZED");
       }
 

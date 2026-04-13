@@ -16,5 +16,6 @@ export default function Users(sequelize) {
       updatedAt: "updateTimestamp",
     },
   );
-  return sequelize.models.Users;
+  const userModel = sequelize.models.Users;
+  return userModel;
 }

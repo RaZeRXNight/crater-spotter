@@ -1,11 +1,12 @@
 import { DataTypes } from "sequelize";
 
-export default function Comments(sequelize, userModel, pinModel) {
+export default function Comments(sequelize) {
+  const userModel = sequelize.models.Users;
+  const pinModel = sequelize.models.Pins;
   sequelize.define(
     "Comments",
     {
       id: { autoIncrement: true, primaryKey: true, type: DataTypes.INTEGER },
-      image: { allowNull: true, type: DataTypes.STRING },
       replyLevel: { allowNull: false, type: DataTypes.INTEGER },
       authorid: {
         allowNull: true,
@@ -15,10 +16,7 @@ export default function Comments(sequelize, userModel, pinModel) {
           key: "id",
         },
       },
-      title: { allowNull: false, type: DataTypes.STRING },
       comment: { type: DataTypes.STRING },
-      lat: { allowNull: false, type: DataTypes.DOUBLE },
-      lng: { allowNull: false, type: DataTypes.DOUBLE },
       PinParent: {
         allowNull: false,
         type: DataTypes.INTEGER,
@@ -27,10 +25,6 @@ export default function Comments(sequelize, userModel, pinModel) {
       CommentParent: {
         allowNull: true,
         type: DataTypes.INTEGER,
-        // references: {
-        //   model: sequelize.models.Comments,
-        //   key: "id",
-        // },
       },
     },
     {

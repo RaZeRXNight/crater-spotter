@@ -4,45 +4,35 @@ const path = require("path");
 const { Sequelize } = require("sequelize");
 const session = require("express-session");
 const SequelizeStore = require("connect-session-sequelize")(session.Store);
+const { CheckAndMakeDefaultAdminAccount } = require("./src/services/admin.js");
+const { sessionSecrets } = require("./src/services/constants.js");
+const router = require("./src/routes/api.js");
 require("dotenv").config({
   path: ENVIRONMENT,
   override: true,
   debug: ENVIRONMENT ? true : false,
 });
 
+// Env Variables
+const databaseLocation = process.env.DATABASE;
+const sessionSecret = process.env.SESSION_SECRET;
+const host = process.env.HOST;
+const port = process.env.PORT;
+
 const database = new Sequelize({
   dialect: "sqlite",
-  storage: ".sqlite3",
+  storage: databaseLocation,
 });
 
 const sessionStore = new SequelizeStore({
   db: database,
 });
 
-// Env Variables
-const sessionSecret = process.env.SESSION_SECRET;
-const host = process.env.HOST;
-const port = process.env.PORT;
-
 const server = express();
+
 // Middleware
 server.use(express.json());
-server.use(
-  session({
-    secret: [sessionSecret],
-    store: sessionStore,
-    resave: false,
-    saveUninitialized: true,
-    cookie: function (req) {
-      var match = req.url.match(/^\/([^/]+)/);
-      return {
-        path: "/",
-        secure: req.secure || false,
-        maxAge: 60000 * 100 * 24,
-      };
-    },
-  }),
-);
+server.use(session(sessionSecrets(sessionSecret, sessionStore)));
 sessionStore.sync();
 
 // Public Storage Path
@@ -53,8 +43,6 @@ server.use(`/${process.env.STORAGE_PATH}`, express.static(storage_path));
 const dist_path = path.join(process.cwd(), "app", "dist");
 server.use(express.static(dist_path));
 
-// APIs
-const router = require("./src/routes/api.js");
 // Placed Session Store to pass in through here, Will Change Later.
 server.use("/api", router(database, sessionStore));
 
@@ -66,4 +54,8 @@ server.use("/", (req, res) =>
 // Server Starts up
 server.listen(port, host, () => {
   console.log(`Now Hosting on ${host}:${port}/`);
+  // Extra Functionality
+  setTimeout(() => {
+    CheckAndMakeDefaultAdminAccount(database);
+  }, 1000);
 });
