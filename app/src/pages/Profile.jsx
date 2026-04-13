@@ -1,4 +1,4 @@
-import axios, { AxiosHeaders } from "axios";
+import axios from "axios";
 import { useState } from "react";
 import { useLoaderData, useNavigate, useOutletContext } from "react-router";
 import { toast } from "react-toastify";
@@ -6,6 +6,9 @@ import { Pagination } from "../components/paginations";
 import "../css/Home.css";
 import { getPins, getUserPins, RenderPins } from "./Pins";
 
+/**
+ * Checks if the primary user is authorized to perform actions on the other user.
+ */
 export function isAuthorized(primaryUser, otherUser) {
   console.log(primaryUser);
   console.log(otherUser);
@@ -14,7 +17,7 @@ export function isAuthorized(primaryUser, otherUser) {
   }
 }
 
-/*
+/**
  * Gets the current user, authenticating their session if they're logged in.
  * Returns their user data { id, username }
  */
@@ -37,8 +40,7 @@ export async function getUser(userid = null) {
   return data;
 }
 
-export async function HandleLogout(event) {
-  event.currentTarget.disabled = true;
+export async function HandleLogout() {
   const data = await axios
     .delete("/api/auth/logout")
     .then(function () {
@@ -46,26 +48,24 @@ export async function HandleLogout(event) {
       return true;
     })
     .catch(function (error) {
-      toast.error(response.message);
+      toast.error(error.message);
       return false;
     });
   return data;
 }
 
-export async function HandleUserDeletion(event) {
-  const button = event.currentTarget;
-  button.disabled = true;
-
+export async function HandleUserDeletion() {
   if (window.confirm(`Are you sure you want to delete this account?`)) {
     const data = await axios
       .delete(`/api/auth/delete`)
-      .then(function () {
-        toast.success("Deleted User");
-        return true;
-      })
-      .catch(function (error) {
-        toast.error(error.message);
-        return false;
+      .then(function (response) {
+        const data = response.data.message;
+        if (response.data.error) {
+          toast.error(data);
+          return;
+        }
+        toast.success(data);
+        setTimeout(() => {}, 2000);
       });
     return data;
   }
@@ -111,7 +111,7 @@ export function Dashboard() {
 
   return (
     <>
-      <section id="posts">
+      <section id="posts" className={"flex flex-col gap-3"}>
         <h2>Recent Posts</h2>
         <div className="flex flex-col gap-3">
           <div>{<RenderPins rows={pins} user={user} />}</div>
@@ -123,7 +123,7 @@ export function Dashboard() {
           perPage={perPage}
         />
       </section>
-      <section>
+      <section className="flex flex-row justify-around ">
         <button onClick={HandleLogoutAndExit} type="button">
           Logout
         </button>
@@ -157,9 +157,8 @@ export function UserProfile() {
     return data.count;
   }
 
-  async function HandleProfileSuspension(event) {
-    event.target.disabled = true;
-    const res = axios
+  async function HandleProfileSuspension() {
+    axios
       .put(
         `/api/user/${profile.id}`,
         {
@@ -182,27 +181,23 @@ export function UserProfile() {
         setProfile({ ...profile, authLevel: response.data.authLevel });
         return response;
       });
-    setTimeout(() => {
-      event.target.disabled = false;
-    }, 1000);
+    setTimeout(() => {}, 1000);
   }
 
-  async function HandleProfileDeletion(event) {
+  async function HandleProfileDeletion() {
     if (
       window.confirm(
         `Are you sure you want to delete #${profile.id} ${profile.username}'s account?`,
       )
     ) {
-      axios.delete(`/api/user/${profile.id}`).then(function (params) {
-        const data = params.data.message;
-        if (params.data.error) {
+      axios.delete(`/api/user/${profile.id}`).then(function (response) {
+        const data = response.data.message;
+        if (response.data.error) {
           toast.error(data);
           return;
         }
         toast.success(data);
-        setTimeout(() => {
-          navigate("/");
-        }, 2000);
+        setTimeout(() => navigate("/"), 2000);
       });
     }
   }

@@ -129,6 +129,9 @@ export async function fetchPinPageData({ params }) {
   return { pins: pinData };
 }
 
+/**
+ * fetches the User Pin Page Data and returns an object
+ */
 export async function fetchUserPinPageData({ params }) {
   const perPage = params.perPage || 10;
   const page = params.page || 1;
@@ -143,8 +146,6 @@ export async function fetchUserPinPageData({ params }) {
 }
 
 export const DeletePost = async function (event, pin, Navigator) {
-  event.currentTarget.disabled = true;
-
   if (window.confirm(`Are you sure you want to delete ${pin.title} post?`)) {
     axios
       .delete(`/api/pin/${pin.id}`)
@@ -158,7 +159,6 @@ export const DeletePost = async function (event, pin, Navigator) {
         toast.error(error.message);
       });
   }
-  event.currentTarget.disabled = false;
 };
 
 export function CreatePin() {
@@ -185,7 +185,7 @@ export function CreatePin() {
     [form],
   );
 
-  async function HandleSetCurrentLocation(event) {
+  async function HandleSetCurrentLocation() {
     navigator.geolocation.getCurrentPosition(
       function (position) {
         const coords = position.coords;
@@ -409,7 +409,7 @@ export function Pin() {
     event.currentTarget.disabled = false;
   }
 
-  async function HandleCommentVisibility(event) {
+  async function HandleCommentVisibility() {
     setCommentVisibility(!commentVisibility);
   }
 
@@ -437,6 +437,7 @@ export function Pin() {
       setCommentCoolDown(true);
 
       await HandleCommentFormSubmission(event, commentForm);
+      HandleCommentVisibility();
 
       setTimeout(async function () {
         const commentFetch = await getComments({ id, page: 1, perPage });
@@ -452,7 +453,7 @@ export function Pin() {
 
         setComments([...commentFetch.rows]);
         setPage(1);
-      }, 3000);
+      }, 1000);
     }
   }
 

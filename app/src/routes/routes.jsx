@@ -24,7 +24,7 @@ import { Dashboard, getUser, UserProfile } from "../pages/Profile.jsx";
 import { getComments } from "../pages/Comments.jsx";
 
 // Loaders
-async function getUserLoader({ context }) {
+async function getUserLoader() {
   return { user: await getUser() };
 }
 
@@ -130,6 +130,8 @@ const authRoutes = {
 
 const pinRoutes = {
   path: "/pin",
+  loader: getUserLoader,
+  element: <MainLayout />,
   children: [
     {
       index: true,
@@ -146,6 +148,7 @@ const pinRoutes = {
     {
       path: "/pin/edit/:id",
       middleware: [authMiddleware],
+      ErrorBoundary: RootErrorBoundary,
       loader: PinDataLoader,
       element: <EditPin />,
     },
@@ -161,6 +164,8 @@ const pinRoutes = {
 const dashboardRoutes = {
   path: "/dashboard",
   middleware: [authMiddleware],
+  loader: getUserLoader,
+  element: <MainLayout />,
   children: [
     {
       index: true,
@@ -172,6 +177,8 @@ const dashboardRoutes = {
 
 const profileRoutes = {
   path: "/profile",
+  loader: getUserLoader,
+  element: <MainLayout />,
   children: [
     {
       path: "/profile/:id",
@@ -188,13 +195,11 @@ const routes = [
     ErrorBoundary: RootErrorBoundary,
     loader: getUserLoader,
     element: <MainLayout />,
-    children: [
-      { index: true, loader: fetchPinPageData, element: <Home /> },
-      dashboardRoutes,
-      pinRoutes,
-      profileRoutes,
-    ],
+    children: [{ index: true, loader: fetchPinPageData, element: <Home /> }],
   },
+  dashboardRoutes,
+  pinRoutes,
+  profileRoutes,
   authRoutes,
 ];
 

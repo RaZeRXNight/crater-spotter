@@ -1,6 +1,10 @@
 import bcrypt from "bcrypt";
 import { checkSchema } from "express-validator";
-import { AdminAuth, BasicAuth } from "../services/admin.js";
+import {
+  AdminAuth,
+  BasicAuth,
+  CheckAndMakeDefaultAdminAccount,
+} from "../services/admin.js";
 import { Op } from "sequelize";
 
 const saltRounds = 12;
@@ -111,10 +115,10 @@ export default function userRouter(Router, usersModel, sessionStore) {
         throw new Error("ERROR: UNAUTHORIZED");
       }
 
-      const userIdString = `\"userid\": ${id},`;
-      const sessions = await sessionModel.findAll({
-        where: { data: { [Op.like]: userIdString } },
-      });
+      // const userIdString = `\"userid\": ${id},`;
+      // const sessions = await sessionModel.findAll({
+      //   where: { data: { [Op.like]: userIdString } },
+      // });
 
       usersModel.destroy({
         where: {
@@ -270,33 +274,27 @@ export default function userRouter(Router, usersModel, sessionStore) {
 
     try {
       // Perform action to delete
-      const query = await usersModel.findOne({ where: { id: id } });
+      const query = await usersModel.findByPk(id);
 
       if (!query) {
-        res.status(404).send("ERROR: USER DOES NOT EXIST");
         throw new Error("ERROR: USER DOES NOT EXIST");
       }
 
       if (query.id != session.userid) {
-        res.status(401).send("ERROR: UNAUTHORIZED");
         throw new Error("ERROR: UNAUTHORIZED");
       }
 
-      await usersModel.destroy({
-        where: {
-          id: id,
-        },
-      });
-
+      const userDeletion = await query.destroy({ where: { id: id } });
       await session.destroy();
 
       res.json({
         message: `${id} was deleted.`,
       });
     } catch (error) {
+      console.error(error);
       res.json({
         error: true,
-        message: "ERROR: FAILED TO DELETE USER",
+        message: error.message,
       });
     }
   });

@@ -73,10 +73,6 @@ export default function commentRouter(Router, CommentModel) {
         const username = author.dataValues.username;
         tempdata.authorName = username;
 
-        if (tempdata.comment.length > TEXTLIMIT) {
-          tempdata.comment = tempdata.comment.slice(0, TEXTLIMIT) + "...";
-        }
-
         return tempdata;
       }
 
