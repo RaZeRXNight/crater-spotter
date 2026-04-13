@@ -226,7 +226,7 @@ export default function pinRouter(Router, PinsModel) {
           throw new Error("ERROR: UNAUTHORIZED");
         }
 
-        if (session.userid != query.authorid && userQuery.authLevel < 2) {
+        if (session.userid != query.authorid && userQuery.authLevel < 1) {
           res.json({ error: true, message: "ERROR: UNAUTHORIZED" });
           throw new Error("ERROR: UNAUTHORIZED");
         }
