@@ -54,6 +54,7 @@ following folders:
 - Implement Locking Posts and User Accounts.
 - Implement Administration Dashboard and Features.
 - Nested Comments and Replies.
+- Password Changing
 
 ## How to Install
 
