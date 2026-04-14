@@ -101,26 +101,25 @@ export default function userRouter(Router, usersModel, sessionStore) {
 
     try {
       // Perform action to delete
-      const query = await usersModel.findOne({ where: { id: id } });
-      const userQuery = await usersModel.findOne({
-        where: { id: sessionUserID },
-      });
+      const requestedUser = await usersModel.findByPk(id);
+      const actingUser = await usersModel.findByPk(sessionUserID);
 
-      if (!query) {
+      if (!requestedUser) {
         throw new Error("ERROR: USER DOES NOT EXIST");
       }
 
       // Check if user is admin or authenticated user.
-      if (query.id != session.userid && userQuery.authLevel < 2) {
+      if (requestedUser.id != session.userid && actingUser.authLevel < 2) {
         throw new Error("ERROR: UNAUTHORIZED");
       }
 
-      // const userIdString = `\"userid\": ${id},`;
-      // const sessions = await sessionModel.findAll({
-      //   where: { data: { [Op.like]: userIdString } },
-      // });
+      // Deletes all the user's comments
+      const commentModel = usersModel.sequelize.models.Comments;
+      const deletedComments = await commentModel.destroy({
+        where: { authorid: id },
+      });
 
-      usersModel.destroy({
+      const deletedUser = await usersModel.destroy({
         where: {
           id: id,
         },
@@ -142,15 +141,14 @@ export default function userRouter(Router, usersModel, sessionStore) {
   // Authenticate User
   Router.get("/auth", async (req, res) => {
     const session = req.session;
-
-    const sessionModel = usersModel.sequelize.models.Session;
+    const userid = session.userid;
 
     try {
       const user = await usersModel.findByPk(session.userid);
 
-      if (!user) {
+      if (userid && !user) {
         session.destroy();
-        res.status(404).send("ERROR: ACCOUNT NOT FOUND.");
+        res.status(401).send("ERROR: ACCOUNT NOT FOUND.");
         throw new Error("ERROR: ACCOUNT NOT FOUND");
       }
 
@@ -179,9 +177,9 @@ export default function userRouter(Router, usersModel, sessionStore) {
 
       try {
         // Validate Credentials
-
         const email = body.email;
         const username = body.username;
+
         // Encrypt Password
         const password = await bcrypt
           .hash(body.password, saltRounds)
@@ -259,11 +257,19 @@ export default function userRouter(Router, usersModel, sessionStore) {
   // Logs User Out
   Router.delete("/auth/logout", (req, res) => {
     const session = req.session;
-    if (session.userid) {
-      session.destroy();
 
+    try {
+      if (session.userid) {
+        session.destroy();
+
+        res.json({
+          message: `Logged Out, Bye ${session.username}`,
+        });
+      }
+    } catch (error) {
+      console.error(error);
       res.json({
-        message: `Logged Out, Bye ${session.username}`,
+        message: "ERROR: LOGOUT FAILED",
       });
     }
   });
@@ -283,6 +289,11 @@ export default function userRouter(Router, usersModel, sessionStore) {
       if (query.id != session.userid) {
         throw new Error("ERROR: UNAUTHORIZED");
       }
+
+      const commentModel = usersModel.sequelize.models.Comments;
+      const deletedComments = await commentModel.destroy({
+        where: { PinParent: id },
+      });
 
       const userDeletion = await query.destroy({ where: { id: id } });
       await session.destroy();

@@ -97,6 +97,7 @@ function RootErrorBoundary() {
     return (
       <div>
         <h1>Error</h1>
+        <p>{error.message}</p>
         {data ? (
           <>
             {Object.keys(data).map(function (item) {
@@ -178,6 +179,7 @@ const dashboardRoutes = {
 const profileRoutes = {
   path: "/profile",
   loader: getUserLoader,
+  middleware: [authMiddleware],
   element: <MainLayout />,
   children: [
     {

@@ -10,8 +10,6 @@ import { getPins, getUserPins, RenderPins } from "./Pins";
  * Checks if the primary user is authorized to perform actions on the other user.
  */
 export function isAuthorized(primaryUser, otherUser) {
-  console.log(primaryUser);
-  console.log(otherUser);
   if (primaryUser.id && otherUser.id) {
     return primaryUser.id == otherUser.id || otherUser.authLevel > 1;
   }
@@ -206,7 +204,7 @@ export function UserProfile() {
     <>
       <section>
         <h2>{profile ? profile.username : "Unknown"}'s Profile</h2>
-        {isAuthorized(profile, user.user)
+        {user.user && isAuthorized(profile, user.user)
           ? (function () {
               return (
                 <>

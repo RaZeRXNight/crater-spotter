@@ -55,6 +55,7 @@ following folders:
 - Implement Administration Dashboard and Features.
 - Nested Comments and Replies.
 - Password Changing
+- Minimize Session Request Loads.
 
 ## How to Install
 

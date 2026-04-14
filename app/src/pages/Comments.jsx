@@ -47,20 +47,11 @@ export async function getComments({ id, page, perPage }) {
   return commentData;
 }
 
-function massDisableChildren(node, bool) {
-  const elements = node.elements;
-  for (let element of elements) {
-    element.disabled = bool;
-  }
-  // node.elements.map((element) => {
-  //   element.disabled = bool;
-  // });
-}
-
 export async function HandleCommentFormSubmission(event, commentForm) {
   event.preventDefault();
+  event.currentTarget.reset();
 
-  axios
+  const data = await axios
     .post("/api/comment", commentForm)
     .then(function (response) {
       const data = response.data.message;
@@ -68,7 +59,6 @@ export async function HandleCommentFormSubmission(event, commentForm) {
         toast.error(data);
         return null;
       }
-      setTimeout(() => {}, 1000);
       toast.success("Created Comment");
       return data;
     })
@@ -84,7 +74,7 @@ export function CreateComment({
 }) {
   return (
     <>
-      <form onSubmit={HandleFormSubmission}>
+      <form method="POST" onSubmit={HandleFormSubmission}>
         <fieldset>
           <legend>Comment</legend>
           <textarea
@@ -109,10 +99,7 @@ export function CreateComment({
 }
 
 export function Comment({ id, authorid, authorName, comment, admin = false }) {
-  const DeletePost = async function (event) {
-    const button = event.currentTarget;
-    button.disabled = true;
-
+  async function DeletePost() {
     if (window.confirm(`Are you sure you want to delete this comment?`)) {
       axios.delete(`/api/comment/${id}`).then(function (response) {
         const data = response.data.message;
@@ -125,7 +112,7 @@ export function Comment({ id, authorid, authorName, comment, admin = false }) {
         return false;
       });
     }
-  };
+  }
 
   return (
     <div key={id} id={`comment_card_${id}`}>

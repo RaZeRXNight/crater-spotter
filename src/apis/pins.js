@@ -271,21 +271,23 @@ export default function pinRouter(Router, PinsModel) {
         throw new Error("ERROR: UNAUTHORIZED");
       }
 
+      // Delete any image associate with the pin
       const file_path = path.join(STORAGE_PATH, query.image);
       const file_status = existsSync(file_path, constants.F_OK);
-      console.log(query.image);
-      console.log(file_path);
-      console.log(file_status);
-
       if (query.image && file_status) {
         unlink(file_path, (err) => {
           if (err) {
-            console.error(`Failed to delete file: ${err}`);
+            throw new Error(`ERROR: Failed to delete file: ${err}`);
           }
         });
       }
 
-      PinsModel.destroy({
+      const commentModel = PinsModel.sequelize.models.Comments;
+      const deletedComments = await commentModel.destroy({
+        where: { PinParent: id },
+      });
+
+      const deletedPins = await PinsModel.destroy({
         where: {
           id: id,
         },
@@ -297,8 +299,8 @@ export default function pinRouter(Router, PinsModel) {
     } catch (error) {
       console.error(error);
       res.json({
-        error,
-        message: "Delete pin",
+        error: true,
+        message: error.message,
       });
     }
   });
