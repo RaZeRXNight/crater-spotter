@@ -1,6 +1,6 @@
 import path from "path";
 import process from "process";
-import { existsSync, unlink } from "fs";
+import { accessSync, constants, existsSync, rm, unlink } from "fs";
 import multer from "multer";
 import { checkSchema } from "express-validator";
 import { BasicAuth } from "../services/admin.js";
@@ -272,8 +272,17 @@ export default function pinRouter(Router, PinsModel) {
       }
 
       const file_path = path.join(STORAGE_PATH, query.image);
-      if (query.image && existsSync(file_path)) {
-        unlink(file_path);
+      const file_status = existsSync(file_path, constants.F_OK);
+      console.log(query.image);
+      console.log(file_path);
+      console.log(file_status);
+
+      if (query.image && file_status) {
+        unlink(file_path, (err) => {
+          if (err) {
+            console.error(`Failed to delete file: ${err}`);
+          }
+        });
       }
 
       PinsModel.destroy({
@@ -286,6 +295,7 @@ export default function pinRouter(Router, PinsModel) {
         message: `${id} was deleted.`,
       });
     } catch (error) {
+      console.error(error);
       res.json({
         error,
         message: "Delete pin",

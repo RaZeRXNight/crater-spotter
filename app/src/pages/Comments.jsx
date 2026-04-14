@@ -58,9 +58,7 @@ function massDisableChildren(node, bool) {
 }
 
 export async function HandleCommentFormSubmission(event, commentForm) {
-  const form = event.currentTarget;
   event.preventDefault();
-  massDisableChildren(form, true);
 
   axios
     .post("/api/comment", commentForm)
@@ -77,7 +75,6 @@ export async function HandleCommentFormSubmission(event, commentForm) {
     .catch(function (error) {
       toast.error(error.message);
     });
-  massDisableChildren(form, false);
 }
 
 export function CreateComment({
@@ -95,6 +92,7 @@ export function CreateComment({
             name="comment"
             value={commentForm.comment}
             height={"full"}
+            required
             placeholder="Comment Here"
             onChange={function (params) {
               setCommentFormState({

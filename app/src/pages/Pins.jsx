@@ -202,7 +202,6 @@ export function CreatePin() {
   }
 
   const HandleSubmit = async function (event) {
-    event.currentTarget.disabled = true;
     event.preventDefault();
     const fileInput = document.querySelector("#file_upload");
     const file = fileInput.files[0];
@@ -216,6 +215,7 @@ export function CreatePin() {
     formData.append("lng", form.coordinates.lng);
 
     axios.post("/api/pin", formData).then(function (request) {
+      console.log("hey");
       if (request.data.error) {
         toast.error(request.data.message);
       } else {
@@ -223,7 +223,6 @@ export function CreatePin() {
         navigate(`/pin/${request.data.id}`);
       }
     });
-    event.currentTarget.disabled = false;
   };
 
   return (
@@ -316,7 +315,6 @@ export function EditPin() {
   );
 
   const HandleSubmit = async function (event) {
-    event.currentTarget.disabled = true;
     event.preventDefault();
     axios
       .put(`/api/pin/${id}`, form, {
@@ -330,7 +328,6 @@ export function EditPin() {
           navigate(`/pin/${id}`);
         }
       });
-    event.currentTarget.disabled = false;
   };
 
   return (
@@ -404,9 +401,7 @@ export function Pin() {
   const [commentCoolDown, setCommentCoolDown] = useState(false);
 
   async function HandleDeletePost(event) {
-    event.currentTarget.disabled = true;
     DeletePost(event, data.pin, Navigator);
-    event.currentTarget.disabled = false;
   }
 
   async function HandleCommentVisibility() {
