@@ -83,6 +83,7 @@ You can simply clone the repository from `RaZeRXNight/crater-spotter`
 #### Dependencies
 
 1. run `npm install` to install all of the dependencies of the project.
+2. run `npm install` within the `/app` directory to install react dependencies.
 
 You may also instead Run the `./install.sh` script to install the dependencies
 
