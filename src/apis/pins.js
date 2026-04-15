@@ -59,7 +59,7 @@ export default function pinRouter(Router, PinsModel) {
         throw new Error("ERROR: INCORRECT FORMAT WANTED");
       }
       if (order && order != "ASC" && order != "DESC") {
-        throw new ERROR("ERROR: INCORRECT ORDER ENTERED");
+        throw new Error("ERROR: INCORRECT ORDER ENTERED");
       }
       if (perPage > UPPERLIMIT) {
         throw new Error("ERROR: INCORRECT PERPAGE WANTED");
@@ -86,7 +86,7 @@ export default function pinRouter(Router, PinsModel) {
       }
 
       if (!data) {
-        throw new ERROR("ERROR: NO DATA FOUND");
+        throw new Error("ERROR: NO DATA FOUND");
       }
 
       // Limits amount of characters

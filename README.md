@@ -4,9 +4,21 @@ crater-spotter is a small full-stack javascript project that interacts with
 the google maps api. It provides a forum for users to post about pot-holes and
 other road hazards, allowing users to pin their locations on a map. crater-spotter
 is built using react for the front-end and node/express js for the back-end. The
-database used is SQLite, and the project may be deployed using docker.
+database used is SQLite,
 
-## Features to Implement
+## Features
+
+With the current react app, you are able to do the following:
+
+- Navigate Google Maps and Drop a pin alongside a Post.
+  - Upload an image alongside your post.
+- Create an account, log in and out.
+  - View user profiles and their posts.
+  - View your own dashboard.
+- Comment on posts and view comments on posts.
+- Administrate your posts and comments, with the ability to delete them.
+
+### Implemented Features
 
 ### Front-end
 
@@ -14,18 +26,27 @@ database used is SQLite, and the project may be deployed using docker.
 - [ X ] Dashboard for authenticated users to view their posts and recent posts
 - [ X ] Post creation form with the ability to add a pin on the map.
 
-### Back-end
+#### Back-end
 
 - [ X ] User authentication and authorization
   - [ X ] Validation for image uploads and post content.
 - [ X ] Integration with Google Maps API to display pins and posts on the map.
 - [ X ] Database schema design for users, comments, and pins.
 
-## Features
+### Future Features
 
-With the current react app, you are able to do the following:
+- Rework Map Pins to avoid "Clumping", Have a list display all of the pins in
+  that area.
+- Look into Open Streets' Open Source API due to <https://www.bahamaslocal.com>
+  website usage of it.
+- Implement Locking Posts and User Accounts.
+- Implement Administration Dashboard and Features.
+- Nested Comments and Replies.
+- Password Changing
+- Minimize Session Request Loads.
+- Create a docker image for the project to allow for easier deployment.
 
-- Navigate Google Maps and Drop a pin alongside a Post.
+## Structure
 
 The structure of the back-end was modeled after Laravel's structure, with the
 following folders:
@@ -45,37 +66,39 @@ following folders:
   - `src/apis` - API endpoints are defined here.
   - `src/services` - where functions are defined for ease of use.
 
-### Future Features
-
-- Rework Map Pins to avoid "Clumping", Have a list display all of the pins in
-  that area.
-- Look into Open Streets' Open Source API due to <https://www.bahamaslocal.com>
-  website usage of it.
-- Implement Locking Posts and User Accounts.
-- Implement Administration Dashboard and Features.
-- Nested Comments and Replies.
-- Password Changing
-- Minimize Session Request Loads.
-
 ## How to Install
 
-You can simply clone the repository from `RaZeRXNight/crater-spotter` or
-pull the docker image from `razerxnight/crater-spotter`.
+You can simply clone the repository from `RaZeRXNight/crater-spotter`
 
 ### Clone the repository
 
+#### Credentials
+
 1. Create a `.env` by copying the `.env.example` file. Here you will use your
    own credentials, adjusting the port if you want.
-2. run `npm install` to install all of the dependencies of the project.
+2. You will also need to do the same on the front-end, creating
+   a `.env` file in the `app/` folder and filling out the credentials for the
+   google maps API.
 
-You may also instead Run the `.dev.sh` script to install the dependencies
-and run the project in development mode.
+#### Dependencies
 
-### Docker Install
+1. run `npm install` to install all of the dependencies of the project.
+
+You may also instead Run the `./install.sh` script to install the dependencies
 
 ## How to Use
 
+To deploy the project you can do the following:
+
+- Run `npm run build` to build the front-end.
+- Run `npm run start` to start the server and serve the front-end.
+
+It is once again recommended that the `.env` files are created and
+filed out with your own credentials.
+
 ## License
+
+Licensed under the GNU GENERAL PUBLIC LICENSE License. See `LICENSE` for more information.
 
 ## References
 

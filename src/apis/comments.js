@@ -35,7 +35,7 @@ export default function commentRouter(Router, CommentModel) {
         throw new Error("ERROR: INCORRECT FORMAT WANTED");
       }
       if (order && order != "ASC" && order != "DESC") {
-        throw new ERROR("ERROR: INCORRECT ORDER ENTERED");
+        throw new Error("ERROR: INCORRECT ORDER ENTERED");
       }
       if (perPage > UPPERLIMIT) {
         throw new Error("ERROR: INCORRECT PERPAGE WANTED");
@@ -59,7 +59,7 @@ export default function commentRouter(Router, CommentModel) {
       });
 
       if (!data) {
-        throw new ERROR("ERROR: NO DATA FOUND");
+        throw new Error("ERROR: NO DATA FOUND");
       }
 
       async function mapRows(row) {
@@ -103,7 +103,7 @@ export default function commentRouter(Router, CommentModel) {
         throw new Error("ERROR: INCORRECT FORMAT WANTED");
       }
       if (order && order != "ASC" && order != "DESC") {
-        throw new ERROR("ERROR: INCORRECT ORDER ENTERED");
+        throw new Error("ERROR: INCORRECT ORDER ENTERED");
       }
       if (perPage > UPPERLIMIT) {
         throw new Error("ERROR: INCORRECT PERPAGE WANTED");
@@ -127,7 +127,7 @@ export default function commentRouter(Router, CommentModel) {
       });
 
       if (!data) {
-        throw new ERROR("ERROR: NO DATA FOUND");
+        throw new Error("ERROR: NO DATA FOUND");
       }
 
       async function mapRows(row) {

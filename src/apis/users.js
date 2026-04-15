@@ -35,14 +35,14 @@ export default function userRouter(Router, usersModel, sessionStore) {
     try {
       if (!userid) {
         res.status(400).send("Invalid user id");
-        throw new ERROR("ERROR: NO USERID PROVIDED");
+        throw new Error("ERROR: NO USERID PROVIDED");
       }
 
       const user = await usersModel.findByPk(userid);
 
       if (!user) {
         res.status(404).send("ERROR: USER NOT FOUND");
-        throw new ERROR("ERROR: USER NOT FOUND");
+        throw new Error("ERROR: USER NOT FOUND");
       }
 
       res.json({
@@ -233,7 +233,7 @@ export default function userRouter(Router, usersModel, sessionStore) {
         }
 
         // Verify if Password Matches then Authenticate Session
-        if (bcrypt.compare(body.password, User.password)) {
+        if (await bcrypt.compare(body.password, User.password)) {
           session.userid = User.id;
           session.username = User.username;
           session.authLevel = User.authLevel;
