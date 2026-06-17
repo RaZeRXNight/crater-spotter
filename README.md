@@ -6,7 +6,7 @@ other road hazards, allowing users to pin their locations on a map. crater-spott
 is built using react for the front-end and node/express js for the back-end. The
 database used is SQLite,
 
-![Screenshot](https://imgur.com/a/rx1yRWC)
+![Screenshot](https://i.imgur.com/lTETNZf.png)
 
 ## Features
 
