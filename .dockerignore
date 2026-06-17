@@ -1,0 +1,53 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Node
+node_modules
+npm-debug.log
+npm-error.log
+yarn.lock
+yarn-error.log
+pnpm-lock.yaml
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+
+# Development
+dev.sh
+react-dev.sh
+.env.development.local
+
+# Build artifacts
+dist
+build
+
+# Documentation
+README.md
+Notes.md
+LICENSE
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Testing
+.test
+coverage
+
+# OS
+Thumbs.db

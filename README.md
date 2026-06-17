@@ -6,6 +6,8 @@ other road hazards, allowing users to pin their locations on a map. crater-spott
 is built using react for the front-end and node/express js for the back-end. The
 database used is SQLite,
 
+![Screenshot](https://imgur.com/a/rx1yRWC)
+
 ## Features
 
 With the current react app, you are able to do the following:
@@ -26,7 +28,7 @@ With the current react app, you are able to do the following:
 - [ X ] Dashboard for authenticated users to view their posts and recent posts
 - [ X ] Post creation form with the ability to add a pin on the map.
 
-#### Back-end
+### Back-end
 
 - [ X ] User authentication and authorization
   - [ X ] Validation for image uploads and post content.
@@ -40,7 +42,9 @@ With the current react app, you are able to do the following:
 - Look into Open Streets' Open Source API due to <https://www.bahamaslocal.com>
   website usage of it.
 - Implement Locking Posts and User Accounts.
+- Implement OAuth for easier sign-in and account creation.
 - Implement Administration Dashboard and Features.
+- Migrate to PostgreSQL for better performance and scalability.
 - Nested Comments and Replies.
 - Password Changing
 - Minimize Session Request Loads.
@@ -96,6 +100,23 @@ To deploy the project you can do the following:
 
 It is once again recommended that the `.env` files are created and
 filed out with your own credentials.
+
+### Docker
+
+```bash
+git clone https://github.com/RaZeRXNight/crater-spotter.git
+cd crater-spotter
+cp .env.example .env
+```
+
+Edit `.env` with your Google Maps API key and a session secret, then:
+
+```bash
+docker compose up --build
+```
+
+The app is served at `http://localhost:8000`. An admin account
+(`admin` / `password`) is auto-created on first run.
 
 ## License
 

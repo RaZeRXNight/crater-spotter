@@ -1,0 +1,34 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VITE_GOOGLE_MAPS_API_KEY: ${VITE_GOOGLE_MAPS_API_KEY}
+        VITE_APP_NAME: ${VITE_APP_NAME:-Crater Spotter}
+    container_name: crater-spotter-app
+    ports:
+      - "${PORT:-8000}:${PORT:-8000}"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=${PORT:-8000}
+      - DEBUG=false
+      - DATABASE=/app/data/crater-spotter.sqlite3
+      - SESSION_SECRET=${SESSION_SECRET}
+      - STORAGE_PATH=public/storage/
+    volumes:
+      - crater-data:/app/data
+      - crater-storage:/app/public/storage
+    networks:
+      - crater-network
+    restart: unless-stopped
+
+volumes:
+  crater-data:
+    driver: local
+  crater-storage:
+    driver: local
+
+networks:
+  crater-network:
+    driver: bridge

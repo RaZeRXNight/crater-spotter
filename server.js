@@ -17,7 +17,7 @@ require("dotenv").config({
 const databaseLocation = process.env.DATABASE;
 const sessionSecret = process.env.SESSION_SECRET;
 const host = process.env.HOST;
-const port = process.env.PORT;
+const port = process.env.PORT || 8000;
 
 const database = new Sequelize({
   dialect: "sqlite",
