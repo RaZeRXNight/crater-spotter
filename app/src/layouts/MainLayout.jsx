@@ -1,5 +1,4 @@
 import { Outlet, useLoaderData } from "react-router";
-import { ToastContainer } from "react-toastify";
 import "../css/Home.css";
 
 export default function MainLayout() {
@@ -9,7 +8,7 @@ export default function MainLayout() {
   return (
     <>
       <header>
-        <h1>{import.meta.env.VITE_APP_NAME}</h1>
+        <h1>Crater Spotter</h1>
         <nav>
           <a href="/">Home</a>
           <a href="/pin">Posts</a>
@@ -24,12 +23,6 @@ export default function MainLayout() {
           )}
         </nav>
       </header>
-      <ToastContainer
-        position={"bottom-center"}
-        closeOnClick={true}
-        pauseOnFocusLoss={false}
-        theme="dark"
-      />
       <main>
         <Outlet context={Auth} />
       </main>

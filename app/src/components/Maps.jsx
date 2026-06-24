@@ -1,8 +1,7 @@
 import { APIProvider, Map, AdvancedMarker } from "@vis.gl/react-google-maps";
-import { useNavigate } from "react-router";
+import { useNavigate, useRouteLoaderData } from "react-router";
 import { useLoaderData } from "react-router";
 
-const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 const DEFAULTCENTER = { lat: 25.033328, lng: -77.421165 };
 
 /**
@@ -17,6 +16,8 @@ const App = ({
   startingCenter,
   defaultZoom = 11,
 }) => {
+  const config = useRouteLoaderData("root");
+  const API_KEY = config?.GOOGLE_MAPS_API_KEY;
   const data = useLoaderData();
   const Navigator = useNavigate();
 
