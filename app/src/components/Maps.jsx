@@ -17,7 +17,7 @@ const App = ({
   defaultZoom = 11,
 }) => {
   const config = useRouteLoaderData("root");
-  const API_KEY = config?.GOOGLE_MAPS_API_KEY;
+  const API_KEY = config.GOOGLE_MAPS_API_KEY;
   const data = useLoaderData();
   const Navigator = useNavigate();
 
