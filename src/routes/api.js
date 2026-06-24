@@ -10,11 +10,6 @@ const { default: Users } = require("../models/users.js");
 const router = function (database, sessionStore) {
   // Home API
   const router = require("express").Router();
-  router.get("/", (req, res) => {
-    res.json({
-      message: "Hello World",
-    });
-  });
 
   // User Routes
   const userRouter = require("../apis/users.js");
@@ -33,6 +28,10 @@ const router = function (database, sessionStore) {
   const commentsModel = Comments(database);
   commentsModel.sync();
   commentRouter.default(router, commentsModel);
+
+  // Config Route
+  const configRouter = require("../apis/config.js");
+  configRouter.default(router);
 
   // Relationships
   usersModel.hasMany(pinsModel, {

@@ -22,10 +22,24 @@ import {
 } from "../pages/Pins.jsx";
 import { Dashboard, getUser, UserProfile } from "../pages/Profile.jsx";
 import { getComments } from "../pages/Comments.jsx";
+import RootLayout from "../layouts/RootLayout.jsx";
 
 // Loaders
 async function getUserLoader() {
   return { user: await getUser() };
+}
+
+async function RootLoader() {
+  const data = await axios
+    .get("/api/config")
+    .then((response) => {
+      return response.data.message;
+    })
+    .catch((error) => {
+      console.error(error);
+      return null;
+    });
+  return { ...data };
 }
 
 async function PinDataLoader({ params }) {
@@ -193,16 +207,25 @@ const profileRoutes = {
 
 const routes = [
   {
-    path: "/",
-    ErrorBoundary: RootErrorBoundary,
-    loader: getUserLoader,
-    element: <MainLayout />,
-    children: [{ index: true, loader: fetchPinPageData, element: <Home /> }],
+    id: "root",
+    element: <RootLayout />,
+    loader: RootLoader,
+    children: [
+      {
+        path: "/",
+        ErrorBoundary: RootErrorBoundary,
+        loader: getUserLoader,
+        element: <MainLayout />,
+        children: [
+          { index: true, loader: fetchPinPageData, element: <Home /> },
+        ],
+      },
+      dashboardRoutes,
+      pinRoutes,
+      profileRoutes,
+      authRoutes,
+    ],
   },
-  dashboardRoutes,
-  pinRoutes,
-  profileRoutes,
-  authRoutes,
 ];
 
 // Routes

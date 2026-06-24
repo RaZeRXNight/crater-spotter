@@ -1,6 +1,6 @@
 import { Outlet, useLoaderData } from "react-router";
-import { ToastContainer } from "react-toastify";
 import "../css/Home.css";
+import { ToastContainer } from "react-toastify";
 
 export default function MainLayout() {
   const Auth = useLoaderData();
@@ -9,7 +9,7 @@ export default function MainLayout() {
   return (
     <>
       <header>
-        <h1>{import.meta.env.VITE_APP_NAME}</h1>
+        <h1>Crater Spotter</h1>
         <nav>
           <a href="/">Home</a>
           <a href="/pin">Posts</a>

@@ -1,34 +1,26 @@
 services:
-  app:
+  backend:
+    container_name: crater-spotter-backend
     build:
       context: .
-      dockerfile: Dockerfile
-      args:
-        VITE_GOOGLE_MAPS_API_KEY: ${VITE_GOOGLE_MAPS_API_KEY}
-        VITE_APP_NAME: ${VITE_APP_NAME:-Crater Spotter}
-    container_name: crater-spotter-app
-    ports:
-      - "${PORT:-8000}:${PORT:-8000}"
+      dockerfile: Dockerfile.backend
+    env_file: .env
     environment:
       - HOST=0.0.0.0
-      - PORT=${PORT:-8000}
-      - DEBUG=false
-      - DATABASE=/app/data/crater-spotter.sqlite3
-      - SESSION_SECRET=${SESSION_SECRET}
-      - STORAGE_PATH=public/storage/
     volumes:
-      - crater-data:/app/data
-      - crater-storage:/app/public/storage
-    networks:
-      - crater-network
-    restart: unless-stopped
-
-volumes:
-  crater-data:
-    driver: local
-  crater-storage:
-    driver: local
-
-networks:
-  crater-network:
-    driver: bridge
+      - ./.sqlite3:/backend/.sqlite3
+      - ./public/storage:/backend/public/storage
+  frontend:
+    container_name: crater-spotter-frontend
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    volumes:
+      - ./nginx/certs/local.rsa.crt:/etc/nginx/certs/local.rsa.crt
+      - ./nginx/certs/local.rsa.key:/etc/nginx/certs/local.rsa.key
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - backend

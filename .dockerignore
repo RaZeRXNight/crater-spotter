@@ -33,7 +33,11 @@ react-dev.sh
 
 # Build artifacts
 dist
+app/dist
+app/node_modules
+nginx/certs/*
 build
+public/storage/*
 
 # Documentation
 README.md
