@@ -1,5 +1,6 @@
 import { Outlet, useLoaderData } from "react-router";
 import "../css/Home.css";
+import { ToastContainer } from "react-toastify";
 
 export default function MainLayout() {
   const Auth = useLoaderData();
@@ -23,6 +24,12 @@ export default function MainLayout() {
           )}
         </nav>
       </header>
+      <ToastContainer
+        position={"bottom-center"}
+        closeOnClick={true}
+        pauseOnFocusLoss={false}
+        theme="dark"
+      />
       <main>
         <Outlet context={Auth} />
       </main>
