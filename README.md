@@ -1,7 +1,7 @@
 # crater-spotter
 
 crater-spotter is a small full-stack javascript project that interacts with
-the google maps api. It provides a forum for users to post about pot-holes and
+the google maps API. It provides a forum for users to post about pot-holes and
 other road hazards, allowing users to pin their locations on a map. crater-spotter
 is built using react for the front-end and node/express js for the back-end. The
 database used is SQLite,
@@ -19,87 +19,6 @@ With the current react app, you are able to do the following:
   - View your own dashboard.
 - Comment on posts and view comments on posts.
 - Administrate your posts and comments, with the ability to delete them.
-
-### Implemented Features
-
-### Front-end
-
-- [ ] Proper Loading and Scaffolding for Data-Intensive Components.
-  - [ ] Loading Skeletons for posts, comments, and map markers
-  - [ ] Skeleton screens for user profiles and dashboard
-  - [ ] Progressive loading for map pins
-- [ ] Front-End Design Revamp
-  - [ ] Responsive design and mobile-friendly layouts
-  - [ ] Dark mode toggle and theme customization
-  - [ ] Accessibility improvements (ARIA labels, keyboard navigation)
-- [ ] Pin Searching and Filtering
-  - [ ] Autocomplete search bar for locations
-  - [ ] Filter pins by date, category, and severity
-  - [ ] Nearby pins view with radius slider
-- [ ] Improved Dashboard, and User Profile Management
-  - [ ] User search and filtering
-  - [ ] Edit profile and account settings
-  - [ ] Post Editing Functionality and Moderation Tools.
-
-### Back-end
-
-- [ ] Real-time Data Updates and Notifications
-  - [ ] WebSocket integration for real-time comment updates
-  - [ ] Push notifications for new comments on user posts
-  - [ ] Live map pin updates when new posts are created
-  - [ ] Real-time user activity indicators
-  - [ ] Socket-based chat or messaging system for users
-
-#### Auth
-
-- [ ] Implement OAuth 2.0 authentication with Google, GitHub, and Facebook providers
-- [ ] Session-based authentication with JWT refresh tokens
-- [ ] Two-factor authentication (2FA) with TOTP
-- [ ] Password reset flow with email verification
-- [ ] Account lockout after failed login attempts
-
-#### Administration & Moderation
-
-- Implement Locking Posts and User Accounts.
-- [ ] Image recognition and Verification
-  - [ ] Image upload validation and compression
-  - [ ] Automated image moderation for inappropriate content
-  - [ ] OCR for reading road signs from uploaded images
-
-#### Security
-
-- [ ] Implement SQL injection prevention measures (parameterized queries)
-- [ ] TLS/SSL certificate configuration and HTTPS enforcement
-- [ ] Implement Helmet.js for secure HTTP headers
-- [ ] Add Content Security Policy (CSP) headers
-- [ ] CORS configuration and best practices
-- [ ] Implement HSTS (HTTP Strict Transport Security) headers
-- [ ] Add XSS protection headers and input sanitization
-- [ ] Set up proper error handling that doesn't leak sensitive information
-
-#### API
-
-- [ ] Security Hardening and Rate Limiting
-  - [ ] Implement rate limiting on API endpoints to prevent abuse
-  - [ ] Add input sanitization and validation for all user inputs
-  - [ ] Implement CSRF protection for state-changing requests
-  - [ ] Set up proper CORS policies
-  - [ ] Add request logging and monitoring for suspicious activity
-  - [ ] Implement secure session management with HTTP-only cookies
-- [ ] API Optimization
-  - [ ] Implement caching layer (Redis or in-memory) for frequently accessed data
-  - [ ] Optimize API response payloads with field selection
-    - [ ] Implement "Globbing" for Pin Search and Filtering
-  - [ ] Add API versioning for backward compatibility
-  - [ ] Implement request batching for related data
-
-#### Database
-
-- [ ] Database Optimization
-  - [ ] Implement database indexing for faster queries
-  - [ ] Add pagination for posts and comments
-  - [ ] Database connection pooling for better performance
-  - [ ] Solve N + 1 query problem in database queries
 
 ### Future Features
 
