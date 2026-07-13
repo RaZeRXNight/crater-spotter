@@ -24,16 +24,82 @@ With the current react app, you are able to do the following:
 
 ### Front-end
 
-- [ X ] Landing page with a map of pins and recent posts
-- [ X ] Dashboard for authenticated users to view their posts and recent posts
-- [ X ] Post creation form with the ability to add a pin on the map.
+- [ ] Proper Loading and Scaffolding for Data-Intensive Components.
+  - [ ] Loading Skeletons for posts, comments, and map markers
+  - [ ] Skeleton screens for user profiles and dashboard
+  - [ ] Progressive loading for map pins
+- [ ] Front-End Design Revamp
+  - [ ] Responsive design and mobile-friendly layouts
+  - [ ] Dark mode toggle and theme customization
+  - [ ] Accessibility improvements (ARIA labels, keyboard navigation)
+- [ ] Pin Searching and Filtering
+  - [ ] Autocomplete search bar for locations
+  - [ ] Filter pins by date, category, and severity
+  - [ ] Nearby pins view with radius slider
+- [ ] Improved Dashboard, and User Profile Management
+  - [ ] User search and filtering
+  - [ ] Edit profile and account settings
+  - [ ] Post Editing Functionality and Moderation Tools.
 
 ### Back-end
 
-- [ X ] User authentication and authorization
-  - [ X ] Validation for image uploads and post content.
-- [ X ] Integration with Google Maps API to display pins and posts on the map.
-- [ X ] Database schema design for users, comments, and pins.
+- [ ] Real-time Data Updates and Notifications
+  - [ ] WebSocket integration for real-time comment updates
+  - [ ] Push notifications for new comments on user posts
+  - [ ] Live map pin updates when new posts are created
+  - [ ] Real-time user activity indicators
+  - [ ] Socket-based chat or messaging system for users
+
+#### Auth
+
+- [ ] Implement OAuth 2.0 authentication with Google, GitHub, and Facebook providers
+- [ ] Session-based authentication with JWT refresh tokens
+- [ ] Two-factor authentication (2FA) with TOTP
+- [ ] Password reset flow with email verification
+- [ ] Account lockout after failed login attempts
+
+#### Administration & Moderation
+
+- Implement Locking Posts and User Accounts.
+- [ ] Image recognition and Verification
+  - [ ] Image upload validation and compression
+  - [ ] Automated image moderation for inappropriate content
+  - [ ] OCR for reading road signs from uploaded images
+
+#### Security
+
+- [ ] Implement SQL injection prevention measures (parameterized queries)
+- [ ] TLS/SSL certificate configuration and HTTPS enforcement
+- [ ] Implement Helmet.js for secure HTTP headers
+- [ ] Add Content Security Policy (CSP) headers
+- [ ] CORS configuration and best practices
+- [ ] Implement HSTS (HTTP Strict Transport Security) headers
+- [ ] Add XSS protection headers and input sanitization
+- [ ] Set up proper error handling that doesn't leak sensitive information
+
+#### API
+
+- [ ] Security Hardening and Rate Limiting
+  - [ ] Implement rate limiting on API endpoints to prevent abuse
+  - [ ] Add input sanitization and validation for all user inputs
+  - [ ] Implement CSRF protection for state-changing requests
+  - [ ] Set up proper CORS policies
+  - [ ] Add request logging and monitoring for suspicious activity
+  - [ ] Implement secure session management with HTTP-only cookies
+- [ ] API Optimization
+  - [ ] Implement caching layer (Redis or in-memory) for frequently accessed data
+  - [ ] Optimize API response payloads with field selection
+    - [ ] Implement "Globbing" for Pin Search and Filtering
+  - [ ] Add API versioning for backward compatibility
+  - [ ] Implement request batching for related data
+
+#### Database
+
+- [ ] Database Optimization
+  - [ ] Implement database indexing for faster queries
+  - [ ] Add pagination for posts and comments
+  - [ ] Database connection pooling for better performance
+  - [ ] Solve N + 1 query problem in database queries
 
 ### Future Features
 
@@ -41,7 +107,6 @@ With the current react app, you are able to do the following:
   that area.
 - Look into Open Streets' Open Source API due to <https://www.bahamaslocal.com>
   website usage of it.
-- Implement Locking Posts and User Accounts.
 - Implement OAuth for easier sign-in and account creation.
 - Implement Administration Dashboard and Features.
 - Migrate to PostgreSQL for better performance and scalability.
