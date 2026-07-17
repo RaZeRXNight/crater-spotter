@@ -10,7 +10,6 @@ export function logger(req, res, next) {
       `${latency}ms`,
       req.ip || req.headers["x-forwarded-for"] || "-", // IP
       req.headers["user-agent"] || "-",
-      req.get("content-length") || "0",
     ];
     console.log(log.join(" "));
   });

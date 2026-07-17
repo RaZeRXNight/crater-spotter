@@ -17,6 +17,10 @@ const router = function (database, sessionStore) {
   usersModel.sync();
   userRouter.default(router, usersModel, sessionStore);
 
+  // Auth Routes
+  const authRouter = require("../apis/auth.js");
+  authRouter.default(router, usersModel, sessionStore);
+
   // Pin Routes
   const pinRouter = require("../apis/pins.js");
   const pinsModel = Pins(database, usersModel);
