@@ -7,6 +7,7 @@ const SequelizeStore = require("connect-session-sequelize")(session.Store);
 const { CheckAndMakeDefaultAdminAccount } = require("./src/services/admin.js");
 const { sessionSecrets } = require("./src/services/constants.js");
 const router = require("./src/routes/api.js");
+const { logger } = require("./src/middleware/logging.js");
 require("dotenv").config({
   path: ENVIRONMENT,
   override: true,
@@ -33,6 +34,7 @@ const server = express();
 // Middleware
 server.use(express.json());
 server.use(session(sessionSecrets(sessionSecret, sessionStore)));
+server.use(logger);
 sessionStore.sync();
 
 // Public Storage Path

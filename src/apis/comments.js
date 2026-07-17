@@ -223,7 +223,7 @@ export default function commentRouter(Router, CommentModel) {
           error: true,
           message: error.message,
         });
-        console.log(error);
+        console.error(error);
       }
     },
   );
