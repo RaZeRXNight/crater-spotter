@@ -23,6 +23,9 @@ const port = process.env.PORT || 8000;
 const database = new Sequelize({
   dialect: "sqlite",
   storage: databaseLocation,
+  username: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  logging: process.env.DEBUG ? true : false,
 });
 
 const sessionStore = new SequelizeStore({
