@@ -6,10 +6,12 @@ export function logger(req, res, next) {
     const log = [
       req.method,
       res.statusCode,
-      [`${req.protocol}://`, req.host, req.path].join(""),
+      `${req.protocol}`,
+      req.host,
+      req.path,
       `${latency}ms`,
-      req.ip || req.headers["x-forwarded-for"] || "-", // IP
       req.headers["user-agent"] || "-",
+      req.ip || req.headers["x-forwarded-for"] || "-", // IP
     ];
     console.log(log.join(" "));
   });

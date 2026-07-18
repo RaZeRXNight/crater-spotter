@@ -47,17 +47,21 @@ follow and reply within threaded comment chains.
 ### Month 4 — Front-End Revamp & First Security Pass
 
 - Responsive / mobile-friendly layouts, dark mode, accessibility (ARIA, keyboard nav), loading skeletons
-- Begin security hardening: Helmet headers, input sanitization, safe error handling, CSP
+- Begin security hardening: Helmet headers (CSP, X-Frame-Options, X-Content-Type-Options, disable X-Powered-By), input sanitization, safe error handling
+- Session cookie hardening: SameSite, Secure behind proxy, `saveUninitialized: false`
+- Cache-control hardening for HTML responses (private, no-store)
 
 **Done:** Site is responsive with dark mode, accessibility, and skeletons;
-first security pass started (headers set, inputs sanitized, errors no longer leak).
+security headers set (CSP, X-Frame-Options, X-Content-Type-Options, X-Powered-By removed);
+session cookies hardened (SameSite, Secure behind proxy, saveUninitialized off);
+cache-control tightened; inputs sanitized; errors no longer leak.
 
 ### Month 5 — Administration & Second Security Pass
 
 - Admin / moderator dashboard (observability of the user base, post/comment queries, moderation tools)
-- Second security pass: audit for vulnerabilities and unsecured APIs
+- Second security pass: ZAP DAST scan and address remaining alerts, audit unsecured APIs
 
-**Done:** Admins can monitor and moderate via the dashboard; security re-audit complete.
+**Done:** Admins can monitor and moderate via the dashboard; ZAP scan passed with no actionable Medium+ alerts; security re-audit complete.
 
 ### Month 6 — Final Security Hardening
 
