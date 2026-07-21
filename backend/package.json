@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "build": "npm run --prefix app build",
+    "build": "npm run --prefix ../frontend build",
     "start": "node server.js",
     "dev": "node server.js .env.development.local --watch"
   },

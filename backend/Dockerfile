@@ -6,8 +6,7 @@ RUN apk upgrade --no-cache
 COPY package*.json ./
 RUN npm i
 
-COPY src/ ./src/
-COPY server.js ./
+COPY . ./
 
 EXPOSE 8000
 CMD ["npm", "start"]

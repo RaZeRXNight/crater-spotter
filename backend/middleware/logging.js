@@ -11,7 +11,7 @@ export function logger(req, res, next) {
       req.ip || req.headers["x-forwarded-for"] || "-", // IP
       req.headers["user-agent"] || "-",
     ];
-    console.log(log.join(" "));
+    process.stdout.write(log.join(" ") + "\n");
   });
   next();
 }

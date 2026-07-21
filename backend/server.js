@@ -4,10 +4,10 @@ const path = require("path");
 const { Sequelize } = require("sequelize");
 const session = require("express-session");
 const SequelizeStore = require("connect-session-sequelize")(session.Store);
-const { CheckAndMakeDefaultAdminAccount } = require("./src/services/admin.js");
-const { sessionSecrets } = require("./src/services/constants.js");
-const router = require("./src/routes/api.js");
-const { logger } = require("./src/middleware/logging.js");
+const { CheckAndMakeDefaultAdminAccount } = require("./services/admin.js");
+const { sessionSecrets } = require("./services/constants.js");
+const router = require("./routes/api.js");
+const { logger } = require("./middleware/logging.js");
 require("dotenv").config({
   path: ENVIRONMENT,
   override: true,
@@ -22,7 +22,7 @@ const port = process.env.PORT || 8000;
 
 const database = new Sequelize({
   dialect: "sqlite",
-  storage: databaseLocation,
+  storage: path.resolve(__dirname, "..", databaseLocation),
   username: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   logging: process.env.DEBUG ? true : false,
@@ -41,11 +41,11 @@ server.use(logger);
 sessionStore.sync();
 
 // Public Storage Path
-const storage_path = path.join(process.cwd(), process.env.STORAGE_PATH);
+const storage_path = path.resolve(__dirname, "..", process.env.STORAGE_PATH);
 server.use(`/${process.env.STORAGE_PATH}`, express.static(storage_path));
 
 // React Path
-const dist_path = path.join(process.cwd(), "app", "dist");
+const dist_path = path.resolve(__dirname, "..", "frontend", "dist");
 server.use(express.static(dist_path));
 
 // Placed Session Store to pass in through here, Will Change Later.
