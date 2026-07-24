@@ -10,11 +10,17 @@
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
+    "express-jwt": "^8.5.1",
     "express-session": "^1.19.0",
     "express-validator": "^7.3.1",
     "multer": "^2.1.1",
     "routes": "^2.1.0",
     "sequelize": "^6.37.8",
     "sqlite3": "^6.0.1"
+  },
+  "overrides": {
+    "sequelize": {
+      "uuid": "^11.1.1"
+    }
   }
 }

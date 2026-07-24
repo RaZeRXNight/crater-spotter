@@ -1,18 +1,8 @@
 import bcrypt from "bcrypt";
 import { checkSchema } from "express-validator";
+import { LoginSchema, RegisterSchema } from "../schema/auth.js";
 
 const saltRounds = 12;
-
-const LoginSchema = {
-  email: { isEmail: true },
-  password: { isLength: { options: { min: 8, max: 52 } } },
-};
-
-const RegisterSchema = {
-  email: { isEmail: true },
-  username: { isLength: { min: 3, max: 52 } },
-  password: { isLength: { options: { min: 8, max: 52 } } },
-};
 
 export default function authRouter(Router, usersModel) {
   // User DB API

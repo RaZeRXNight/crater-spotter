@@ -1,11 +1,6 @@
 import { checkSchema } from "express-validator";
 import { BasicAuth } from "../services/admin.js";
-
-const CommentSchema = {
-  authorid: { notEmpty: true },
-  PinParent: { notEmpty: true },
-  comment: { notEmpty: true },
-};
+import { CommentSchema } from "../schema/comment.js";
 
 export default function commentRouter(Router, CommentModel) {
   const UPPERLIMIT = 10;
