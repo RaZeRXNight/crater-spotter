@@ -13,7 +13,7 @@ export function logger(req, res, next) {
       req.headers["user-agent"] || "-",
       req.ip || req.headers["x-forwarded-for"] || "-", // IP
     ];
-    console.log(log.join(" "));
+    process.stdout.write(log.join(" ") + "\n");
   });
   next();
 }

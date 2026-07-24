@@ -3,10 +3,10 @@ WORKDIR /frontend
 
 RUN apk upgrade --no-cache
 
-COPY app/package*.json ./
+COPY package*.json ./
 RUN npm i --legacy-peer-deps
 
-COPY app/ ./
+COPY . ./
 RUN npm run build
 
 FROM nginx:alpine
