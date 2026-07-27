@@ -1,6 +1,8 @@
 import bcrypt from "bcrypt";
 import { checkSchema } from "express-validator";
 import { LoginSchema, RegisterSchema } from "../schema/auth.js";
+import { jwtVerify } from "jose";
+import { jwt_secret, signAccessToken } from "../services/jwt.js";
 
 const saltRounds = 12;
 
@@ -33,6 +35,28 @@ export default function authRouter(Router, usersModel) {
       }
     } catch (error) {
       console.error(error);
+    }
+  });
+
+  Router.get("/auth/refresh", async (req, res) => {
+    const token = req.cookies?.refreshtoken;
+
+    if (!token) {
+      return res.status(401).json({ message: "Refresh token missing" });
+    }
+
+    try {
+      const { payload, protectedHeader } = await jwtVerify(token, jwt_secret);
+      req.user = payload;
+
+      const newAccessToken = await signAccessToken({
+        userid: payload.userid,
+        role: payload.role,
+      });
+
+      return res.json({ accessToken: newAccessToken });
+    } catch (error) {
+      return res.status(403).json({ message: "Invalid or expired token" });
     }
   });
 
