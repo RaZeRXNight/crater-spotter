@@ -1,4 +1,4 @@
-import { SignJWT } from "jose";
+import { SignJWT, jwtVerify } from "jose";
 export const jwt_secret = new TextEncoder().encode(process.env.JWT_SECRET);
 
 export async function signAccessToken(
@@ -26,4 +26,9 @@ export async function signRefreshToken(
   expiryTime = "7d",
 ) {
   return await signAccessToken(info, protectedHeader, expiryTime);
+}
+
+export async function jwtVerification(token) {
+  const { payload } = await jwtVerify(token, jwt_secret);
+  return payload;
 }

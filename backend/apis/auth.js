@@ -1,8 +1,8 @@
 import bcrypt from "bcrypt";
 import { checkSchema } from "express-validator";
 import { LoginSchema, RegisterSchema } from "../schema/auth.js";
-import { jwtVerify } from "jose";
-import { jwt_secret, signAccessToken } from "../services/jwt.js";
+import { jwtVerification, signAccessToken } from "../services/jwt.js";
+import authMiddleware from "../middleware/authentication.js";
 
 const saltRounds = 12;
 
@@ -10,29 +10,23 @@ export default function authRouter(Router, usersModel) {
   // User DB API
   // Routes
   // User Authentication & Session Handling
-  // Authenticate User
-  Router.get("/auth", async (req, res) => {
-    const session = req.session;
-    const userid = session.userid;
-
+  // Authenticate User — protected by authMiddleware (JWT or session)
+  Router.get("/auth", authMiddleware, async (req, res) => {
     try {
-      const user = await usersModel.findByPk(session.userid);
+      const user = await usersModel.findByPk(req.user.userid);
 
-      if (userid && !user) {
-        session.destroy();
-        res.status(401).send("ERROR: ACCOUNT NOT FOUND.");
-        throw new Error("ERROR: ACCOUNT NOT FOUND");
+      if (!user) {
+        if (req.session) {
+          req.session.destroy();
+        }
+        return res.status(401).json({ message: "ERROR: ACCOUNT NOT FOUND." });
       }
 
-      if (session.userid) {
-        res.json({
-          id: session.userid,
-          username: session.username,
-          authLevel: session.authLevel,
-        });
-      } else {
-        res.status(401).send("ERROR: Unauthorized.");
-      }
+      res.json({
+        id: req.user.userid,
+        username: req.user.username,
+        authLevel: req.user.authLevel,
+      });
     } catch (error) {
       console.error(error);
     }
@@ -46,12 +40,13 @@ export default function authRouter(Router, usersModel) {
     }
 
     try {
-      const { payload, protectedHeader } = await jwtVerify(token, jwt_secret);
+      const payload = await jwtVerification(token);
       req.user = payload;
 
       const newAccessToken = await signAccessToken({
         userid: payload.userid,
-        role: payload.role,
+        username: payload.username,
+        authLevel: payload.authLevel,
       });
 
       return res.json({ accessToken: newAccessToken });
