@@ -48,6 +48,7 @@ follow and reply within threaded comment chains.
 
 - [ ] Responsive / mobile-friendly layouts, dark mode, accessibility (ARIA, keyboard nav), loading skeletons
 - [ ] Begin security hardening: Helmet headers, input sanitization, safe error handling, CSP
+  - [ ] Consistent API error format: convert remaining `.send()` plain-text responses to `.json()` (`users.js`, `pins.js`)
 
 **Done:** Site is responsive with dark mode, accessibility, and skeletons;
 security headers set (CSP, X-Frame-Options, X-Content-Type-Options, X-Powered-By removed);
