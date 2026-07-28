@@ -68,6 +68,10 @@ cache-control tightened; inputs sanitized; errors no longer leak.
 
 **Done:** App meets current security best practices established during research.
 
+## Technical Debt
+
+- [ ] **Deduplicate `/api/auth` calls** — Multiple React Router loaders and middleware independently call `getUser()` → `/api/auth` on the same page load. Public post pages hit it twice (parent `getUserLoader` + child `PinCommentDataLoader`); protected routes hit it twice (parent loader + `authMiddleware`). Fix: (a) remove redundant `getUser()` calls in child loaders where the component already reads user from `useOutletContext()`, and/or (b) add a concurrent-request cache in `getUser()` so in-flight `/api/auth` calls are shared.
+
 ## Future Features (Deferred)
 
 - JWT token revocation (denylist or token versioning) — required for proper mobile logout

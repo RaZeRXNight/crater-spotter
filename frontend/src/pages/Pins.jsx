@@ -1,7 +1,6 @@
 import api from "../api.js";
 import { useCallback, useState } from "react";
 import { useLoaderData, useNavigate, useOutletContext } from "react-router";
-import { toast } from "react-toastify";
 import Card from "../components/Card.jsx";
 import App from "../components/Maps.jsx";
 import { Pagination } from "../components/paginations.jsx";
@@ -64,7 +63,7 @@ export async function getUserPins({ page, perPage }) {
       page: page || 1,
     },
   });
-  if (err) { toast.error(err); return null; }
+  if (err) return null;
   return data;
 }
 
@@ -83,7 +82,7 @@ export async function getPins({ userid = null, page, perPage }) {
       page: page || 1,
     },
   });
-  if (err) { toast.error(err); return null; }
+  if (err) return null;
   return { rows: data.rows, count: data.count };
 }
 
@@ -124,10 +123,8 @@ export async function fetchUserPinPageData({ params }) {
 
 export const DeletePost = async function (event, pin, Navigator) {
   if (window.confirm(`Are you sure you want to delete ${pin.title} post?`)) {
-    const { err, data } = await api({ url: `/api/pin/${pin.id}`, method: "DELETE" });
-    if (err) { toast.error(err); return; }
-    if (data.error) { toast.error(data.message); return; }
-    toast.success(data.message);
+    const { err } = await api({ url: `/api/pin/${pin.id}`, method: "DELETE" });
+    if (err) return;
     Navigator("/pin/");
   }
 };
@@ -186,9 +183,7 @@ export function CreatePin() {
     formData.append("lng", form.coordinates.lng);
 
     const { err, data } = await api({ url: "/api/pin", method: "POST", body: formData });
-    if (err) { toast.error(err); return; }
-    if (data.error) { toast.error(data.message); return; }
-    toast.success(data.message);
+    if (err) return;
     navigate(`/pin/${data.id}`);
   };
 
@@ -283,10 +278,8 @@ export function EditPin() {
 
   const HandleSubmit = async function (event) {
     event.preventDefault();
-    const { err, data } = await api({ url: `/api/pin/${id}`, method: "PUT", headers: { "Content-Type": "application/json" }, body: form });
-    if (err) { toast.error(err); return; }
-    if (data.error) { toast.error(data.message); return; }
-    toast.success(data.message);
+    const { err } = await api({ url: `/api/pin/${id}`, method: "PUT", headers: { "Content-Type": "application/json" }, body: form });
+    if (err) return;
     navigate(`/pin/${id}`);
   };
 

@@ -1,7 +1,6 @@
 import api from "../api.js";
 import { useState } from "react";
 import { useLoaderData, useNavigate, useOutletContext } from "react-router";
-import { toast } from "react-toastify";
 import { Pagination } from "../components/paginations";
 import "../css/Home.css";
 import { getPins, getUserPins, RenderPins } from "./Pins";
@@ -27,17 +26,14 @@ export async function getUser(userid = null) {
 
 export async function HandleLogout() {
   const { err } = await api({ url: "/api/auth/logout", method: "DELETE" });
-  if (err) { toast.error(err); return false; }
-  toast.success("Logged Out");
+  if (err) return false;
   return true;
 }
 
 export async function HandleUserDeletion() {
   if (window.confirm(`Are you sure you want to delete this account?`)) {
-    const { err, data } = await api({ url: "/api/auth/delete", method: "DELETE" });
-    if (err) { toast.error(err); return; }
-    if (data.error) { toast.error(data.message); return; }
-    toast.success(data.message);
+    const { err } = await api({ url: "/api/auth/delete", method: "DELETE" });
+    if (err) return;
   }
 }
 
@@ -134,9 +130,7 @@ export function UserProfile() {
       headers: { action: "suspend" },
       body: { username: profile.username, authLevel: profile.authLevel },
     });
-    if (err) { toast.error(err); return; }
-    if (data.error) { toast.error(data.message); return; }
-    toast.success(data.message);
+    if (err) return;
     setProfile({ ...profile, authLevel: data.authLevel });
   }
 
@@ -146,10 +140,8 @@ export function UserProfile() {
         `Are you sure you want to delete #${profile.id} ${profile.username}'s account?`,
       )
     ) {
-      const { err, data } = await api({ url: `/api/user/${profile.id}`, method: "DELETE" });
-      if (err) { toast.error(err); return; }
-      if (data.error) { toast.error(data.message); return; }
-      toast.success(data.message);
+      const { err } = await api({ url: `/api/user/${profile.id}`, method: "DELETE" });
+      if (err) return;
       setTimeout(() => navigate("/"), 2000);
     }
   }

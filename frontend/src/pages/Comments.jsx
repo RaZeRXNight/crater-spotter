@@ -1,5 +1,4 @@
 import api from "../api.js";
-import { toast } from "react-toastify";
 import { isAuthorized } from "./Pins";
 
 export function RenderComments({ rows, user }) {
@@ -34,8 +33,7 @@ export async function getComments({ id, page, perPage }) {
       page: page || 1,
     },
   });
-  if (err) { toast.error(err); return null; }
-  if (data.error) { toast.error(data.message); return null; }
+  if (err) return null;
   return data.message;
 }
 
@@ -44,9 +42,7 @@ export async function HandleCommentFormSubmission(event, commentForm) {
   event.currentTarget.reset();
 
   const { err, data } = await api({ url: "/api/comment", method: "POST", body: commentForm });
-  if (err) { toast.error(err); return; }
-  if (data.error) { toast.error(data.message); return; }
-  toast.success("Created Comment");
+  if (err) return;
 }
 
 export function CreateComment({
@@ -84,9 +80,7 @@ export function Comment({ id, authorid, authorName, comment, admin = false }) {
   async function DeletePost() {
     if (window.confirm(`Are you sure you want to delete this comment?`)) {
       const { err, data } = await api({ url: `/api/comment/${id}`, method: "DELETE" });
-      if (err) { toast.error(err); return; }
-      if (data.error) { toast.error(data.message); return; }
-      toast.success(data.message);
+      if (err) return;
       document.getElementById(`comment_card_${id}`).hidden = true;
     }
   }
