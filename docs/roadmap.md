@@ -83,3 +83,8 @@ cache-control tightened; inputs sanitized; errors no longer leak.
 - Map-pin "clumping" rework + list view
 - OpenStreetMap API exploration
 - Password changing
+- Pin search & filtering (autocomplete, date/category/severity filters, radius slider)
+- User search / filtering
+- Edit profile / account settings
+- Push notifications (distinct from in-app WebSocket chat)
+- CSRF protection
