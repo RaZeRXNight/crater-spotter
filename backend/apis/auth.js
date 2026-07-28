@@ -1,48 +1,58 @@
 import bcrypt from "bcrypt";
 import { checkSchema } from "express-validator";
+import { LoginSchema, RegisterSchema } from "../schema/auth.js";
+import { jwtVerification, signAccessToken } from "../services/jwt.js";
+import authMiddleware from "../middleware/authentication.js";
 
 const saltRounds = 12;
-
-const LoginSchema = {
-  email: { isEmail: true },
-  password: { isLength: { options: { min: 8, max: 52 } } },
-};
-
-const RegisterSchema = {
-  email: { isEmail: true },
-  username: { isLength: { min: 3, max: 52 } },
-  password: { isLength: { options: { min: 8, max: 52 } } },
-};
 
 export default function authRouter(Router, usersModel) {
   // User DB API
   // Routes
   // User Authentication & Session Handling
-  // Authenticate User
-  Router.get("/auth", async (req, res) => {
-    const session = req.session;
-    const userid = session.userid;
-
+  // Authenticate User — protected by authMiddleware (JWT or session)
+  Router.get("/auth", authMiddleware, async (req, res) => {
     try {
-      const user = await usersModel.findByPk(session.userid);
+      const user = await usersModel.findByPk(req.user.userid);
 
-      if (userid && !user) {
-        session.destroy();
-        res.status(401).send("ERROR: ACCOUNT NOT FOUND.");
-        throw new Error("ERROR: ACCOUNT NOT FOUND");
+      if (!user) {
+        if (req.session) {
+          req.session.destroy();
+        }
+        return res.status(401).json({ message: "ERROR: ACCOUNT NOT FOUND." });
       }
 
-      if (session.userid) {
-        res.json({
-          id: session.userid,
-          username: session.username,
-          authLevel: session.authLevel,
-        });
-      } else {
-        res.status(401).send("ERROR: Unauthorized.");
-      }
+      res.json({
+        id: req.user.userid,
+        username: req.user.username,
+        authLevel: req.user.authLevel,
+      });
     } catch (error) {
       console.error(error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  Router.get("/auth/refresh", async (req, res) => {
+    const token = req.cookies?.refreshtoken;
+
+    if (!token) {
+      return res.status(401).json({ message: "Refresh token missing" });
+    }
+
+    try {
+      const payload = await jwtVerification(token);
+      req.user = payload;
+
+      const newAccessToken = await signAccessToken({
+        userid: payload.userid,
+        username: payload.username,
+        authLevel: payload.authLevel,
+      });
+
+      return res.json({ accessToken: newAccessToken });
+    } catch (error) {
+      return res.status(403).json({ message: "Invalid or expired token" });
     }
   });
 
@@ -61,15 +71,7 @@ export default function authRouter(Router, usersModel) {
         const username = body.username;
 
         // Encrypt Password
-        const password = await bcrypt
-          .hash(body.password, saltRounds)
-          .then(function (hash) {
-            return hash;
-          });
-
-        if (!password) {
-          throw new Error("No Password");
-        }
+        const password = await bcrypt.hash(body.password, saltRounds);
 
         // Create User Record
         const newUser = await usersModel.create({
@@ -88,6 +90,7 @@ export default function authRouter(Router, usersModel) {
         });
       } catch (error) {
         console.error(error);
+        return res.status(500).json({ message: "Internal server error" });
       }
     },
   );
@@ -108,8 +111,7 @@ export default function authRouter(Router, usersModel) {
 
         // Throws if no valid user is found
         if (!User) {
-          res.status(404).json({ message: "ERROR: USER DOES NOT EXIST" });
-          throw new Error("ERROR: USER DOES NOT EXIST");
+          return res.status(404).json({ message: "ERROR: USER DOES NOT EXIST" });
         }
 
         // Verify if Password Matches then Authenticate Session
@@ -123,13 +125,13 @@ export default function authRouter(Router, usersModel) {
             message: `Welcome back ${session.username}!`,
           });
         } else {
-          res
+          return res
             .status(401)
             .send("ERROR: INCORRECT PASSWORD, Authentication Failed");
-          throw new Error("ERROR: INCORRECT PASSWORD, Authentication Failed");
         }
       } catch (error) {
         console.error(error);
+        return res.status(500).json({ message: "Internal server error" });
       }
     },
   );
@@ -140,15 +142,16 @@ export default function authRouter(Router, usersModel) {
 
     try {
       if (session.userid) {
+        const username = session.username;
         session.destroy();
 
         res.json({
-          message: `Logged Out, Bye ${session.username}`,
+          message: `Logged Out, Bye ${username}`,
         });
       }
     } catch (error) {
       console.error(error);
-      res.json({
+      res.status(500).json({
         message: "ERROR: LOGOUT FAILED",
       });
     }
@@ -166,16 +169,12 @@ export default function authRouter(Router, usersModel) {
         throw new Error("ERROR: USER DOES NOT EXIST");
       }
 
-      if (query.id != session.userid) {
-        throw new Error("ERROR: UNAUTHORIZED");
-      }
-
       const commentModel = usersModel.sequelize.models.Comments;
       const deletedComments = await commentModel.destroy({
         where: { PinParent: id },
       });
 
-      const userDeletion = await query.destroy({ where: { id: id } });
+      const userDeletion = await query.destroy();
       await session.destroy();
 
       res.json({
@@ -183,7 +182,7 @@ export default function authRouter(Router, usersModel) {
       });
     } catch (error) {
       console.error(error);
-      res.json({
+      res.status(500).json({
         error: true,
         message: error.message,
       });

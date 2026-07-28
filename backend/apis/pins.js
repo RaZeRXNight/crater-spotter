@@ -4,24 +4,12 @@ import { accessSync, constants, existsSync, rm, unlink } from "fs";
 import multer from "multer";
 import { checkSchema } from "express-validator";
 import { BasicAuth } from "../services/admin.js";
+import { PinSchema } from "../schema/pin.js";
 
 export const upload = multer({
   limits: { fieldSize: 1048576 * 8 },
   dest: process.env.STORAGE_PATH,
 });
-
-const PinSchema = {
-  authorid: { notEmpty: true },
-  lat: { notEmpty: true },
-  lng: { notEmpty: true },
-  title: {
-    isLength: {
-      options: { min: 3, max: 52 },
-      errorMessage: "Password must be atleast 8 characters.",
-    },
-  },
-  comment: { optional: true },
-};
 
 export default function pinRouter(Router, PinsModel) {
   const UPPERLIMIT = 10;

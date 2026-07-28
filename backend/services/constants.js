@@ -8,6 +8,7 @@ export function sessionSecrets(sessionSecret, sessionStore) {
       return {
         path: "/",
         secure: req.secure || false,
+        httpOnly: true,
         maxAge: 60000 * 100 * 24,
       };
     },

@@ -21,6 +21,10 @@ const router = function (database, sessionStore) {
   const authRouter = require("../apis/auth.js");
   authRouter.default(router, usersModel, sessionStore);
 
+  // Mobile Auth Routes — commented out until mobile client is ready
+  // const mobileAuthRouter = require("../apis/mobileAuth.js");
+  // mobileAuthRouter.default(router, usersModel);
+
   // Pin Routes
   const pinRouter = require("../apis/pins.js");
   const pinsModel = Pins(database, usersModel);

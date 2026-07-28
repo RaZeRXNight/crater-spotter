@@ -1,6 +1,7 @@
 const ENVIRONMENT = require("process").argv[2];
 const express = require("express");
 const path = require("path");
+const cookieParser = require("cookie-parser");
 const { Sequelize } = require("sequelize");
 const session = require("express-session");
 const SequelizeStore = require("connect-session-sequelize")(session.Store);
@@ -21,7 +22,7 @@ const host = process.env.HOST;
 const port = process.env.PORT || 8000;
 
 const database = new Sequelize({
-  dialect: "sqlite",
+  dialect: process.env.DB_DIALECT,
   storage: path.resolve(__dirname, "..", databaseLocation),
   username: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
@@ -38,6 +39,7 @@ const server = express();
 server.use(express.json());
 server.use(session(sessionSecrets(sessionSecret, sessionStore)));
 server.use(logger);
+server.use(cookieParser());
 sessionStore.sync();
 
 // Public Storage Path
