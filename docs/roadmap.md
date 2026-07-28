@@ -19,13 +19,11 @@
 
 ### Month 1 — Auth & Observability Foundations
 
-- [ ] JWT auth migration (replace session auth; JWT verified on every protected route)
+- [ X ] JWT for mobile auth (coexists alongside session auth; JWT verified on protected routes via unified middleware)
 - [ X ] Request logging
 - [ ] Rate limiting on API endpoints
 
-**Done:** JWT is issued on login and verified on every protected route
-(sessions removed); rate limiter active on auth + post/comment endpoints;
-request logs capture method, route, status, and latency.
+**Done:** JWT backend implementation complete — access/refresh token signing, verification, mobile login/register/logout endpoints, and unified middleware. What remains is the mobile app client (Flutter). Rate limiter active on auth + post/comment endpoints; request logs capture method, route, status, and latency.
 
 ### Month 2 — Database
 
@@ -58,6 +56,8 @@ cache-control tightened; inputs sanitized; errors no longer leak.
 ### Month 5 — Administration & Second Security Pass
 
 - [ ] Admin / moderator dashboard (observability of the user base, post/comment queries, moderation tools)
+- [ ] Define authLevel enums: `0` suspended, `1` standard, `2` admin
+- [ ] Authorization middleware: consolidate ad-hoc auth guard rails (`BasicAuth`/`AdminAuth` in each route handler) into `middleware/authorization.js` (`requireAuth`, `requireAdmin`)
 - [ ] Second security pass: audit for vulnerabilities and unsecured APIs
 
 **Done:** Admins can monitor and moderate via the dashboard; ZAP scan passed with no actionable Medium+ alerts; security re-audit complete.
@@ -70,6 +70,7 @@ cache-control tightened; inputs sanitized; errors no longer leak.
 
 ## Future Features (Deferred)
 
+- JWT token revocation (denylist or token versioning) — required for proper mobile logout
 - Real-time updates & WebSocket chat
 - OAuth 2.0 (Google / GitHub / Facebook) + 2FA/TOTP + password reset
 - Image recognition / moderation + OCR

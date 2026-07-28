@@ -7,7 +7,7 @@ export async function signAccessToken(
   expiryTime = "15m",
 ) {
   if (Object.keys(info).length == 0) {
-    return;
+    throw new Error("Cannot sign token: empty claims");
   }
 
   const token = await new SignJWT(info)
@@ -16,7 +16,6 @@ export async function signAccessToken(
     .setExpirationTime(expiryTime)
     .sign(jwt_secret);
 
-  console.log("Access Token:", token);
   return token;
 }
 
