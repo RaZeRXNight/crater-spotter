@@ -41,7 +41,7 @@ export async function HandleCommentFormSubmission(event, commentForm) {
   event.preventDefault();
   event.currentTarget.reset();
 
-  const { err, data } = await api({ url: "/api/comment", method: "POST", body: commentForm });
+  const { err } = await api({ url: "/api/comment", method: "POST", body: commentForm });
   if (err) return;
 }
 
@@ -79,7 +79,7 @@ export function CreateComment({
 export function Comment({ id, authorid, authorName, comment, admin = false }) {
   async function DeletePost() {
     if (window.confirm(`Are you sure you want to delete this comment?`)) {
-      const { err, data } = await api({ url: `/api/comment/${id}`, method: "DELETE" });
+      const { err } = await api({ url: `/api/comment/${id}`, method: "DELETE" });
       if (err) return;
       document.getElementById(`comment_card_${id}`).hidden = true;
     }

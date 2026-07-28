@@ -212,6 +212,7 @@ export default function commentRouter(Router, CommentModel) {
         res.json({
           id: comment.id,
           comment: comment.comment,
+          message: "Comment created",
         });
       } catch (error) {
         res.json({

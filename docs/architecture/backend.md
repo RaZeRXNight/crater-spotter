@@ -21,4 +21,4 @@ Node.js (Express) + Sequelize (SQLite). Sessions via `express-session` + `connec
 - Admin bootstrap creates `admin`/`password` in **plaintext** (bcrypt not applied).
 - Pagination via HTTP headers (`Perpage`, `Page`, `Order`), not query params.
 - `GET /api/comment/:id` and `GET /api/user/:id` ignore path param, read from headers.
-- `DELETE /api/auth/logout` reads `session.username` *after* `session.destroy()` → always "Bye undefined".
+- `DELETE /api/auth/logout` reads `session.username` *before* `session.destroy()` (captured in local variable).

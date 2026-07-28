@@ -30,7 +30,7 @@ All endpoints are mounted under `/api`.
 2. Server validates, returns `{ accessToken, refreshToken }`.
 3. Client stores tokens in platform secure storage (iOS Keychain / Android Keystore).
 4. Every subsequent request includes `Authorization: Bearer <accessToken>`.
-5. When the access token expires, the client calls the web `/api/auth/refresh` endpoint with the refresh token stored in an httpOnly cookie. <!-- The refresh token cookie is set during mobile login but this path runs through the session-based refresh handler. Refresh token rotation is not yet implemented. -->
+5. When the access token expires, the client calls the web `/api/auth/refresh` endpoint with the refresh token stored in an httpOnly cookie. <!-- The mobile login returns the refresh token in the JSON body, but the refresh endpoint reads from req.cookies.refreshtoken. There's no mobile-specific refresh endpoint yet — this is a gap for mobile client development. -->
 6. If refresh fails, the client re-authenticates via login.
 
 ### Access & Refresh Token
@@ -58,7 +58,7 @@ All endpoints are mounted under `/api`.
 | ------ | ---------------- | --------- | --------------------------------------------------------------- | -------------------------------------------- |
 | GET    | /api/comment/    | —         | —                                                               | `{ message: { rows, count } }`               |
 | GET    | /api/comment/:id | —         | —                                                               | `{ message: { rows, count } }` (ignores :id) |
-| POST   | /api/comment     | BasicAuth | `{ authorid, PinParent, comment, CommentParent?, replyLevel? }` | `{ id, comment }`                            |
+| POST   | /api/comment     | BasicAuth | `{ authorid, PinParent, comment, CommentParent?, replyLevel? }` | `{ id, comment, message }`                   |
 | DELETE | /api/comment/:id | BasicAuth | —                                                               | `{ message }`                                |
 
 ## Users

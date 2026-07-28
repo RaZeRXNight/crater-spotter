@@ -38,6 +38,7 @@ eliminated via eager-loaded queries; indexes, pagination, and pooling in place.
 
 - [ ] Redis caching layer for frequently accessed queries
 - [ ] Nested comments and replies
+- [ ] API response consistency: add `message` field to all success responses so the frontend toast wrapper works universally; fix endpoints that silently swallow errors (no HTTP response)
 
 **Done:** Hot queries served from Redis instead of the database; users can
 follow and reply within threaded comment chains.
