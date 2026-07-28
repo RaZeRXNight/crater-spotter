@@ -1,4 +1,4 @@
-import axios from "axios";
+import api from "../api.js";
 import { getComments } from "../pages/Comments";
 import { getPin, getPins, getUserPins } from "../pages/Pins";
 import { getUser } from "../pages/Profile";
@@ -11,17 +11,10 @@ export async function getUserLoader() {
 export async function PinDataLoader({ params }) {
   const id = params.id;
 
-  const pinData = await axios
-    .get(`/api/pin/${id}`)
-    .then(function (response) {
-      const data = response.data.message;
-      return data;
-    })
-    .catch(function (error) {
-      console.log(error);
-    });
+  const { err, data } = await api({ url: `/api/pin/${id}` });
+  if (err) { console.log(err); }
   const userData = await getUser();
-  return { pin: pinData, user: userData };
+  return { pin: err ? undefined : data.message, user: userData };
 }
 
 export async function PinCommentDataLoader({ params }) {

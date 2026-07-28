@@ -1,7 +1,6 @@
-import axios from "axios";
+import api from "../api.js";
 import { useState } from "react";
 import { useLoaderData, useNavigate } from "react-router";
-import { toast } from "react-toastify";
 import "../css/articles.css";
 import "../css/forms.css";
 
@@ -12,17 +11,11 @@ function RegisterForm() {
     email: "",
     password: "",
   });
-  const HandleRegisterSubmit = function (event) {
+  const HandleRegisterSubmit = async function (event) {
     event.preventDefault();
-    axios
-      .post("/api/auth/register", userAuth)
-      .then(function (response) {
-        toast(response.data.message);
-        Navigate("/");
-      })
-      .catch(function (error) {
-        toast(error.message);
-      });
+    const { err } = await api({ url: "/api/auth/register", method: "POST", body: userAuth });
+    if (err) return;
+    Navigate("/");
   };
   return (
     <form
@@ -84,25 +77,11 @@ function LoginForm() {
     username: "",
     password: "",
   });
-  const HandleLoginSubmit = function (event) {
-    event.currentTarget.disabled = true;
+  const HandleLoginSubmit = async function (event) {
     event.preventDefault();
-    axios
-      .post("/api/auth/login", userAuth)
-      .then(function (response) {
-        toast(response.data.message);
-        Navigate("/");
-      })
-      .catch(function (error) {
-        const statusCode = error.status;
-
-        if (statusCode == 404) {
-          toast("User not Found");
-        } else if (statusCode == 401) {
-          toast("Authenitcation Failed");
-        }
-      });
-    event.currentTarget.disabled = false;
+    const { err } = await api({ url: "/api/auth/login", method: "POST", body: userAuth });
+    if (err) return;
+    Navigate("/");
   };
   return (
     <form action="/api/auth/login" onSubmit={HandleLoginSubmit} method="POST">
@@ -141,18 +120,12 @@ function LoginForm() {
 }
 
 function Logout() {
-  function HandleLogout(event) {
-    event.currentTarget.disabled = true;
-    axios
-      .delete("/api/auth/logout")
-      .then(function (response) {
-        toast(response);
-        Navigate("/");
-      })
-      .catch(function (error) {
-        toast(error.message);
-      });
-    event.currentTarget.disabled = false;
+  const Navigate = useNavigate();
+  async function HandleLogout(event) {
+    event.preventDefault();
+    const { err } = await api({ url: "/api/auth/logout", method: "DELETE" });
+    if (err) return;
+    Navigate("/");
   }
   return (
     <section className="h-1/3 w-1/3 self-center flex flex-col justify-center">

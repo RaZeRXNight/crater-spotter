@@ -1,4 +1,4 @@
-import axios from "axios";
+import api from "../api.js";
 import {
   createBrowserRouter,
   isRouteErrorResponse,
@@ -30,32 +30,18 @@ async function getUserLoader() {
 }
 
 async function RootLoader() {
-  const data = await axios
-    .get("/api/config")
-    .then((response) => {
-      return response.data.message;
-    })
-    .catch((error) => {
-      console.error(error);
-      return null;
-    });
-  return { ...data };
+  const { err, data } = await api({ url: "/api/config" });
+  if (err) { console.error(err); return {}; }
+  return { ...data.message };
 }
 
 async function PinDataLoader({ params }) {
   const id = params.id;
 
-  const pinData = await axios
-    .get(`/api/pin/${id}`)
-    .then(function (response) {
-      const data = response.data.message;
-      return data;
-    })
-    .catch(function (error) {
-      console.log(error);
-    });
+  const { err, data } = await api({ url: `/api/pin/${id}` });
+  if (err) { console.log(err); }
   const userData = await getUser();
-  return { pin: pinData, user: userData };
+  return { pin: err ? undefined : data.message, user: userData };
 }
 
 async function PinCommentDataLoader({ params }) {

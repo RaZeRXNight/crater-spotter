@@ -1,4 +1,4 @@
-import axios from "axios";
+import api from "../api.js";
 import { useCallback, useState } from "react";
 import { useLoaderData, useNavigate, useOutletContext } from "react-router";
 import { toast } from "react-toastify";
@@ -55,22 +55,16 @@ export function RenderPins({ rows, user }) {
  * Returns the pin data as { pins: pins, count: count} or null on error
  */
 export async function getUserPins({ page, perPage }) {
-  const data = await axios
-    .get("/api/pin/", {
-      headers: {
-        Authorization: "User",
-        Accept: "application/json",
-        perPage: perPage || 10,
-        page: page || 1,
-      },
-    })
-    .then(function (response) {
-      return response.data;
-    })
-    .catch(function (error) {
-      toast.error(error);
-      return null;
-    });
+  const { err, data } = await api({
+    url: "/api/pin/",
+    headers: {
+      Authorization: "User",
+      Accept: "application/json",
+      perPage: perPage || 10,
+      page: page || 1,
+    },
+  });
+  if (err) { toast.error(err); return null; }
   return data;
 }
 
@@ -80,40 +74,23 @@ export async function getUserPins({ page, perPage }) {
  * return. { pins, count } or null on failure
  */
 export async function getPins({ userid = null, page, perPage }) {
-  const data = await axios
-    .get("/api/pin/", {
-      headers: {
-        Accept: "application/json",
-        userid: userid,
-        perPage: perPage || 10,
-        page: page || 1,
-      },
-    })
-    .then(function (response) {
-      const responseObject = {
-        rows: response.data.rows,
-        count: response.data.count,
-      };
-      return responseObject;
-    })
-    .catch(function (error) {
-      toast.error(error.message);
-      return null;
-    });
-  return data;
+  const { err, data } = await api({
+    url: "/api/pin/",
+    headers: {
+      Accept: "application/json",
+      userid: userid,
+      perPage: perPage || 10,
+      page: page || 1,
+    },
+  });
+  if (err) { toast.error(err); return null; }
+  return { rows: data.rows, count: data.count };
 }
 
 export async function getPin({ id }) {
-  const data = await axios
-    .get(`/api/pin/${id}`)
-    .then(function (response) {
-      const data = response.data.message;
-      return data;
-    })
-    .catch(function (error) {
-      console.log(error);
-    });
-  return data;
+  const { err, data } = await api({ url: `/api/pin/${id}` });
+  if (err) { console.log(err); return undefined; }
+  return data.message;
 }
 
 /**
@@ -147,17 +124,11 @@ export async function fetchUserPinPageData({ params }) {
 
 export const DeletePost = async function (event, pin, Navigator) {
   if (window.confirm(`Are you sure you want to delete ${pin.title} post?`)) {
-    axios
-      .delete(`/api/pin/${pin.id}`)
-      .then(function (response) {
-        toast.success(response);
-        if (!response.data.error) {
-          Navigator("/pin/");
-        }
-      })
-      .catch(function (error) {
-        toast.error(error.message);
-      });
+    const { err, data } = await api({ url: `/api/pin/${pin.id}`, method: "DELETE" });
+    if (err) { toast.error(err); return; }
+    if (data.error) { toast.error(data.message); return; }
+    toast.success(data.message);
+    Navigator("/pin/");
   }
 };
 
@@ -214,15 +185,11 @@ export function CreatePin() {
     formData.append("lat", form.coordinates.lat);
     formData.append("lng", form.coordinates.lng);
 
-    axios.post("/api/pin", formData).then(function (request) {
-      console.log("hey");
-      if (request.data.error) {
-        toast.error(request.data.message);
-      } else {
-        toast.success(request.data.message);
-        navigate(`/pin/${request.data.id}`);
-      }
-    });
+    const { err, data } = await api({ url: "/api/pin", method: "POST", body: formData });
+    if (err) { toast.error(err); return; }
+    if (data.error) { toast.error(data.message); return; }
+    toast.success(data.message);
+    navigate(`/pin/${data.id}`);
   };
 
   return (
@@ -316,18 +283,11 @@ export function EditPin() {
 
   const HandleSubmit = async function (event) {
     event.preventDefault();
-    axios
-      .put(`/api/pin/${id}`, form, {
-        headers: { "Content-Type": "application/json" },
-      })
-      .then(function (request) {
-        if (request.data.error) {
-          toast.error(request.data.message);
-        } else {
-          toast.success(request.data.message);
-          navigate(`/pin/${id}`);
-        }
-      });
+    const { err, data } = await api({ url: `/api/pin/${id}`, method: "PUT", headers: { "Content-Type": "application/json" }, body: form });
+    if (err) { toast.error(err); return; }
+    if (data.error) { toast.error(data.message); return; }
+    toast.success(data.message);
+    navigate(`/pin/${id}`);
   };
 
   return (

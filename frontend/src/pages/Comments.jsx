@@ -1,4 +1,4 @@
-import axios from "axios";
+import api from "../api.js";
 import { toast } from "react-toastify";
 import { isAuthorized } from "./Pins";
 
@@ -25,46 +25,28 @@ export function RenderComments({ rows, user }) {
 }
 
 export async function getComments({ id, page, perPage }) {
-  const commentData = await axios
-    .get(`/api/comment/`, {
-      headers: {
-        Accept: "application/json",
-        postid: id,
-        perPage: perPage || 10,
-        page: page || 1,
-      },
-    })
-    .then(function (response) {
-      const data = response.data.message;
-
-      if (response.error) {
-        toast.error(data);
-        return null;
-      }
-      return data;
-    });
-
-  return commentData;
+  const { err, data } = await api({
+    url: "/api/comment/",
+    headers: {
+      Accept: "application/json",
+      postid: id,
+      perPage: perPage || 10,
+      page: page || 1,
+    },
+  });
+  if (err) { toast.error(err); return null; }
+  if (data.error) { toast.error(data.message); return null; }
+  return data.message;
 }
 
 export async function HandleCommentFormSubmission(event, commentForm) {
   event.preventDefault();
   event.currentTarget.reset();
 
-  const data = await axios
-    .post("/api/comment", commentForm)
-    .then(function (response) {
-      const data = response.data.message;
-      if (response.data.error) {
-        toast.error(data);
-        return null;
-      }
-      toast.success("Created Comment");
-      return data;
-    })
-    .catch(function (error) {
-      toast.error(error.message);
-    });
+  const { err, data } = await api({ url: "/api/comment", method: "POST", body: commentForm });
+  if (err) { toast.error(err); return; }
+  if (data.error) { toast.error(data.message); return; }
+  toast.success("Created Comment");
 }
 
 export function CreateComment({
@@ -101,16 +83,11 @@ export function CreateComment({
 export function Comment({ id, authorid, authorName, comment, admin = false }) {
   async function DeletePost() {
     if (window.confirm(`Are you sure you want to delete this comment?`)) {
-      axios.delete(`/api/comment/${id}`).then(function (response) {
-        const data = response.data.message;
-        if (!response.data.error) {
-          toast.success(response.data.message);
-          document.getElementById(`comment_card_${id}`).hidden = true;
-          return true;
-        }
-        toast.error(data);
-        return false;
-      });
+      const { err, data } = await api({ url: `/api/comment/${id}`, method: "DELETE" });
+      if (err) { toast.error(err); return; }
+      if (data.error) { toast.error(data.message); return; }
+      toast.success(data.message);
+      document.getElementById(`comment_card_${id}`).hidden = true;
     }
   }
 

@@ -1,4 +1,4 @@
-import axios from "axios";
+import api from "../api.js";
 import { useState } from "react";
 import { useLoaderData, useNavigate, useOutletContext } from "react-router";
 import { toast } from "react-toastify";
@@ -21,51 +21,23 @@ export function isAuthorized(primaryUser, otherUser) {
  */
 export async function getUser(userid = null) {
   const apiURL = userid ? `/api/user/${userid}` : "/api/auth";
-  const apiHeader = { headers: { userid: userid } };
-
-  const data = await axios
-    .get(apiURL, userid ? apiHeader : {})
-    .then(function (response) {
-      return response.data;
-    })
-    .catch(function (error) {
-      if (apiURL != "/api/auth") {
-        console.error(error);
-        toast.error(error.message);
-      }
-    });
-
+  const { data } = await api({ url: apiURL, silent: apiURL === "/api/auth" });
   return data;
 }
 
 export async function HandleLogout() {
-  const data = await axios
-    .delete("/api/auth/logout")
-    .then(function () {
-      toast.success("Logged Out");
-      return true;
-    })
-    .catch(function (error) {
-      toast.error(error.message);
-      return false;
-    });
-  return data;
+  const { err } = await api({ url: "/api/auth/logout", method: "DELETE" });
+  if (err) { toast.error(err); return false; }
+  toast.success("Logged Out");
+  return true;
 }
 
 export async function HandleUserDeletion() {
   if (window.confirm(`Are you sure you want to delete this account?`)) {
-    const data = await axios
-      .delete(`/api/auth/delete`)
-      .then(function (response) {
-        const data = response.data.message;
-        if (response.data.error) {
-          toast.error(data);
-          return;
-        }
-        toast.success(data);
-        setTimeout(() => {}, 2000);
-      });
-    return data;
+    const { err, data } = await api({ url: "/api/auth/delete", method: "DELETE" });
+    if (err) { toast.error(err); return; }
+    if (data.error) { toast.error(data.message); return; }
+    toast.success(data.message);
   }
 }
 
@@ -156,30 +128,16 @@ export function UserProfile() {
   }
 
   async function HandleProfileSuspension() {
-    axios
-      .put(
-        `/api/user/${profile.id}`,
-        {
-          username: profile.username,
-          authLevel: profile.authLevel,
-        },
-        {
-          headers: {
-            action: "suspend",
-          },
-        },
-      )
-      .then(function (response) {
-        const data = response.data.message;
-        if (response.data.error) {
-          toast.error(data);
-          return;
-        }
-        toast.success(data);
-        setProfile({ ...profile, authLevel: response.data.authLevel });
-        return response;
-      });
-    setTimeout(() => {}, 1000);
+    const { err, data } = await api({
+      url: `/api/user/${profile.id}`,
+      method: "PUT",
+      headers: { action: "suspend" },
+      body: { username: profile.username, authLevel: profile.authLevel },
+    });
+    if (err) { toast.error(err); return; }
+    if (data.error) { toast.error(data.message); return; }
+    toast.success(data.message);
+    setProfile({ ...profile, authLevel: data.authLevel });
   }
 
   async function HandleProfileDeletion() {
@@ -188,15 +146,11 @@ export function UserProfile() {
         `Are you sure you want to delete #${profile.id} ${profile.username}'s account?`,
       )
     ) {
-      axios.delete(`/api/user/${profile.id}`).then(function (response) {
-        const data = response.data.message;
-        if (response.data.error) {
-          toast.error(data);
-          return;
-        }
-        toast.success(data);
-        setTimeout(() => navigate("/"), 2000);
-      });
+      const { err, data } = await api({ url: `/api/user/${profile.id}`, method: "DELETE" });
+      if (err) { toast.error(err); return; }
+      if (data.error) { toast.error(data.message); return; }
+      toast.success(data.message);
+      setTimeout(() => navigate("/"), 2000);
     }
   }
 
