@@ -1,4 +1,9 @@
 import { SignJWT, jwtVerify } from "jose";
+
+if (!process.env.JWT_SECRET) {
+  throw new Error("NO JWT_SECRET SET");
+}
+
 export const jwt_secret = new TextEncoder().encode(process.env.JWT_SECRET);
 
 export async function signAccessToken(

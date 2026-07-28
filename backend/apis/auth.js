@@ -33,29 +33,6 @@ export default function authRouter(Router, usersModel) {
     }
   });
 
-  Router.get("/auth/refresh", async (req, res) => {
-    const token = req.cookies?.refreshtoken;
-
-    if (!token) {
-      return res.status(401).json({ message: "Refresh token missing" });
-    }
-
-    try {
-      const payload = await jwtVerification(token);
-      req.user = payload;
-
-      const newAccessToken = await signAccessToken({
-        userid: payload.userid,
-        username: payload.username,
-        authLevel: payload.authLevel,
-      });
-
-      return res.json({ accessToken: newAccessToken });
-    } catch (error) {
-      return res.status(403).json({ message: "Invalid or expired token" });
-    }
-  });
-
   // Handle User Registration using Schema Validation, & Express-Session.
   // User Registration
   Router.post(
@@ -111,7 +88,9 @@ export default function authRouter(Router, usersModel) {
 
         // Throws if no valid user is found
         if (!User) {
-          return res.status(404).json({ message: "ERROR: USER DOES NOT EXIST" });
+          return res
+            .status(404)
+            .json({ message: "ERROR: USER DOES NOT EXIST" });
         }
 
         // Verify if Password Matches then Authenticate Session

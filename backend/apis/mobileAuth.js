@@ -6,6 +6,29 @@ import { signAccessToken, signRefreshToken } from "../services/jwt.js";
 const saltRounds = 12;
 
 export default function mobileAuthRouter(Router, usersModel) {
+  Router.get("/auth/mobile/refresh", async (req, res) => {
+    const token = req.cookies?.refreshtoken;
+
+    if (!token) {
+      return res.status(401).json({ message: "Refresh token missing" });
+    }
+
+    try {
+      const payload = await jwtVerification(token);
+      req.user = payload;
+
+      const newAccessToken = await signAccessToken({
+        userid: payload.userid,
+        username: payload.username,
+        authLevel: payload.authLevel,
+      });
+
+      return res.json({ accessToken: newAccessToken });
+    } catch (error) {
+      return res.status(403).json({ message: "Invalid or expired token" });
+    }
+  });
+
   // Mobile Login — returns JWT instead of setting session
   Router.post(
     "/auth/mobile/login",
@@ -23,26 +46,27 @@ export default function mobileAuthRouter(Router, usersModel) {
           return;
         }
 
-        if (await bcrypt.compare(body.password, User.password)) {
-          const claims = {
-            userid: User.id,
-            username: User.username,
-            authLevel: User.authLevel,
-          };
-
-          const accessToken = await signAccessToken(claims);
-          const refreshToken = await signRefreshToken(claims);
-
-          res.json({
-            accessToken: accessToken,
-            refreshToken: refreshToken,
-            expiresIn: "15m",
+        if (!(await bcrypt.compare(body.password, User.password))) {
+          res.status(401).json({
+            message: "ERROR: INCORRECT PASSWORD, Authentication Failed",
           });
-        } else {
-          res
-            .status(401)
-            .send("ERROR: INCORRECT PASSWORD, Authentication Failed");
+          return;
         }
+
+        const claims = {
+          userid: User.id,
+          username: User.username,
+          authLevel: User.authLevel,
+        };
+
+        const accessToken = await signAccessToken(claims);
+        const refreshToken = await signRefreshToken(claims);
+
+        res.json({
+          accessToken: accessToken,
+          refreshToken: refreshToken,
+          expiresIn: "15m",
+        });
       } catch (error) {
         console.error(error);
       }
