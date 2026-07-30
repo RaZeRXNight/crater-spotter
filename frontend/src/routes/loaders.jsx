@@ -11,7 +11,7 @@ export async function getUserLoader() {
 export async function PinDataLoader({ params }) {
   const id = params.id;
 
-  const { err, data } = await api({ url: `/api/pin/${id}` });
+  const { err, data } = await api({ url: `/api/v1/pin/${id}` });
   if (err) { console.log(err); }
   const userData = await getUser();
   return { pin: err ? undefined : data.message, user: userData };

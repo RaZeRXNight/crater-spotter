@@ -28,7 +28,7 @@
 
 - [ ] Migrate from SQLite to PostgreSQL
 - [ ] Database optimization: indexing, pagination, connection pooling, solve N+1
-- [ ] API Versioning: prefix all API Routes with `/v1/`
+- [ X ] API Versioning: prefix all API Routes with `/v1/`
 
 **Done:** App runs fully on PostgreSQL (scalable, AWS-compatible); N+1
 eliminated via eager-loaded queries; indexes, pagination, and pooling in place.

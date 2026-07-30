@@ -30,7 +30,7 @@ async function getUserLoader() {
 }
 
 async function RootLoader() {
-  const { err, data } = await api({ url: "/api/config" });
+  const { err, data } = await api({ url: "/api/v1/config" });
   if (err) { console.error(err); return {}; }
   return { ...data.message };
 }
@@ -38,7 +38,7 @@ async function RootLoader() {
 async function PinDataLoader({ params }) {
   const id = params.id;
 
-  const { err, data } = await api({ url: `/api/pin/${id}` });
+  const { err, data } = await api({ url: `/api/v1/pin/${id}` });
   if (err) { console.log(err); }
   const userData = await getUser();
   return { pin: err ? undefined : data.message, user: userData };

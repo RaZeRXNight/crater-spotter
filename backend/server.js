@@ -51,7 +51,7 @@ const dist_path = path.resolve(__dirname, "..", "frontend", "dist");
 server.use(express.static(dist_path));
 
 // Placed Session Store to pass in through here, Will Change Later.
-server.use("/api", router(database, sessionStore));
+server.use("/api/v1", router(database, sessionStore));
 
 // Serves the React distribution
 server.use("/", (req, res) =>
