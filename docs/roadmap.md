@@ -21,9 +21,8 @@
 
 - [ X ] JWT for mobile auth (coexists alongside session auth; JWT verified on protected routes via unified middleware)
 - [ X ] Request logging
-- [ ] Rate limiting on API endpoints
 
-**Done:** JWT backend implementation complete — access/refresh token signing, verification, mobile login/register/logout endpoints, and unified middleware. What remains is the mobile app client (Flutter). Rate limiter active on auth + post/comment endpoints; request logs capture method, route, status, and latency.
+**Done:** JWT backend implementation complete — access/refresh token signing, verification, mobile login/register/logout endpoints, and unified middleware. What remains is the mobile app client (Flutter). Request logs capture method, route, status, and latency.
 
 ### Month 2 — Database
 
@@ -66,6 +65,7 @@ cache-control tightened; inputs sanitized; errors no longer leak.
 ### Month 6 — Final Security Hardening
 
 - [ ] Research-driven pass on current standards and known vulnerabilities
+- [ ] Rate limiting on API endpoints
 
 **Done:** App meets current security best practices established during research.
 
