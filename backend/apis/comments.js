@@ -57,22 +57,22 @@ export default function commentRouter(Router, CommentModel) {
         throw new Error("ERROR: NO DATA FOUND");
       }
 
-      async function mapRows(row) {
-        const tempdata = { ...row.dataValues };
-        const author = await userModel.findByPk(tempdata.authorid);
-
-        if (!author) {
-          return null;
-        }
-
-        const username = author.dataValues.username;
-        tempdata.authorName = username;
-
-        return tempdata;
+      // Batch fetch authors to avoid N+1 queries
+      const authorIds = Array.from(new Set(data.rows.map((r) => r.dataValues.authorid).filter(Boolean)));
+      let authorsMap = {};
+      if (authorIds.length) {
+        const authors = await userModel.findAll({ where: { id: authorIds }, attributes: ["id", "username"] });
+        authorsMap = authors.reduce((acc, a) => {
+          acc[a.id] = a.username;
+          return acc;
+        }, {});
       }
 
-      // Limits amount of characters
-      const dataRows = await Promise.all(data.rows.map(mapRows));
+      const dataRows = data.rows.map((row) => {
+        const tempdata = { ...row.dataValues };
+        tempdata.authorName = authorsMap[tempdata.authorid] || "Deleted User";
+        return tempdata;
+      });
 
       const dataToSend = {
         rows: dataRows,
@@ -125,26 +125,25 @@ export default function commentRouter(Router, CommentModel) {
         throw new Error("ERROR: NO DATA FOUND");
       }
 
-      async function mapRows(row) {
+      // Batch fetch authors to avoid N+1 queries
+      const authorIds = Array.from(new Set(data.rows.map((r) => r.dataValues.authorid).filter(Boolean)));
+      let authorsMap = {};
+      if (authorIds.length) {
+        const authors = await userModel.findAll({ where: { id: authorIds }, attributes: ["id", "username"] });
+        authorsMap = authors.reduce((acc, a) => {
+          acc[a.id] = a.username;
+          return acc;
+        }, {});
+      }
+
+      const dataRows = data.rows.map((row) => {
         const tempdata = { ...row.dataValues };
-        const author = await userModel.findByPk(tempdata.authorid);
-
-        if (!author) {
-          return null;
-        }
-
-        const username = author.dataValues.username;
-        tempdata.authorName = username;
-
+        tempdata.authorName = authorsMap[tempdata.authorid] || "Deleted User";
         if (tempdata.comment.length > TEXTLIMIT) {
           tempdata.comment = tempdata.comment.slice(0, TEXTLIMIT) + "...";
         }
-
         return tempdata;
-      }
-
-      // Limits amount of characters
-      const dataRows = await Promise.all(data.rows.map(mapRows));
+      });
 
       const dataToSend = {
         rows: dataRows,
