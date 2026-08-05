@@ -1,4 +1,4 @@
-import { checkSchema } from "express-validator";
+import { checkSchema, validationResult } from "express-validator";
 import { BasicAuth } from "../services/admin.js";
 import { CommentSchema } from "../schema/comment.js";
 
@@ -36,10 +36,8 @@ export default function commentRouter(Router, CommentModel) {
     const order = headers.order || "DESC";
 
     // Pagination Variables
-    const perPage = headers.perpage;
-    const currentPage = headers.page;
-    const endIndex = perPage * currentPage;
-    const startIndex = endIndex - perPage;
+    const requestedPerPage = headers.perpage ?? "10";
+    const requestedPage = headers.page ?? "1";
 
     try {
       // Validation
@@ -49,12 +47,23 @@ export default function commentRouter(Router, CommentModel) {
       if (order && order != "ASC" && order != "DESC") {
         throw new Error("ERROR: INCORRECT ORDER ENTERED");
       }
-      if (perPage > UPPERLIMIT) {
-        throw new Error("ERROR: INCORRECT PERPAGE WANTED");
-      }
       if (!postid) {
         throw new Error("ERROR: NO PARENT PROVIDED FOR COMMENT");
       }
+
+      const perPage = Number(requestedPerPage);
+      const currentPage = Number(requestedPage);
+      if (
+        !Number.isInteger(perPage) ||
+        perPage < 1 ||
+        perPage > UPPERLIMIT ||
+        !Number.isInteger(currentPage) ||
+        currentPage < 1
+      ) {
+        throw new Error("ERROR: INVALID PAGINATION");
+      }
+      const endIndex = perPage * currentPage;
+      const startIndex = endIndex - perPage;
 
       // Query Additions
       const query = {};
@@ -140,6 +149,14 @@ export default function commentRouter(Router, CommentModel) {
       const reqReplyLevel = body.replyLevel;
 
       try {
+        const validation = validationResult(req);
+        if (!validation.isEmpty()) {
+          throw new Error(validation
+            .array()
+            .map(({ msg }) => msg)
+            .join(", "));
+        }
+
         const auth = await BasicAuth(CommentModel.sequelize, session);
 
         if (!auth) {
@@ -152,7 +169,14 @@ export default function commentRouter(Router, CommentModel) {
         }
 
         const pinParent = await pinsModel.findByPk(reqPinParent);
-        const commentParent = await CommentModel.findByPk(reqCommentParent);
+        const commentParent = reqCommentParent
+          ? await CommentModel.findOne({
+              where: {
+                id: reqCommentParent,
+                PinParent: reqPinParent,
+              },
+            })
+          : null;
 
         if (reqCommentParent && !commentParent) {
           throw new Error("ERROR: NO COMMENT PARENT FOUND");
@@ -204,7 +228,7 @@ export default function commentRouter(Router, CommentModel) {
       const query = await CommentModel.findOne({ where: { id: id } });
       const userQuery = await userModel.findByPk(session.userid);
 
-      const auth = BasicAuth(CommentModel.sequelize, session);
+      const auth = await BasicAuth(CommentModel.sequelize, session);
 
       if (!auth) {
         throw new Error("ERROR: UNAUTHORIZED");

@@ -1,5 +1,15 @@
 export const CommentSchema = {
-  authorid: { notEmpty: true },
-  PinParent: { notEmpty: true },
-  comment: { notEmpty: true },
+  PinParent: {
+    isInt: { errorMessage: "PinParent must be an integer" },
+  },
+  CommentParent: {
+    optional: { nullable: true },
+    isInt: { errorMessage: "CommentParent must be an integer" },
+  },
+  replyLevel: {
+    isInt: { errorMessage: "replyLevel must be an integer" },
+  },
+  comment: {
+    notEmpty: { errorMessage: "Comment cannot be empty" },
+  },
 };
