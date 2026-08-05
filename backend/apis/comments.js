@@ -1,8 +1,8 @@
 import { checkSchema, validationResult } from "express-validator";
 import { BasicAuth } from "../services/admin.js";
 import { CommentSchema } from "../schema/comment.js";
+import { validatePagination } from "../services/validation.js";
 
-const UPPERLIMIT = 10;
 const TEXTLIMIT = 30;
 function mapRows(row) {
   const tempdata = { ...row.dataValues };
@@ -35,10 +35,6 @@ export default function commentRouter(Router, CommentModel) {
     const postid = headers.postid;
     const order = headers.order || "DESC";
 
-    // Pagination Variables
-    const requestedPerPage = headers.perpage ?? "10";
-    const requestedPage = headers.page ?? "1";
-
     try {
       // Validation
       if (headers.accept != "application/json") {
@@ -51,19 +47,14 @@ export default function commentRouter(Router, CommentModel) {
         throw new Error("ERROR: NO PARENT PROVIDED FOR COMMENT");
       }
 
-      const perPage = Number(requestedPerPage);
-      const currentPage = Number(requestedPage);
-      if (
-        !Number.isInteger(perPage) ||
-        perPage < 1 ||
-        perPage > UPPERLIMIT ||
-        !Number.isInteger(currentPage) ||
-        currentPage < 1
-      ) {
-        throw new Error("ERROR: INVALID PAGINATION");
+      const pagination = validatePagination(headers);
+      if (!pagination) {
+        return res.status(400).json({
+          error: true,
+          message: "ERROR: INVALID PAGINATION",
+        });
       }
-      const endIndex = perPage * currentPage;
-      const startIndex = endIndex - perPage;
+      const { perPage, offset } = pagination;
 
       // Query Additions
       const query = {};
@@ -73,8 +64,8 @@ export default function commentRouter(Router, CommentModel) {
       // Determines whether we send user specific data or general data.
       const data = await CommentModel.findAndCountAll({
         where: query,
-        order: [["createdAt", order]],
-        offset: startIndex,
+        order: [["createdAt", order], ["id", order]],
+        offset,
         limit: perPage,
         include: CommentInclude,
       });

@@ -5,6 +5,7 @@ import multer from "multer";
 import { checkSchema } from "express-validator";
 import { BasicAuth } from "../services/admin.js";
 import { PinSchema } from "../schema/pin.js";
+import { validatePagination } from "../services/validation.js";
 
 export const upload = multer({
   limits: { fieldSize: 1048576 * 8 },
@@ -12,7 +13,6 @@ export const upload = multer({
 });
 
 export default function pinRouter(Router, PinsModel) {
-  const UPPERLIMIT = 10;
   const TEXTLIMIT = 30;
   const STORAGE_PATH = path.join(process.cwd(), process.env.STORAGE_PATH);
   const ALLOWED_MIME_TYPES = [
@@ -35,12 +35,6 @@ export default function pinRouter(Router, PinsModel) {
     const userid = headers.userid;
     const order = headers.order || "DESC";
 
-    // Pagination Variables
-    const perPage = headers.perpage;
-    const currentPage = headers.page;
-    const endIndex = perPage * currentPage;
-    const startIndex = endIndex - perPage;
-
     try {
       // Validation
       if (headers.accept != "application/json") {
@@ -49,9 +43,14 @@ export default function pinRouter(Router, PinsModel) {
       if (order && order != "ASC" && order != "DESC") {
         throw new Error("ERROR: INCORRECT ORDER ENTERED");
       }
-      if (perPage > UPPERLIMIT) {
-        throw new Error("ERROR: INCORRECT PERPAGE WANTED");
+      const pagination = validatePagination(headers);
+      if (!pagination) {
+        return res.status(400).json({
+          error: true,
+          message: "ERROR: INVALID PAGINATION",
+        });
       }
+      const { perPage, offset } = pagination;
 
       // Determines whether we send user specific data or general data.
       let data;
@@ -60,15 +59,15 @@ export default function pinRouter(Router, PinsModel) {
           where: {
             authorid: session.userid,
           },
-          order: [["createdAt", order]],
-          offset: startIndex,
+          order: [["createdAt", order], ["id", order]],
+          offset,
           limit: perPage,
         });
       } else {
         data = await PinsModel.findAndCountAll({
           where: userid ? { authorid: userid } : null,
-          order: [["createdAt", order]],
-          offset: startIndex,
+          order: [["createdAt", order], ["id", order]],
+          offset,
           limit: perPage,
         });
       }
@@ -96,6 +95,7 @@ export default function pinRouter(Router, PinsModel) {
       });
     } catch (error) {
       console.error(error);
+      res.status(500).json({ error: true, message: error.message });
     }
   });
 
