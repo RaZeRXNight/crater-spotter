@@ -3,10 +3,10 @@ WORKDIR /backend
 
 RUN apk upgrade --no-cache
 
-COPY package*.json ./
+COPY backend/package*.json ./
 RUN npm i
 
-COPY . ./
+COPY backend/ ./
 
 EXPOSE 8000
 CMD ["npm", "start"]
