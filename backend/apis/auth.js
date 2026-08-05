@@ -3,8 +3,10 @@ import { checkSchema } from "express-validator";
 import { LoginSchema, RegisterSchema } from "../schema/auth.js";
 import { jwtVerification, signAccessToken } from "../services/jwt.js";
 import authMiddleware from "../middleware/authentication.js";
-
-const saltRounds = 12;
+import {
+  BCRYPT_SALT_ROUNDS,
+  DEFAULT_USER_AUTH_LEVEL,
+} from "../services/constants.js";
 
 export default function authRouter(Router, usersModel) {
   // User DB API
@@ -48,13 +50,13 @@ export default function authRouter(Router, usersModel) {
         const username = body.username;
 
         // Encrypt Password
-        const password = await bcrypt.hash(body.password, saltRounds);
+        const password = await bcrypt.hash(body.password, BCRYPT_SALT_ROUNDS);
 
         // Create User Record
         const newUser = await usersModel.create({
           username: username,
           email: email,
-          authLevel: 1,
+          authLevel: DEFAULT_USER_AUTH_LEVEL,
           password: password,
         });
 

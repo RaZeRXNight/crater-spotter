@@ -6,22 +6,20 @@ import { checkSchema } from "express-validator";
 import { BasicAuth } from "../services/admin.js";
 import { PinSchema } from "../schema/pin.js";
 import { validatePagination } from "../services/validation.js";
+import {
+  ALLOWED_IMAGE_MIME_TYPES,
+  BASIC_AUTH_LEVEL,
+  TEXT_LIMIT,
+  UPLOAD_FIELD_SIZE,
+} from "../services/constants.js";
 
 export const upload = multer({
-  limits: { fieldSize: 1048576 * 8 },
+  limits: { fieldSize: UPLOAD_FIELD_SIZE },
   dest: process.env.STORAGE_PATH,
 });
 
 export default function pinRouter(Router, PinsModel) {
-  const TEXTLIMIT = 30;
   const STORAGE_PATH = path.join(process.cwd(), process.env.STORAGE_PATH);
-  const ALLOWED_MIME_TYPES = [
-    "image/jpeg",
-    "image/jpg",
-    "image/png",
-    "image/webp",
-    "image/avif",
-  ];
 
   // pin DB API
   // Routes
@@ -80,11 +78,11 @@ export default function pinRouter(Router, PinsModel) {
       const dataRows = data.rows.map((row) => {
         const tempdata = { ...row.dataValues };
 
-        if (tempdata.comment.length > TEXTLIMIT) {
-          tempdata.comment = tempdata.comment.slice(0, TEXTLIMIT) + "...";
+        if (tempdata.comment.length > TEXT_LIMIT) {
+          tempdata.comment = tempdata.comment.slice(0, TEXT_LIMIT) + "...";
         }
-        if (tempdata.title.length > TEXTLIMIT) {
-          tempdata.title = tempdata.title.slice(0, TEXTLIMIT) + "...";
+        if (tempdata.title.length > TEXT_LIMIT) {
+          tempdata.title = tempdata.title.slice(0, TEXT_LIMIT) + "...";
         }
         return tempdata;
       });
@@ -137,7 +135,7 @@ export default function pinRouter(Router, PinsModel) {
 
       try {
         // Image Validation
-        if (file && !ALLOWED_MIME_TYPES.includes(file.mimetype)) {
+        if (file && !ALLOWED_IMAGE_MIME_TYPES.includes(file.mimetype)) {
           unlink(file.path);
           throw new Error("Invalid file type");
         }
@@ -214,7 +212,10 @@ export default function pinRouter(Router, PinsModel) {
           throw new Error("ERROR: UNAUTHORIZED");
         }
 
-        if (session.userid != query.authorid && userQuery.authLevel < 1) {
+        if (
+          session.userid != query.authorid &&
+          userQuery.authLevel < BASIC_AUTH_LEVEL
+        ) {
           res.json({ error: true, message: "ERROR: UNAUTHORIZED" });
           throw new Error("ERROR: UNAUTHORIZED");
         }
@@ -255,7 +256,10 @@ export default function pinRouter(Router, PinsModel) {
         throw new Error("ERROR: UNAUTHORIZED");
       }
 
-      if (query.authorid != session.userid && userQuery.authLevel < 1) {
+      if (
+        query.authorid != session.userid &&
+        userQuery.authLevel < BASIC_AUTH_LEVEL
+      ) {
         throw new Error("ERROR: UNAUTHORIZED");
       }
 

@@ -1,7 +1,14 @@
-const MAX_PAGE = 100;
-const MAX_PER_PAGE = 10;
+import {
+  DEFAULT_PAGE,
+  DEFAULT_PER_PAGE,
+  MAX_PAGE,
+  MAX_PER_PAGE,
+} from "./constants.js";
 
-export function validatePagination({ page = "1", perpage = "10" }) {
+export function validatePagination({
+  page = DEFAULT_PAGE,
+  perpage = DEFAULT_PER_PAGE,
+}) {
   const currentPage = Number(page);
   const perPage = Number(perpage);
 
@@ -16,6 +23,6 @@ export function validatePagination({ page = "1", perpage = "10" }) {
     return null;
   }
 
-  // ponytail: page 100 caps offsets at 990 rows; use cursor pagination if feeds outgrow it.
+  // ponytail: MAX_PAGE caps offsets; use cursor pagination if feeds outgrow it.
   return { currentPage, perPage, offset: (currentPage - 1) * perPage };
 }

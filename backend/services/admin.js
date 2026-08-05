@@ -1,3 +1,8 @@
+import {
+  ADMIN_AUTH_LEVEL,
+  BASIC_AUTH_LEVEL,
+} from "./constants.js";
+
 /// Creates an admin Profile if there are no accounts available
 export async function CheckAndMakeDefaultAdminAccount(database) {
   try {
@@ -7,7 +12,7 @@ export async function CheckAndMakeDefaultAdminAccount(database) {
 
     if (!userCount) {
       const newUser = await usersModel.create({
-        authLevel: 2,
+        authLevel: ADMIN_AUTH_LEVEL,
         username: "admin",
         email: "default@gmail.com",
         password: "password",
@@ -30,7 +35,7 @@ export async function BasicAuth(sequelize, session) {
 
     const user = await userModel.findByPk(session.userid);
 
-    if (user.authLevel < 1) {
+    if (user.authLevel < BASIC_AUTH_LEVEL) {
       return false;
     }
   } catch (error) {
@@ -50,7 +55,7 @@ export async function AdminAuth(sequelize, session) {
 
     const user = await userModel.findByPk(session.userid);
 
-    if (user.authLevel < 2) {
+    if (user.authLevel < ADMIN_AUTH_LEVEL) {
       return false;
     }
 

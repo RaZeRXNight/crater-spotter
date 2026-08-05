@@ -2,15 +2,15 @@ import { checkSchema, validationResult } from "express-validator";
 import { BasicAuth } from "../services/admin.js";
 import { CommentSchema } from "../schema/comment.js";
 import { validatePagination } from "../services/validation.js";
+import { BASIC_AUTH_LEVEL, TEXT_LIMIT } from "../services/constants.js";
 
-const TEXTLIMIT = 30;
 function mapRows(row) {
   const tempdata = { ...row.dataValues };
 
   tempdata.authorName = row.author?.username || "Deleted User";
 
-  if (tempdata.comment?.length > TEXTLIMIT) {
-    tempdata.comment = tempdata.comment.slice(0, TEXTLIMIT) + "...";
+  if (tempdata.comment?.length > TEXT_LIMIT) {
+    tempdata.comment = tempdata.comment.slice(0, TEXT_LIMIT) + "...";
   }
 
   return tempdata;
@@ -225,7 +225,10 @@ export default function commentRouter(Router, CommentModel) {
         throw new Error("ERROR: UNAUTHORIZED");
       }
 
-      if (query.authorid != session.userid && userQuery.authLevel < 1) {
+      if (
+        query.authorid != session.userid &&
+        userQuery.authLevel < BASIC_AUTH_LEVEL
+      ) {
         throw new Error("ERROR: UNAUTHORIZED");
       }
 

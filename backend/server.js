@@ -7,7 +7,11 @@ const { Sequelize } = require("sequelize");
 const session = require("express-session");
 const SequelizeStore = require("connect-session-sequelize")(session.Store);
 const { CheckAndMakeDefaultAdminAccount } = require("./services/admin.js");
-const { sessionSecrets } = require("./services/constants.js");
+const {
+  DEFAULT_ADMIN_DELAY_MS,
+  DEFAULT_PORT,
+  sessionSecrets,
+} = require("./services/constants.js");
 const router = require("./routes/api.js");
 const { logger } = require("./middleware/logging.js");
 require("dotenv").config({
@@ -20,7 +24,7 @@ require("dotenv").config({
 const databaseLocation = process.env.DATABASE;
 const sessionSecret = process.env.SESSION_SECRET;
 const host = process.env.HOST;
-const port = process.env.PORT || 8000;
+const port = process.env.PORT || DEFAULT_PORT;
 
 const database = new Sequelize({
   dialect: process.env.DB_DIALECT,
@@ -63,5 +67,5 @@ server.listen(port, host, () => {
   // Extra Functionality
   setTimeout(() => {
     CheckAndMakeDefaultAdminAccount(database);
-  }, 1000);
+  }, DEFAULT_ADMIN_DELAY_MS);
 });

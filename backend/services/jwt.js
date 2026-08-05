@@ -1,4 +1,8 @@
 import { SignJWT, jwtVerify } from "jose";
+import {
+  ACCESS_TOKEN_EXPIRY,
+  REFRESH_TOKEN_EXPIRY,
+} from "./constants.js";
 
 if (!process.env.JWT_SECRET) {
   throw new Error("NO JWT_SECRET SET");
@@ -9,7 +13,7 @@ export const jwt_secret = new TextEncoder().encode(process.env.JWT_SECRET);
 export async function signAccessToken(
   info = {},
   protectedHeader = { alg: "HS256" },
-  expiryTime = "15m",
+  expiryTime = ACCESS_TOKEN_EXPIRY,
 ) {
   if (Object.keys(info).length == 0) {
     throw new Error("Cannot sign token: empty claims");
@@ -27,7 +31,7 @@ export async function signAccessToken(
 export async function signRefreshToken(
   info = {},
   protectedHeader = { alg: "HS256" },
-  expiryTime = "7d",
+  expiryTime = REFRESH_TOKEN_EXPIRY,
 ) {
   return await signAccessToken(info, protectedHeader, expiryTime);
 }
