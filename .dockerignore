@@ -35,7 +35,7 @@ react-dev.sh
 dist
 app/dist
 app/node_modules
-nginx/certs/*
+docker/nginx/certs/*
 build
 public/storage/*
 
