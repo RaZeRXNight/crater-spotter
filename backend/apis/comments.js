@@ -2,12 +2,32 @@ import { checkSchema } from "express-validator";
 import { BasicAuth } from "../services/admin.js";
 import { CommentSchema } from "../schema/comment.js";
 
-export default function commentRouter(Router, CommentModel) {
-  const UPPERLIMIT = 10;
-  const TEXTLIMIT = 30;
+const UPPERLIMIT = 10;
+const TEXTLIMIT = 30;
+function mapRows(row) {
+  const tempdata = { ...row.dataValues };
 
+  tempdata.authorName = row.author?.username || "Deleted User";
+
+  if (tempdata.comment?.length > TEXTLIMIT) {
+    tempdata.comment = tempdata.comment.slice(0, TEXTLIMIT) + "...";
+  }
+
+  return tempdata;
+}
+
+export default function commentRouter(Router, CommentModel) {
   // comment DB API
   // Routes
+  const CommentInclude = [
+    {
+      model: CommentModel.sequelize.models.Users,
+      as: "author",
+      attributes: ["username"],
+      required: true,
+    },
+  ];
+
   Router.get("/comment/", async (req, res) => {
     const headers = req.headers;
 
@@ -22,9 +42,8 @@ export default function commentRouter(Router, CommentModel) {
     const endIndex = perPage * currentPage;
     const startIndex = endIndex - perPage;
 
-    const userModel = CommentModel.sequelize.models.Users;
-
     try {
+      console.log("Hello");
       // Validation
       if (headers.accept != "application/json") {
         throw new Error("ERROR: INCORRECT FORMAT WANTED");
@@ -51,28 +70,15 @@ export default function commentRouter(Router, CommentModel) {
         order: [["createdAt", order]],
         offset: startIndex,
         limit: perPage,
+        include: CommentInclude,
       });
 
       if (!data) {
         throw new Error("ERROR: NO DATA FOUND");
       }
 
-      async function mapRows(row) {
-        const tempdata = { ...row.dataValues };
-        const author = await userModel.findByPk(tempdata.authorid);
-
-        if (!author) {
-          return null;
-        }
-
-        const username = author.dataValues.username;
-        tempdata.authorName = username;
-
-        return tempdata;
-      }
-
       // Limits amount of characters
-      const dataRows = await Promise.all(data.rows.map(mapRows));
+      const dataRows = data.rows.map(mapRows);
 
       const dataToSend = {
         rows: dataRows,
@@ -88,70 +94,31 @@ export default function commentRouter(Router, CommentModel) {
   Router.get("/comment/:id", async (req, res) => {
     const headers = req.headers;
 
-    // Data Order & Filters
-    const userid = headers.userid;
-    const postid = headers.postid;
-    const order = headers.order || "DESC";
     try {
       // Validation
       if (headers.accept != "application/json") {
         throw new Error("ERROR: INCORRECT FORMAT WANTED");
       }
-      if (order && order != "ASC" && order != "DESC") {
-        throw new Error("ERROR: INCORRECT ORDER ENTERED");
-      }
-      if (perPage > UPPERLIMIT) {
-        throw new Error("ERROR: INCORRECT PERPAGE WANTED");
-      }
 
-      if (!postid) {
-        throw new Error("ERROR: NO PARENT PROVIDED FOR COMMENT");
-      }
-
-      // Query Additions
-      const query = {};
-      userid ? (query.authorid = userid) : null;
-      postid ? (query.PinParent = postid) : null;
-
-      // Determines whether we send user specific data or general data.
+      // Fetch one comment without list pagination.
       const data = await CommentModel.findAndCountAll({
-        where: query,
-        order: [["createdAt", order]],
-        offset: startIndex,
-        limit: perPage,
+        where: { id: req.params.id },
+        include: CommentInclude,
       });
 
       if (!data) {
         throw new Error("ERROR: NO DATA FOUND");
       }
 
-      async function mapRows(row) {
-        const tempdata = { ...row.dataValues };
-        const author = await userModel.findByPk(tempdata.authorid);
-
-        if (!author) {
-          return null;
-        }
-
-        const username = author.dataValues.username;
-        tempdata.authorName = username;
-
-        if (tempdata.comment.length > TEXTLIMIT) {
-          tempdata.comment = tempdata.comment.slice(0, TEXTLIMIT) + "...";
-        }
-
-        return tempdata;
-      }
-
       // Limits amount of characters
-      const dataRows = await Promise.all(data.rows.map(mapRows));
+      const dataRows = data.rows.map(mapRows);
 
-      const dataToSend = {
-        rows: dataRows,
-        count: data.count,
-      };
-
-      res.json({ message: dataToSend });
+      res.json({
+        message: {
+          rows: dataRows,
+          count: data.count,
+        },
+      });
     } catch (error) {
       res.json({ error: true, message: error.message });
       console.error(error);
@@ -162,11 +129,9 @@ export default function commentRouter(Router, CommentModel) {
     "/comment",
     checkSchema(CommentSchema, ["body"]),
     async (req, res) => {
-      const headers = req.headers;
       const session = req.session;
 
       // post data
-      const postid = headers.postid;
       const body = req.body;
 
       const pinsModel = CommentModel.sequelize.models.Pins;
