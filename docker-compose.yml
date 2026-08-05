@@ -3,7 +3,7 @@ services:
     container_name: crater-spotter-backend
     build:
       context: .
-      dockerfile: docker/Dockerfile.backend
+      dockerfile: docker/backend/Dockerfile
     env_file: ./backend/.env
     volumes:
       - ./.sqlite3:/.sqlite3
@@ -12,7 +12,7 @@ services:
     container_name: crater-spotter-frontend
     build:
       context: .
-      dockerfile: docker/Dockerfile.frontend
+      dockerfile: docker/frontend/Dockerfile
     volumes:
       - ./docker/nginx/certs/local.rsa.crt:/etc/nginx/certs/local.rsa.crt
       - ./docker/nginx/certs/local.rsa.key:/etc/nginx/certs/local.rsa.key

@@ -9,7 +9,7 @@
 ## Module system quirk (don't "fix" this)
 
 - `backend/package.json` has no `"type": "module"`, so `.js` files are CommonJS by default. `backend/routes/api.js` and `backend/server.js` load modules with `require(...)`, but `backend/apis/*.js`, `backend/models/*.js`, `backend/services/*.js`, and `backend/middleware/*.js` are written with `export default` / `import` (ESM syntax).
-- This works only because of Node's stable `require(esm)` interop (Node ≥22, matches `node:22-alpine` in `docker/Dockerfile.backend`). Keep this pattern — don't convert one side to the other without checking Node version compatibility.
+- This works only because of Node's stable `require(esm)` interop (Node ≥22, matches `node:22-alpine` in `docker/backend/Dockerfile`). Keep this pattern — don't convert one side to the other without checking Node version compatibility.
 
 ## Commands
 
