@@ -1,7 +1,4 @@
-import {
-  ADMIN_AUTH_LEVEL,
-  BASIC_AUTH_LEVEL,
-} from "./constants.js";
+import { ADMIN_AUTH_LEVEL, BASIC_AUTH_LEVEL } from "./constants.js";
 
 /// Creates an admin Profile if there are no accounts available
 export async function CheckAndMakeDefaultAdminAccount(database) {

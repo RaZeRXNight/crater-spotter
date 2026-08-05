@@ -70,7 +70,10 @@ export default function commentRouter(Router, CommentModel) {
       // Determines whether we send user specific data or general data.
       const data = await CommentModel.findAndCountAll({
         where: query,
-        order: [["createdAt", order], ["id", order]],
+        order: [
+          ["createdAt", order],
+          ["id", order],
+        ],
         offset,
         limit: perPage,
         include: CommentInclude,
@@ -148,10 +151,12 @@ export default function commentRouter(Router, CommentModel) {
       try {
         const validation = validationResult(req);
         if (!validation.isEmpty()) {
-          throw new Error(validation
-            .array()
-            .map(({ msg }) => msg)
-            .join(", "));
+          throw new Error(
+            validation
+              .array()
+              .map(({ msg }) => msg)
+              .join(", "),
+          );
         }
 
         const auth = await BasicAuth(CommentModel.sequelize, session);

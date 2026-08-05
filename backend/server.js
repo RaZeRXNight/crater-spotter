@@ -55,7 +55,9 @@ server.use(`/${process.env.STORAGE_PATH}`, express.static(storage_path));
 const dist_path = path.resolve(__dirname, "..", "frontend", "dist");
 if (existsSync(path.join(dist_path, "index.html"))) {
   server.use(express.static(dist_path));
-  server.use("/", (req, res) => res.sendFile(path.join(dist_path, "index.html")));
+  server.use("/", (req, res) =>
+    res.sendFile(path.join(dist_path, "index.html")),
+  );
 }
 
 // Placed Session Store to pass in through here, Will Change Later.
