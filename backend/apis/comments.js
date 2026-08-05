@@ -24,7 +24,6 @@ export default function commentRouter(Router, CommentModel) {
       model: CommentModel.sequelize.models.Users,
       as: "author",
       attributes: ["username"],
-      required: true,
     },
   ];
 
@@ -43,7 +42,6 @@ export default function commentRouter(Router, CommentModel) {
     const startIndex = endIndex - perPage;
 
     try {
-      console.log("Hello");
       // Validation
       if (headers.accept != "application/json") {
         throw new Error("ERROR: INCORRECT FORMAT WANTED");
@@ -54,7 +52,6 @@ export default function commentRouter(Router, CommentModel) {
       if (perPage > UPPERLIMIT) {
         throw new Error("ERROR: INCORRECT PERPAGE WANTED");
       }
-
       if (!postid) {
         throw new Error("ERROR: NO PARENT PROVIDED FOR COMMENT");
       }
@@ -87,6 +84,7 @@ export default function commentRouter(Router, CommentModel) {
 
       res.json({ message: dataToSend });
     } catch (error) {
+      res.json({ error: true, message: error.message });
       console.error(error);
     }
   });
@@ -216,7 +214,7 @@ export default function commentRouter(Router, CommentModel) {
         throw new Error("ERROR: UNAUTHORIZED");
       }
 
-      CommentModel.destroy({
+      await CommentModel.destroy({
         where: {
           id: id,
         },
