@@ -24,7 +24,8 @@ yarn-error.log*
 lerna-debug.log*
 .pnpm-debug.log*
 
-*.crt
-*.key
-
 # End of https://www.toptal.com/developers/gitignore/api/react
+
+
+*.key
+*.crt
