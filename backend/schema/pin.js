@@ -7,7 +7,7 @@ export const PinSchema = {
   title: {
     isLength: {
       options: { min: MIN_TEXT_LENGTH, max: MAX_TEXT_LENGTH },
-      errorMessage: "Password must be atleast 8 characters.",
+      errorMessage: `Title must be between ${MIN_TEXT_LENGTH} and ${MAX_TEXT_LENGTH} characters.`,
     },
   },
   comment: { optional: true },

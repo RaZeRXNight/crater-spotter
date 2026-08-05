@@ -2,7 +2,13 @@ import { checkSchema, validationResult } from "express-validator";
 import { BasicAuth } from "../services/admin.js";
 import { CommentSchema } from "../schema/comment.js";
 import { validatePagination } from "../services/validation.js";
-import { BASIC_AUTH_LEVEL, TEXT_LIMIT } from "../services/constants.js";
+import {
+  BASIC_AUTH_LEVEL,
+  DEFAULT_SORT_ORDER,
+  SORT_ASC,
+  SORT_DESC,
+  TEXT_LIMIT,
+} from "../services/constants.js";
 
 function mapRows(row) {
   const tempdata = { ...row.dataValues };
@@ -33,14 +39,14 @@ export default function commentRouter(Router, CommentModel) {
     // Data Order & Filters
     const userid = headers.userid;
     const postid = headers.postid;
-    const order = headers.order || "DESC";
+    const order = headers.order || DEFAULT_SORT_ORDER;
 
     try {
       // Validation
       if (headers.accept != "application/json") {
         throw new Error("ERROR: INCORRECT FORMAT WANTED");
       }
-      if (order && order != "ASC" && order != "DESC") {
+      if (order && order != SORT_ASC && order != SORT_DESC) {
         throw new Error("ERROR: INCORRECT ORDER ENTERED");
       }
       if (!postid) {

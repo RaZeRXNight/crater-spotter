@@ -1,5 +1,6 @@
 export const ACCESS_TOKEN_EXPIRY = "15m";
 export const REFRESH_TOKEN_EXPIRY = "7d";
+export const JWT_ALGORITHM = "HS256";
 export const BCRYPT_SALT_ROUNDS = 12;
 export const BASIC_AUTH_LEVEL = 1;
 export const ADMIN_AUTH_LEVEL = 2;
@@ -11,6 +12,9 @@ export const MAX_PAGE = 100;
 export const MAX_PER_PAGE = 10;
 export const DEFAULT_PAGE = 1;
 export const DEFAULT_PER_PAGE = MAX_PER_PAGE;
+export const SORT_ASC = "ASC";
+export const SORT_DESC = "DESC";
+export const DEFAULT_SORT_ORDER = SORT_DESC;
 export const TEXT_LIMIT = 30;
 export const MIN_TEXT_LENGTH = 3;
 export const MIN_PASSWORD_LENGTH = 8;

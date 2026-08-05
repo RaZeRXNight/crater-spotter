@@ -9,6 +9,9 @@ import { validatePagination } from "../services/validation.js";
 import {
   ALLOWED_IMAGE_MIME_TYPES,
   BASIC_AUTH_LEVEL,
+  DEFAULT_SORT_ORDER,
+  SORT_ASC,
+  SORT_DESC,
   TEXT_LIMIT,
   UPLOAD_FIELD_SIZE,
 } from "../services/constants.js";
@@ -31,14 +34,14 @@ export default function pinRouter(Router, PinsModel) {
     const session = req.session;
     const headers = req.headers;
     const userid = headers.userid;
-    const order = headers.order || "DESC";
+    const order = headers.order || DEFAULT_SORT_ORDER;
 
     try {
       // Validation
       if (headers.accept != "application/json") {
         throw new Error("ERROR: INCORRECT FORMAT WANTED");
       }
-      if (order && order != "ASC" && order != "DESC") {
+      if (order && order != SORT_ASC && order != SORT_DESC) {
         throw new Error("ERROR: INCORRECT ORDER ENTERED");
       }
       const pagination = validatePagination(headers);
