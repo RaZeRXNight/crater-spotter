@@ -1,6 +1,7 @@
 const ENVIRONMENT = require("process").argv[2];
 const express = require("express");
 const path = require("path");
+const { existsSync } = require("fs");
 const cookieParser = require("cookie-parser");
 const { Sequelize } = require("sequelize");
 const session = require("express-session");
@@ -48,15 +49,13 @@ server.use(`/${process.env.STORAGE_PATH}`, express.static(storage_path));
 
 // React Path
 const dist_path = path.resolve(__dirname, "..", "frontend", "dist");
-server.use(express.static(dist_path));
+if (existsSync(path.join(dist_path, "index.html"))) {
+  server.use(express.static(dist_path));
+  server.use("/", (req, res) => res.sendFile(path.join(dist_path, "index.html")));
+}
 
 // Placed Session Store to pass in through here, Will Change Later.
 server.use("/api/v1", router(database, sessionStore));
-
-// Serves the React distribution
-server.use("/", (req, res) =>
-  res.sendFile(path.resolve(dist_path, "index.html")),
-);
 
 // Server Starts up
 server.listen(port, host, () => {
