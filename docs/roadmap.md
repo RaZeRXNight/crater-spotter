@@ -38,6 +38,7 @@ eliminated via eager-loaded queries; indexes, pagination, and pooling in place.
 - [ ] Redis caching layer for frequently accessed queries
 - [ ] Nested comments and replies
 - [ ] API response consistency: add `message` field to all success responses so the frontend toast wrapper works universally; fix endpoints that silently swallow errors (no HTTP response)
+- [ ] Implement Vitest for frontend and backend unit/integration testing
 
 **Done:** Hot queries served from Redis instead of the database; users can
 follow and reply within threaded comment chains.
@@ -47,6 +48,7 @@ follow and reply within threaded comment chains.
 - [ ] Responsive / mobile-friendly layouts, dark mode, accessibility (ARIA, keyboard nav), loading skeletons
 - [ ] Begin security hardening: Helmet headers, input sanitization, safe error handling, CSP
   - [ ] Consistent API error format: convert remaining `.send()` plain-text responses to `.json()` (`users.js`, `pins.js`)
+- [ ] Implement Playwright for frontend end-to-end testing
 
 **Done:** Site is responsive with dark mode, accessibility, and skeletons;
 security headers set (CSP, X-Frame-Options, X-Content-Type-Options, X-Powered-By removed);

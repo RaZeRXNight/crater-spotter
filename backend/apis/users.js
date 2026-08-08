@@ -9,6 +9,7 @@ import {
   BASIC_AUTH_LEVEL,
   SUSPENDED_AUTH_LEVEL,
 } from "../services/constants.js";
+import { DeleteUser } from "../services/user.js";
 
 export default function userRouter(Router, usersModel, sessionStore) {
   // User DB API
@@ -92,9 +93,6 @@ export default function userRouter(Router, usersModel, sessionStore) {
     const sessionUserID = session.userid;
     const id = req.params.id;
 
-    // Models
-    const sessionModel = usersModel.sequelize.models.Session;
-
     try {
       // Perform action to delete
       const requestedUser = await usersModel.findByPk(id);
@@ -112,17 +110,7 @@ export default function userRouter(Router, usersModel, sessionStore) {
         throw new Error("ERROR: UNAUTHORIZED");
       }
 
-      // Deletes all the user's comments
-      const commentModel = usersModel.sequelize.models.Comments;
-      const deletedComments = await commentModel.destroy({
-        where: { authorid: id },
-      });
-
-      const deletedUser = await usersModel.destroy({
-        where: {
-          id: id,
-        },
-      });
+      await DeleteUser(usersModel, id);
 
       res.json({
         message: `${id} was deleted.`,

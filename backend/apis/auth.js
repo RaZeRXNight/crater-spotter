@@ -1,12 +1,13 @@
 import bcrypt from "bcrypt";
 import { checkSchema } from "express-validator";
 import { LoginSchema, RegisterSchema } from "../schema/auth.js";
-import { jwtVerification, signAccessToken } from "../services/jwt.js";
 import authMiddleware from "../middleware/authentication.js";
 import {
   BCRYPT_SALT_ROUNDS,
   DEFAULT_USER_AUTH_LEVEL,
 } from "../services/constants.js";
+import { BasicAuth } from "../services/admin.js";
+import { DeleteUser } from "../services/user.js";
 
 export default function authRouter(Router, usersModel) {
   // User DB API
@@ -143,19 +144,11 @@ export default function authRouter(Router, usersModel) {
     const id = session.userid;
 
     try {
-      // Perform action to delete
-      const query = await usersModel.findByPk(id);
-
-      if (!query) {
-        throw new Error("ERROR: USER DOES NOT EXIST");
+      if (!(await BasicAuth(usersModel.sequelize, session))) {
+        throw new Error("ERROR: UNAUTHORIZED");
       }
 
-      const commentModel = usersModel.sequelize.models.Comments;
-      const deletedComments = await commentModel.destroy({
-        where: { PinParent: id },
-      });
-
-      const userDeletion = await query.destroy();
+      await DeleteUser(usersModel, id);
       await session.destroy();
 
       res.json({

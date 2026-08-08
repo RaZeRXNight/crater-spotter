@@ -272,27 +272,33 @@ export default function pinRouter(Router, PinsModel) {
         throw new Error("ERROR: UNAUTHORIZED");
       }
 
-      // Delete any image associate with the pin
+      const commentModel = PinsModel.sequelize.models.Comments;
+      await PinsModel.sequelize.transaction(async (transaction) => {
+        await commentModel.destroy({
+          where: { PinParent: id },
+          transaction,
+        });
+
+        const deletedPins = await PinsModel.destroy({
+          where: { id },
+          transaction,
+        });
+
+        if (!deletedPins) {
+          throw new Error("ERROR: PIN DOES NOT EXIST");
+        }
+      });
+
+      // Filesystem changes cannot be rolled back with the database transaction.
       const file_path = path.join(STORAGE_PATH, query.image);
       const file_status = existsSync(file_path, constants.F_OK);
       if (query.image && file_status) {
         unlink(file_path, (err) => {
           if (err) {
-            throw new Error(`ERROR: Failed to delete file: ${err}`);
+            console.error(`ERROR: Failed to delete file: ${err}`);
           }
         });
       }
-
-      const commentModel = PinsModel.sequelize.models.Comments;
-      const deletedComments = await commentModel.destroy({
-        where: { PinParent: id },
-      });
-
-      const deletedPins = await PinsModel.destroy({
-        where: {
-          id: id,
-        },
-      });
 
       res.json({
         message: `${id} was deleted.`,
