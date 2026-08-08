@@ -107,9 +107,8 @@ export default function commentRouter(Router, CommentModel) {
         throw new Error("ERROR: INCORRECT FORMAT WANTED");
       }
 
-      // Fetch one comment without list pagination.
-      const data = await CommentModel.findAndCountAll({
-        where: { id: req.params.id },
+      // Fetch one comment by ID
+      const data = await CommentModel.findByPk(req.params.id, {
         include: CommentInclude,
       });
 
@@ -117,13 +116,9 @@ export default function commentRouter(Router, CommentModel) {
         throw new Error("ERROR: NO DATA FOUND");
       }
 
-      // Limits amount of characters
-      const dataRows = data.rows.map(mapRows);
-
       res.json({
         message: {
-          rows: dataRows,
-          count: data.count,
+          row: mapRows(data),
         },
       });
     } catch (error) {
