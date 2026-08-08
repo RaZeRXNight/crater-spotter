@@ -1,6 +1,6 @@
 import path from "path";
 import process from "process";
-import { accessSync, constants, existsSync, rm, unlink } from "fs";
+import { constants, existsSync, unlink } from "fs";
 import multer from "multer";
 import { checkSchema } from "express-validator";
 import { BasicAuth } from "../services/admin.js";
