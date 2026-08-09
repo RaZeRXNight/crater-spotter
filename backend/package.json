@@ -2,7 +2,8 @@
   "scripts": {
     "build": "npm run --prefix ../frontend build",
     "start": "node server.js",
-    "dev": "node server.js .env.development.local --watch"
+    "dev": "node server.js .env.development.local --watch",
+    "migrate:data": "node scripts/migrate-data.js"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",

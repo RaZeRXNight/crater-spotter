@@ -30,9 +30,6 @@ async function startServer() {
   });
   const apiRouter = router(database, sessionStore);
 
-  await database.sync();
-  await sessionStore.sync();
-
   const server = express();
 
   // Middleware
