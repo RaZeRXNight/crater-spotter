@@ -1,6 +1,7 @@
 const ENVIRONMENT = require("process").argv[2];
 const express = require("express");
 const path = require("path");
+const { existsSync } = require("fs");
 const cookieParser = require("cookie-parser");
 const session = require("express-session");
 const SequelizeStore = require("connect-session-sequelize")(session.Store);
