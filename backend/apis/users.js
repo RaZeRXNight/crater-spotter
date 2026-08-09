@@ -4,6 +4,12 @@ import {
   CheckAndMakeDefaultAdminAccount,
 } from "../services/admin.js";
 import { Op } from "sequelize";
+import {
+  ADMIN_AUTH_LEVEL,
+  BASIC_AUTH_LEVEL,
+  SUSPENDED_AUTH_LEVEL,
+} from "../services/constants.js";
+import { DeleteUser } from "../services/user.js";
 
 export default function userRouter(Router, usersModel, sessionStore) {
   // User DB API
@@ -55,8 +61,14 @@ export default function userRouter(Router, usersModel, sessionStore) {
       }
 
       const user = await usersModel.findByPk(userid);
-      if (adminAuth && action == "suspend" && user.authLevel < 2) {
-        const newAuthLevel = user.authLevel ? 0 : 1;
+      if (
+        adminAuth &&
+        action == "suspend" &&
+        user.authLevel < ADMIN_AUTH_LEVEL
+      ) {
+        const newAuthLevel = user.authLevel
+          ? SUSPENDED_AUTH_LEVEL
+          : BASIC_AUTH_LEVEL;
 
         const updatedUser = await user.update({ authLevel: newAuthLevel });
         res.json({
@@ -81,9 +93,6 @@ export default function userRouter(Router, usersModel, sessionStore) {
     const sessionUserID = session.userid;
     const id = req.params.id;
 
-    // Models
-    const sessionModel = usersModel.sequelize.models.Session;
-
     try {
       // Perform action to delete
       const requestedUser = await usersModel.findByPk(id);
@@ -94,21 +103,14 @@ export default function userRouter(Router, usersModel, sessionStore) {
       }
 
       // Check if user is admin or authenticated user.
-      if (requestedUser.id != session.userid && actingUser.authLevel < 2) {
+      if (
+        requestedUser.id != session.userid &&
+        actingUser.authLevel < ADMIN_AUTH_LEVEL
+      ) {
         throw new Error("ERROR: UNAUTHORIZED");
       }
 
-      // Deletes all the user's comments
-      const commentModel = usersModel.sequelize.models.Comments;
-      const deletedComments = await commentModel.destroy({
-        where: { authorid: id },
-      });
-
-      const deletedUser = await usersModel.destroy({
-        where: {
-          id: id,
-        },
-      });
+      await DeleteUser(usersModel, id);
 
       res.json({
         message: `${id} was deleted.`,

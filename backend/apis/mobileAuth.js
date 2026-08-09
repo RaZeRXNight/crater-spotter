@@ -2,8 +2,11 @@ import bcrypt from "bcrypt";
 import { checkSchema } from "express-validator";
 import { LoginSchema, RegisterSchema } from "../schema/auth.js";
 import { signAccessToken, signRefreshToken } from "../services/jwt.js";
-
-const saltRounds = 12;
+import {
+  ACCESS_TOKEN_EXPIRY,
+  BCRYPT_SALT_ROUNDS,
+  DEFAULT_USER_AUTH_LEVEL,
+} from "../services/constants.js";
 
 export default function mobileAuthRouter(Router, usersModel) {
   Router.get("/auth/mobile/refresh", async (req, res) => {
@@ -65,7 +68,7 @@ export default function mobileAuthRouter(Router, usersModel) {
         res.json({
           accessToken: accessToken,
           refreshToken: refreshToken,
-          expiresIn: "15m",
+          expiresIn: ACCESS_TOKEN_EXPIRY,
         });
       } catch (error) {
         console.error(error);
@@ -81,12 +84,12 @@ export default function mobileAuthRouter(Router, usersModel) {
       const body = req.body;
 
       try {
-        const password = await bcrypt.hash(body.password, saltRounds);
+        const password = await bcrypt.hash(body.password, BCRYPT_SALT_ROUNDS);
 
         const newUser = await usersModel.create({
           username: body.username,
           email: body.email,
-          authLevel: 1,
+          authLevel: DEFAULT_USER_AUTH_LEVEL,
           password: password,
         });
 
@@ -102,7 +105,7 @@ export default function mobileAuthRouter(Router, usersModel) {
         res.json({
           accessToken: accessToken,
           refreshToken: refreshToken,
-          expiresIn: "15m",
+          expiresIn: ACCESS_TOKEN_EXPIRY,
         });
       } catch (error) {
         console.error(error);

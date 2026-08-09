@@ -84,7 +84,19 @@ All endpoints are mounted under `/api`.
 
 ## Pagination
 
-All list endpoints use **HTTP headers** (not query params): `Perpage`, `Page`, `Order` (ASC/DESC).
+`GET /api/pin/` and `GET /api/comment/` use **HTTP headers** (not query parameters):
+
+| Header | Default | Accepted values |
+| --- | --- | --- |
+| `Page` | `1` | Whole numbers from `1` through `100` |
+| `Perpage` | `10` | Whole numbers from `1` through `10` |
+| `Order` | `DESC` | `ASC` or `DESC` |
+
+Invalid `Page` or `Perpage` values return HTTP `400`:
+
+```json
+{ "error": true, "message": "ERROR: INVALID PAGINATION" }
+```
 
 ## Images
 

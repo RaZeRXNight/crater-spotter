@@ -3,7 +3,7 @@ import { DataTypes } from "sequelize";
 export default function Comments(sequelize) {
   const userModel = sequelize.models.Users;
   const pinModel = sequelize.models.Pins;
-  sequelize.define(
+  const commentModel = sequelize.define(
     "Comments",
     {
       id: { autoIncrement: true, primaryKey: true, type: DataTypes.INTEGER },
@@ -33,5 +33,9 @@ export default function Comments(sequelize) {
       updatedAt: "updateTimestamp",
     },
   );
+  commentModel.belongsTo(sequelize.models.Users, {
+    foreignKey: "authorid",
+    as: "author",
+  });
   return sequelize.models.Comments;
 }

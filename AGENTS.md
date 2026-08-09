@@ -3,7 +3,7 @@
 ## Project shape
 
 - Two independent npm packages: `backend/` (Express 5 / Sequelize / CJS) and `frontend/` (Vite + React 19 / ESM). Install/lint/build each separately. No root package.json or root-level scripts.
-- Backend layout mirrors Laravel naming, not Node convention: `backend/apis/` = route handler logic, `backend/routes/api.js` = router wiring + model sync, `backend/models/` = Sequelize model factories, `backend/services/` = shared helpers (auth checks, JWT, session config, admin bootstrap), `backend/middleware/` = Express middleware, `backend/schema/` = express-validator schemas.
+- Backend layout mirrors Laravel naming, not Node convention: `backend/apis/` = route handler logic, `backend/routes/api.js` = router wiring + model sync, `backend/models/` = Sequelize model factories, `backend/services/` = shared helpers and values (auth checks, JWT, session config, pagination validation, `constants.js`, admin bootstrap), `backend/middleware/` = Express middleware, `backend/schema/` = express-validator schemas.
 - `backend/server.js` is the single backend entrypoint. It serves the built React app from `frontend/dist`, mounts API routes under `/api`, and serves uploaded files from `STORAGE_PATH` as static files.
 
 ## Module system quirk (don't "fix" this)
@@ -15,7 +15,7 @@
 
 - **Backend** (from repo root or `backend/`): `npm run start` (plain `node server.js`, loads `backend/.env`). `npm run dev` (`node server.js backend/.env.development.local --watch`, uses Node's built-in `--watch`, loads a different env file — see gotcha below). `npm run build` delegates to `npm run --prefix ../frontend build`.
 - **Frontend** (`cd frontend`): `npm run dev` (Vite dev server — no proxy configured, hits the real backend), `npm run build`, `npm run lint` (ESLint), `npm run preview` (preview production build).
-- No test suite, no typecheck, no CI, no root-level lint config.
+- One assertion-based backend validator test is available: `node backend/tests/validation.test.js`. No typecheck, CI, or root-level lint config.
 
 ## Env files gotcha
 
