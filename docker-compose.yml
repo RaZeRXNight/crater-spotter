@@ -1,13 +1,38 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-crater_spotter}
+      POSTGRES_USER: ${POSTGRES_USER:-crater_spotter}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-development-password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   backend:
     container_name: crater-spotter-backend
     build:
       context: .
       dockerfile: docker/backend/Dockerfile
     env_file: ./backend/.env
+    environment:
+      DEVELOPMENT: "true"
+      DEV_DB_HOST: postgres
+      DEV_DB_PORT: 5432
+      DEV_DB_NAME: ${POSTGRES_DB:-crater_spotter}
+      DEV_DB_USER: ${POSTGRES_USER:-crater_spotter}
+      DEV_DB_PASSWORD: ${POSTGRES_PASSWORD:-development-password}
+      DB_SSL: "false"
+    depends_on:
+      postgres:
+        condition: service_healthy
     volumes:
-      - ./.sqlite3:/.sqlite3
       - ./public/storage:/backend/public/storage
+
   frontend:
     container_name: crater-spotter-frontend
     build:
@@ -22,3 +47,6 @@ services:
       - "8443:443"
     depends_on:
       - backend
+
+volumes:
+  postgres_data:

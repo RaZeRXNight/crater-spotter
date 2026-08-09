@@ -19,20 +19,20 @@ export function isAuthorized(primaryUser, otherUser) {
  * Returns their user data { id, username }
  */
 export async function getUser(userid = null) {
-  const apiURL = userid ? `/api/user/${userid}` : "/api/auth";
-  const { data } = await api({ url: apiURL, silent: apiURL === "/api/auth" });
+  const apiURL = userid ? `/api/v1/user/${userid}` : "/api/v1/auth";
+  const { data } = await api({ url: apiURL, silent: apiURL === "/api/v1/auth" });
   return data;
 }
 
 export async function HandleLogout() {
-  const { err } = await api({ url: "/api/auth/logout", method: "DELETE" });
+  const { err } = await api({ url: "/api/v1/auth/logout", method: "DELETE" });
   if (err) return false;
   return true;
 }
 
 export async function HandleUserDeletion() {
   if (window.confirm(`Are you sure you want to delete this account?`)) {
-    const { err } = await api({ url: "/api/auth/delete", method: "DELETE" });
+    const { err } = await api({ url: "/api/v1/auth/delete", method: "DELETE" });
     if (err) return;
   }
 }
@@ -125,7 +125,7 @@ export function UserProfile() {
 
   async function HandleProfileSuspension() {
     const { err, data } = await api({
-      url: `/api/user/${profile.id}`,
+      url: `/api/v1/user/${profile.id}`,
       method: "PUT",
       headers: { action: "suspend" },
       body: { username: profile.username, authLevel: profile.authLevel },
@@ -140,7 +140,7 @@ export function UserProfile() {
         `Are you sure you want to delete #${profile.id} ${profile.username}'s account?`,
       )
     ) {
-      const { err } = await api({ url: `/api/user/${profile.id}`, method: "DELETE" });
+      const { err } = await api({ url: `/api/v1/user/${profile.id}`, method: "DELETE" });
       if (err) return;
       setTimeout(() => navigate("/"), 2000);
     }

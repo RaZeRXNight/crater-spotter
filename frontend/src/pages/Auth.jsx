@@ -13,13 +13,13 @@ function RegisterForm() {
   });
   const HandleRegisterSubmit = async function (event) {
     event.preventDefault();
-    const { err } = await api({ url: "/api/auth/register", method: "POST", body: userAuth });
+    const { err } = await api({ url: "/api/v1/auth/register", method: "POST", body: userAuth });
     if (err) return;
     Navigate("/");
   };
   return (
     <form
-      action="/api/auth/register"
+      action="/api/v1/auth/register"
       onSubmit={HandleRegisterSubmit}
       method="POST"
     >
@@ -79,12 +79,12 @@ function LoginForm() {
   });
   const HandleLoginSubmit = async function (event) {
     event.preventDefault();
-    const { err } = await api({ url: "/api/auth/login", method: "POST", body: userAuth });
+    const { err } = await api({ url: "/api/v1/auth/login", method: "POST", body: userAuth });
     if (err) return;
     Navigate("/");
   };
   return (
-    <form action="/api/auth/login" onSubmit={HandleLoginSubmit} method="POST">
+    <form action="/api/v1/auth/login" onSubmit={HandleLoginSubmit} method="POST">
       <fieldset name="Auth">
         <legend>Login</legend>
         <label for="email">username</label>
@@ -123,7 +123,7 @@ function Logout() {
   const Navigate = useNavigate();
   async function HandleLogout(event) {
     event.preventDefault();
-    const { err } = await api({ url: "/api/auth/logout", method: "DELETE" });
+    const { err } = await api({ url: "/api/v1/auth/logout", method: "DELETE" });
     if (err) return;
     Navigate("/");
   }

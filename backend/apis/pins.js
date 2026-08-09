@@ -1,27 +1,28 @@
 import path from "path";
 import process from "process";
-import { accessSync, constants, existsSync, rm, unlink } from "fs";
+import { constants, existsSync, unlink } from "fs";
 import multer from "multer";
 import { checkSchema } from "express-validator";
 import { BasicAuth } from "../services/admin.js";
 import { PinSchema } from "../schema/pin.js";
+import { validatePagination } from "../services/validation.js";
+import {
+  ALLOWED_IMAGE_MIME_TYPES,
+  BASIC_AUTH_LEVEL,
+  DEFAULT_SORT_ORDER,
+  SORT_ASC,
+  SORT_DESC,
+  TEXT_LIMIT,
+  UPLOAD_FIELD_SIZE,
+} from "../services/constants.js";
 
 export const upload = multer({
-  limits: { fieldSize: 1048576 * 8 },
+  limits: { fieldSize: UPLOAD_FIELD_SIZE },
   dest: process.env.STORAGE_PATH,
 });
 
 export default function pinRouter(Router, PinsModel) {
-  const UPPERLIMIT = 10;
-  const TEXTLIMIT = 30;
   const STORAGE_PATH = path.join(process.cwd(), process.env.STORAGE_PATH);
-  const ALLOWED_MIME_TYPES = [
-    "image/jpeg",
-    "image/jpg",
-    "image/png",
-    "image/webp",
-    "image/avif",
-  ];
 
   // pin DB API
   // Routes
@@ -33,25 +34,24 @@ export default function pinRouter(Router, PinsModel) {
     const session = req.session;
     const headers = req.headers;
     const userid = headers.userid;
-    const order = headers.order || "DESC";
-
-    // Pagination Variables
-    const perPage = headers.perpage;
-    const currentPage = headers.page;
-    const endIndex = perPage * currentPage;
-    const startIndex = endIndex - perPage;
+    const order = headers.order || DEFAULT_SORT_ORDER;
 
     try {
       // Validation
       if (headers.accept != "application/json") {
         throw new Error("ERROR: INCORRECT FORMAT WANTED");
       }
-      if (order && order != "ASC" && order != "DESC") {
+      if (order && order != SORT_ASC && order != SORT_DESC) {
         throw new Error("ERROR: INCORRECT ORDER ENTERED");
       }
-      if (perPage > UPPERLIMIT) {
-        throw new Error("ERROR: INCORRECT PERPAGE WANTED");
+      const pagination = validatePagination(headers);
+      if (!pagination) {
+        return res.status(400).json({
+          error: true,
+          message: "ERROR: INVALID PAGINATION",
+        });
       }
+      const { perPage, offset } = pagination;
 
       // Determines whether we send user specific data or general data.
       let data;
@@ -60,15 +60,21 @@ export default function pinRouter(Router, PinsModel) {
           where: {
             authorid: session.userid,
           },
-          order: [["createdAt", order]],
-          offset: startIndex,
+          order: [
+            ["createdAt", order],
+            ["id", order],
+          ],
+          offset,
           limit: perPage,
         });
       } else {
         data = await PinsModel.findAndCountAll({
           where: userid ? { authorid: userid } : null,
-          order: [["createdAt", order]],
-          offset: startIndex,
+          order: [
+            ["createdAt", order],
+            ["id", order],
+          ],
+          offset,
           limit: perPage,
         });
       }
@@ -81,11 +87,11 @@ export default function pinRouter(Router, PinsModel) {
       const dataRows = data.rows.map((row) => {
         const tempdata = { ...row.dataValues };
 
-        if (tempdata.comment.length > TEXTLIMIT) {
-          tempdata.comment = tempdata.comment.slice(0, TEXTLIMIT) + "...";
+        if (tempdata.comment.length > TEXT_LIMIT) {
+          tempdata.comment = tempdata.comment.slice(0, TEXT_LIMIT) + "...";
         }
-        if (tempdata.title.length > TEXTLIMIT) {
-          tempdata.title = tempdata.title.slice(0, TEXTLIMIT) + "...";
+        if (tempdata.title.length > TEXT_LIMIT) {
+          tempdata.title = tempdata.title.slice(0, TEXT_LIMIT) + "...";
         }
         return tempdata;
       });
@@ -96,6 +102,7 @@ export default function pinRouter(Router, PinsModel) {
       });
     } catch (error) {
       console.error(error);
+      res.status(500).json({ error: true, message: error.message });
     }
   });
 
@@ -137,7 +144,7 @@ export default function pinRouter(Router, PinsModel) {
 
       try {
         // Image Validation
-        if (file && !ALLOWED_MIME_TYPES.includes(file.mimetype)) {
+        if (file && !ALLOWED_IMAGE_MIME_TYPES.includes(file.mimetype)) {
           unlink(file.path);
           throw new Error("Invalid file type");
         }
@@ -214,7 +221,10 @@ export default function pinRouter(Router, PinsModel) {
           throw new Error("ERROR: UNAUTHORIZED");
         }
 
-        if (session.userid != query.authorid && userQuery.authLevel < 1) {
+        if (
+          session.userid != query.authorid &&
+          userQuery.authLevel < BASIC_AUTH_LEVEL
+        ) {
           res.json({ error: true, message: "ERROR: UNAUTHORIZED" });
           throw new Error("ERROR: UNAUTHORIZED");
         }
@@ -255,31 +265,40 @@ export default function pinRouter(Router, PinsModel) {
         throw new Error("ERROR: UNAUTHORIZED");
       }
 
-      if (query.authorid != session.userid && userQuery.authLevel < 1) {
+      if (
+        query.authorid != session.userid &&
+        userQuery.authLevel < BASIC_AUTH_LEVEL
+      ) {
         throw new Error("ERROR: UNAUTHORIZED");
       }
 
-      // Delete any image associate with the pin
+      const commentModel = PinsModel.sequelize.models.Comments;
+      await PinsModel.sequelize.transaction(async (transaction) => {
+        await commentModel.destroy({
+          where: { PinParent: id },
+          transaction,
+        });
+
+        const deletedPins = await PinsModel.destroy({
+          where: { id },
+          transaction,
+        });
+
+        if (!deletedPins) {
+          throw new Error("ERROR: PIN DOES NOT EXIST");
+        }
+      });
+
+      // Filesystem changes cannot be rolled back with the database transaction.
       const file_path = path.join(STORAGE_PATH, query.image);
       const file_status = existsSync(file_path, constants.F_OK);
       if (query.image && file_status) {
         unlink(file_path, (err) => {
           if (err) {
-            throw new Error(`ERROR: Failed to delete file: ${err}`);
+            console.error(`ERROR: Failed to delete file: ${err}`);
           }
         });
       }
-
-      const commentModel = PinsModel.sequelize.models.Comments;
-      const deletedComments = await commentModel.destroy({
-        where: { PinParent: id },
-      });
-
-      const deletedPins = await PinsModel.destroy({
-        where: {
-          id: id,
-        },
-      });
 
       res.json({
         message: `${id} was deleted.`,
