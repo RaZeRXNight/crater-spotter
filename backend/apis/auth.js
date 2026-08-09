@@ -9,6 +9,19 @@ import {
 import { BasicAuth } from "../services/admin.js";
 import { DeleteUser } from "../services/user.js";
 
+function authenticateSession(req, user) {
+  return new Promise((resolve, reject) => {
+    req.session.regenerate((error) => {
+      if (error) return reject(error);
+
+      req.session.userid = user.id;
+      req.session.username = user.username;
+      req.session.authLevel = user.authLevel;
+      req.session.save((saveError) => (saveError ? reject(saveError) : resolve()));
+    });
+  });
+}
+
 export default function authRouter(Router, usersModel) {
   // User DB API
   // Routes
@@ -43,7 +56,6 @@ export default function authRouter(Router, usersModel) {
     checkSchema(RegisterSchema, ["body"]),
     async (req, res) => {
       const body = req.body;
-      const session = req.session;
 
       try {
         // Validate Credentials
@@ -61,12 +73,10 @@ export default function authRouter(Router, usersModel) {
           password: password,
         });
 
-        session.userid = newUser.id;
-        session.username = newUser.username;
-        session.authLevel = newUser.authLevel;
+        await authenticateSession(req, newUser);
 
         res.json({
-          message: `Welcome ${session.username}!`,
+          message: `Welcome ${newUser.username}!`,
         });
       } catch (error) {
         console.error(error);
@@ -81,7 +91,6 @@ export default function authRouter(Router, usersModel) {
     checkSchema(LoginSchema, ["body"]),
     async (req, res) => {
       const body = req.body;
-      const session = req.session;
 
       try {
         // Get User Entry
@@ -98,13 +107,11 @@ export default function authRouter(Router, usersModel) {
 
         // Verify if Password Matches then Authenticate Session
         if (await bcrypt.compare(body.password, User.password)) {
-          session.userid = User.id;
-          session.username = User.username;
-          session.authLevel = User.authLevel;
+          await authenticateSession(req, User);
 
           // response
           res.json({
-            message: `Welcome back ${session.username}!`,
+            message: `Welcome back ${User.username}!`,
           });
         } else {
           return res

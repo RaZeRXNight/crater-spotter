@@ -43,6 +43,8 @@ async function startServer() {
   server.use(`/${process.env.STORAGE_PATH}`, express.static(storage_path));
 
   server.use("/api/v1", apiRouter);
+
+  await database.sync();
   await CheckAndMakeDefaultAdminAccount(database);
 
   server.listen(port, host, () => {

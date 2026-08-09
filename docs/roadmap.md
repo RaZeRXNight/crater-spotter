@@ -89,4 +89,5 @@ cache-control tightened; inputs sanitized; errors no longer leak.
 - User search / filtering
 - Edit profile / account settings
 - Push notifications (distinct from in-app WebSocket chat)
+- Harden session cookies behind the reverse proxy (`Secure`, `SameSite`, and Express `trust proxy` configuration)
 - CSRF protection
