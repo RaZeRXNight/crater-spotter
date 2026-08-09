@@ -7,7 +7,6 @@ export const ADMIN_AUTH_LEVEL = 2;
 export const SUSPENDED_AUTH_LEVEL = 0;
 export const DEFAULT_USER_AUTH_LEVEL = BASIC_AUTH_LEVEL;
 export const DEFAULT_PORT = 8000;
-export const DEFAULT_ADMIN_DELAY_MS = 1000;
 export const MAX_PAGE = 100;
 export const MAX_PER_PAGE = 10;
 export const DEFAULT_PAGE = 1;
