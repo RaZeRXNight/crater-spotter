@@ -34,6 +34,8 @@ async function startServer() {
   const server = express();
 
   // Middleware
+  const compression = require('compression');
+  server.use(compression());
   server.use(express.json());
   server.use(session(sessionSecrets(sessionSecret, sessionStore)));
   server.use(logger);
@@ -41,7 +43,9 @@ async function startServer() {
 
   // Public Storage Path
   const storage_path = path.resolve(__dirname, "..", process.env.STORAGE_PATH);
-  server.use(`/${process.env.STORAGE_PATH}`, express.static(storage_path));
+  server.use(`/${process.env.STORAGE_PATH}`, express.static(storage_path, { maxAge: '7d', setHeaders: (res, filePath) => {
+    res.setHeader('Cache-Control', 'public, max-age=604800, immutable');
+  }}));
 
   server.use("/api/v1", apiRouter);
 
