@@ -3,6 +3,7 @@
     "build": "npm run --prefix ../frontend build",
     "start": "node server.js",
     "dev": "node server.js .env.development.local --watch",
+    "test": "vitest",
     "migrate:data": "node scripts/migrate-data.js"
   },
   "dependencies": {
@@ -25,5 +26,11 @@
     "sequelize": {
       "uuid": "^11.1.1"
     }
+  },
+  "devDependencies": {
+    "vitest": "^4.1.10"
+  },
+  "allowScripts": {
+    "sqlite3@6.0.1": true
   }
 }
