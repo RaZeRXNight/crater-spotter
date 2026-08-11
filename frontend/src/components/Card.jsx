@@ -8,7 +8,7 @@ export default function Card({ id, title, comment, admin = false }) {
     const button = event.currentTarget;
     button.disabled = true;
     if (window.confirm(`Are you sure you want to delete ${title} post?`)) {
-      const { err } = await api({ url: `/api/pin/${id}`, method: "DELETE" });
+      const { err } = await api({ url: `/api/v1/pin/${id}`, method: "DELETE" });
       if (err) return;
       Navigate("/pin/");
     }

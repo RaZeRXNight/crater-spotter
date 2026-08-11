@@ -1,6 +1,6 @@
 /*
  * This is where the routes are located...
- * These are connected to the sqlite database
+ * These are connected to the PostgreSQL database
  *
  */
 const { default: Comments } = require("../models/comments.js");
@@ -14,7 +14,6 @@ const router = function (database, sessionStore) {
   // User Routes
   const userRouter = require("../apis/users.js");
   const usersModel = Users(database);
-  usersModel.sync();
   userRouter.default(router, usersModel, sessionStore);
 
   // Auth Routes
@@ -28,13 +27,11 @@ const router = function (database, sessionStore) {
   // Pin Routes
   const pinRouter = require("../apis/pins.js");
   const pinsModel = Pins(database, usersModel);
-  pinsModel.sync();
   pinRouter.default(router, pinsModel, usersModel);
 
   // Comment Routes
   const commentRouter = require("../apis/comments.js");
   const commentsModel = Comments(database);
-  commentsModel.sync();
   commentRouter.default(router, commentsModel);
 
   // Config Route

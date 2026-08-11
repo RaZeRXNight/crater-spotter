@@ -1,10 +1,26 @@
 import bcrypt from "bcrypt";
 import { checkSchema } from "express-validator";
 import { LoginSchema, RegisterSchema } from "../schema/auth.js";
-import { jwtVerification, signAccessToken } from "../services/jwt.js";
 import authMiddleware from "../middleware/authentication.js";
+import {
+  BCRYPT_SALT_ROUNDS,
+  DEFAULT_USER_AUTH_LEVEL,
+} from "../services/constants.js";
+import { BasicAuth } from "../services/admin.js";
+import { DeleteUser } from "../services/user.js";
 
-const saltRounds = 12;
+function authenticateSession(req, user) {
+  return new Promise((resolve, reject) => {
+    req.session.regenerate((error) => {
+      if (error) return reject(error);
+
+      req.session.userid = user.id;
+      req.session.username = user.username;
+      req.session.authLevel = user.authLevel;
+      req.session.save((saveError) => (saveError ? reject(saveError) : resolve()));
+    });
+  });
+}
 
 export default function authRouter(Router, usersModel) {
   // User DB API
@@ -40,7 +56,6 @@ export default function authRouter(Router, usersModel) {
     checkSchema(RegisterSchema, ["body"]),
     async (req, res) => {
       const body = req.body;
-      const session = req.session;
 
       try {
         // Validate Credentials
@@ -48,22 +63,20 @@ export default function authRouter(Router, usersModel) {
         const username = body.username;
 
         // Encrypt Password
-        const password = await bcrypt.hash(body.password, saltRounds);
+        const password = await bcrypt.hash(body.password, BCRYPT_SALT_ROUNDS);
 
         // Create User Record
         const newUser = await usersModel.create({
           username: username,
           email: email,
-          authLevel: 1,
+          authLevel: DEFAULT_USER_AUTH_LEVEL,
           password: password,
         });
 
-        session.userid = newUser.id;
-        session.username = newUser.username;
-        session.authLevel = newUser.authLevel;
+        await authenticateSession(req, newUser);
 
         res.json({
-          message: `Welcome ${session.username}!`,
+          message: `Welcome ${newUser.username}!`,
         });
       } catch (error) {
         console.error(error);
@@ -78,7 +91,6 @@ export default function authRouter(Router, usersModel) {
     checkSchema(LoginSchema, ["body"]),
     async (req, res) => {
       const body = req.body;
-      const session = req.session;
 
       try {
         // Get User Entry
@@ -95,13 +107,11 @@ export default function authRouter(Router, usersModel) {
 
         // Verify if Password Matches then Authenticate Session
         if (await bcrypt.compare(body.password, User.password)) {
-          session.userid = User.id;
-          session.username = User.username;
-          session.authLevel = User.authLevel;
+          await authenticateSession(req, User);
 
           // response
           res.json({
-            message: `Welcome back ${session.username}!`,
+            message: `Welcome back ${User.username}!`,
           });
         } else {
           return res
@@ -141,19 +151,11 @@ export default function authRouter(Router, usersModel) {
     const id = session.userid;
 
     try {
-      // Perform action to delete
-      const query = await usersModel.findByPk(id);
-
-      if (!query) {
-        throw new Error("ERROR: USER DOES NOT EXIST");
+      if (!(await BasicAuth(usersModel.sequelize, session))) {
+        throw new Error("ERROR: UNAUTHORIZED");
       }
 
-      const commentModel = usersModel.sequelize.models.Comments;
-      const deletedComments = await commentModel.destroy({
-        where: { PinParent: id },
-      });
-
-      const userDeletion = await query.destroy();
+      await DeleteUser(usersModel, id);
       await session.destroy();
 
       res.json({

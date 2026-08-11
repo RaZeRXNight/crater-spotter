@@ -55,7 +55,7 @@ export function RenderPins({ rows, user }) {
  */
 export async function getUserPins({ page, perPage }) {
   const { err, data } = await api({
-    url: "/api/pin/",
+    url: "/api/v1/pin/",
     headers: {
       Authorization: "User",
       Accept: "application/json",
@@ -74,7 +74,7 @@ export async function getUserPins({ page, perPage }) {
  */
 export async function getPins({ userid = null, page, perPage }) {
   const { err, data } = await api({
-    url: "/api/pin/",
+    url: "/api/v1/pin/",
     headers: {
       Accept: "application/json",
       userid: userid,
@@ -87,7 +87,7 @@ export async function getPins({ userid = null, page, perPage }) {
 }
 
 export async function getPin({ id }) {
-  const { err, data } = await api({ url: `/api/pin/${id}` });
+  const { err, data } = await api({ url: `/api/v1/pin/${id}` });
   if (err) { console.log(err); return undefined; }
   return data.message;
 }
@@ -123,7 +123,7 @@ export async function fetchUserPinPageData({ params }) {
 
 export const DeletePost = async function (event, pin, Navigator) {
   if (window.confirm(`Are you sure you want to delete ${pin.title} post?`)) {
-    const { err } = await api({ url: `/api/pin/${pin.id}`, method: "DELETE" });
+    const { err } = await api({ url: `/api/v1/pin/${pin.id}`, method: "DELETE" });
     if (err) return;
     Navigator("/pin/");
   }
@@ -182,7 +182,7 @@ export function CreatePin() {
     formData.append("lat", form.coordinates.lat);
     formData.append("lng", form.coordinates.lng);
 
-    const { err, data } = await api({ url: "/api/pin", method: "POST", body: formData });
+    const { err, data } = await api({ url: "/api/v1/pin", method: "POST", body: formData });
     if (err) return;
     navigate(`/pin/${data.id}`);
   };
@@ -278,7 +278,7 @@ export function EditPin() {
 
   const HandleSubmit = async function (event) {
     event.preventDefault();
-    const { err } = await api({ url: `/api/pin/${id}`, method: "PUT", headers: { "Content-Type": "application/json" }, body: form });
+    const { err } = await api({ url: `/api/v1/pin/${id}`, method: "PUT", headers: { "Content-Type": "application/json" }, body: form });
     if (err) return;
     navigate(`/pin/${id}`);
   };

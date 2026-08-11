@@ -19,6 +19,6 @@ Node.js (Express) + Sequelize (SQLite). Sessions via `express-session` + `connec
 - SQLite only (`dialect: "sqlite"`), `DB_*` env vars ignored.
 - No migrations — models call `.sync()` on startup.
 - Admin bootstrap creates `admin`/`password` in **plaintext** (bcrypt not applied).
-- Pagination via HTTP headers (`Perpage`, `Page`, `Order`), not query params.
+- Pin and comment pagination uses HTTP headers (`Perpage`, `Page`, `Order`), not query params. `backend/services/validation.js` validates the values using defaults and limits from `backend/services/constants.js`: page `1`–`100`, per-page `1`–`10`.
 - `GET /api/comment/:id` and `GET /api/user/:id` ignore path param, read from headers.
 - `DELETE /api/auth/logout` reads `session.username` *before* `session.destroy()` (captured in local variable).
