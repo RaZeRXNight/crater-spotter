@@ -22,6 +22,16 @@ function authenticateSession(req, user) {
   });
 }
 
+function destroySession(session) {
+  if (!session?.destroy) {
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve, reject) => {
+    session.destroy((error) => (error ? reject(error) : resolve()));
+  });
+}
+
 export default function authRouter(Router, usersModel) {
   const requireAuthMiddleware = requireAuth(usersModel);
 
@@ -148,27 +158,30 @@ export default function authRouter(Router, usersModel) {
     }
   });
 
-  Router.delete("/auth/delete", requireAuthMiddleware, async (req, res) => {
-    const session = req.session;
-    const id = req.user.userid;
+  Router.delete(
+    "/auth/delete",
+    authMiddleware,
+    requireAuthMiddleware,
+    async (req, res) => {
+      const session = req.session;
+      const id = req.user.userid;
 
-    try {
-      await DeleteUser(usersModel, id);
-      if (session?.destroy) {
-        await session.destroy();
+      try {
+        await DeleteUser(usersModel, id);
+        await destroySession(session);
+
+        res.json({
+          message: `${id} was deleted.`,
+        });
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({
+          error: true,
+          message: error.message,
+        });
       }
-
-      res.json({
-        message: `${id} was deleted.`,
-      });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({
-        error: true,
-        message: error.message,
-      });
-    }
-  });
+    },
+  );
 
   return Router;
 }

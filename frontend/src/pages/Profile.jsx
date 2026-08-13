@@ -49,7 +49,9 @@ export async function HandleUserDeletion() {
   if (window.confirm(`Are you sure you want to delete this account?`)) {
     const { err } = await api({ url: "/api/v1/auth/delete", method: "DELETE" });
     if (err) return;
+    return true;
   }
+  return false;
 }
 
 export function Dashboard() {
