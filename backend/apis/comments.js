@@ -22,23 +22,23 @@ function mapRows(row) {
   return tempdata;
 }
 
+// Malformed Request Middleware
+Router.use((error, req, res, next) => {
+  if (
+    error?.type === "entity.parse.failed" ||
+    error?.status === 400 ||
+    error instanceof SyntaxError
+  ) {
+    return res.status(400).json({
+      error: true,
+      message: "ERROR: INVALID REQUEST BODY",
+    });
+  }
+
+  next(error);
+});
+
 export default function commentRouter(Router, CommentModel) {
-  // Malformed Request Middleware
-  Router.use((error, req, res, next) => {
-    if (
-      error?.type === "entity.parse.failed" ||
-      error?.status === 400 ||
-      error instanceof SyntaxError
-    ) {
-      return res.status(400).json({
-        error: true,
-        message: "ERROR: INVALID REQUEST BODY",
-      });
-    }
-
-    next(error);
-  });
-
   // comment DB API
   // Routes
   const CommentInclude = [
