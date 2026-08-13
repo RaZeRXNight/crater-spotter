@@ -17,6 +17,7 @@ const commentModel = Comments(sequelize);
 
 let app;
 let currentSession;
+let currentUser;
 let user;
 let pin;
 let server;
@@ -56,9 +57,10 @@ beforeAll(async () => {
   app.use(express.json());
   app.use((req, res, next) => {
     req.session = currentSession;
+    req.user = currentUser;
     next();
   });
-  app.use(commentRouter(express.Router(), commentModel));
+  app.use(commentRouter(express.Router(), commentModel, userModel));
 
   server = await new Promise((resolve) => {
     const httpServer = app.listen(0, "127.0.0.1", () => resolve(httpServer));
@@ -83,6 +85,11 @@ beforeEach(async () => {
     lng: 2,
   });
   currentSession = { userid: user.id };
+  currentUser = {
+    userid: user.id,
+    username: user.username,
+    authLevel: user.authLevel,
+  };
 });
 
 afterAll(async () => {
@@ -165,7 +172,6 @@ test("rejects an empty comment with bad request", async () => {
   });
 
   expect(response.status).toBe(400);
-  expect(response.body).toBe(true);
   expect(response.body.error).toBe(true);
 });
 
@@ -173,12 +179,12 @@ test("rejects a null request body with bad request", async () => {
   const response = await request(null);
 
   expect(response.status).toBe(400);
-  expect(response.body).toBe(true);
-  expect(response.body?.error).toBe(true);
+  expect(response.body).toBeNull();
 });
 
 test("rejects an unauthenticated request with unauthorized", async () => {
   currentSession = {};
+  currentUser = undefined;
   const response = await request({
     PinParent: pin.id,
     CommentParent: null,
@@ -186,7 +192,22 @@ test("rejects an unauthenticated request with unauthorized", async () => {
   });
 
   expect(response.status).toBe(401);
-  expect(response.body.error).toBe(true);
+  expect(response.body.message).toBe("Unauthorized");
+});
+
+test("rejects a session-only identity when req.user is missing", async () => {
+  currentSession = { userid: user.id };
+  currentUser = undefined;
+
+  const response = await request({
+    PinParent: pin.id,
+    CommentParent: null,
+    comment: "Comment",
+  });
+
+  expect(response.status).toBe(401);
+  expect(response.body.error).toBeUndefined();
+  expect(response.body.message).toBe("Unauthorized");
 });
 
 test("returns not found when the pin does not exist", async () => {

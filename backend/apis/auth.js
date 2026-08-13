@@ -6,7 +6,7 @@ import {
   BCRYPT_SALT_ROUNDS,
   DEFAULT_USER_AUTH_LEVEL,
 } from "../services/constants.js";
-import { BasicAuth } from "../services/admin.js";
+import { requireAuth } from "../middleware/authorization.js";
 import { DeleteUser } from "../services/user.js";
 
 function authenticateSession(req, user) {
@@ -23,6 +23,8 @@ function authenticateSession(req, user) {
 }
 
 export default function authRouter(Router, usersModel) {
+  const requireAuthMiddleware = requireAuth(usersModel);
+
   // User DB API
   // Routes
   // User Authentication & Session Handling
@@ -146,17 +148,15 @@ export default function authRouter(Router, usersModel) {
     }
   });
 
-  Router.delete("/auth/delete", async (req, res) => {
+  Router.delete("/auth/delete", requireAuthMiddleware, async (req, res) => {
     const session = req.session;
-    const id = session.userid;
+    const id = req.user.userid;
 
     try {
-      if (!(await BasicAuth(usersModel.sequelize, session))) {
-        throw new Error("ERROR: UNAUTHORIZED");
-      }
-
       await DeleteUser(usersModel, id);
-      await session.destroy();
+      if (session?.destroy) {
+        await session.destroy();
+      }
 
       res.json({
         message: `${id} was deleted.`,

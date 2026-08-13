@@ -1,5 +1,5 @@
 import { checkSchema, validationResult } from "express-validator";
-import { BasicAuth } from "../services/admin.js";
+import { requireAuth } from "../middleware/authorization.js";
 import { CommentSchema } from "../schema/comment.js";
 import { validatePagination } from "../services/validation.js";
 import {
@@ -22,25 +22,26 @@ function mapRows(row) {
   return tempdata;
 }
 
-// Malformed Request Middleware
-Router.use((error, req, res, next) => {
-  if (
-    error?.type === "entity.parse.failed" ||
-    error?.status === 400 ||
-    error instanceof SyntaxError
-  ) {
-    return res.status(400).json({
-      error: true,
-      message: "ERROR: INVALID REQUEST BODY",
-    });
-  }
-
-  next(error);
-});
-
-export default function commentRouter(Router, CommentModel) {
+export default function commentRouter(Router, CommentModel, usersModel) {
   // comment DB API
   // Routes
+  const requireAuthMiddleware = requireAuth(usersModel);
+  // Malformed Request Middleware
+  Router.use((error, req, res, next) => {
+    if (
+      error?.type === "entity.parse.failed" ||
+      error?.status === 400 ||
+      error instanceof SyntaxError
+    ) {
+      return res.status(400).json({
+        error: true,
+        message: "ERROR: INVALID REQUEST BODY",
+      });
+    }
+
+    next(error);
+  });
+
   const CommentInclude = [
     {
       model: CommentModel.sequelize.models.Users,
@@ -145,6 +146,7 @@ export default function commentRouter(Router, CommentModel) {
 
   Router.post(
     "/comment",
+    requireAuthMiddleware,
     (req, res, next) => {
       if (
         !req.body ||
@@ -157,8 +159,6 @@ export default function commentRouter(Router, CommentModel) {
     },
     checkSchema(CommentSchema, ["body"]),
     async (req, res) => {
-      const session = req.session;
-
       // post data
       const body = req.body;
 
@@ -178,15 +178,6 @@ export default function commentRouter(Router, CommentModel) {
               .array()
               .map(({ msg }) => msg)
               .join(", "),
-          });
-        }
-
-        const auth = await BasicAuth(CommentModel.sequelize, session);
-
-        if (!auth) {
-          return res.status(401).json({
-            error: true,
-            message: "ERROR: NOT AUTHORIZED",
           });
         }
 
@@ -229,7 +220,7 @@ export default function commentRouter(Router, CommentModel) {
 
         // Post Content
         const comment = await CommentModel.create({
-          authorid: session.userid,
+          authorid: req.user.userid,
           PinParent: reqPinParent,
           CommentParent: reqCommentParent,
           replyLevel: reqReplyLevel ?? 0,
@@ -259,25 +250,16 @@ export default function commentRouter(Router, CommentModel) {
     });
   });
 
-  Router.delete("/comment/:id", async (req, res) => {
-    const userModel = CommentModel.sequelize.models.Users;
+  Router.delete("/comment/:id", requireAuthMiddleware, async (req, res) => {
     const id = req.params.id;
-    const session = req.session;
 
     try {
       // Perform action to delete
       const query = await CommentModel.findOne({ where: { id: id } });
-      const userQuery = await userModel.findByPk(session.userid);
-
-      const auth = await BasicAuth(CommentModel.sequelize, session);
-
-      if (!auth) {
-        throw new Error("ERROR: UNAUTHORIZED");
-      }
 
       if (
-        query.authorid != session.userid &&
-        userQuery.authLevel < BASIC_AUTH_LEVEL
+        query.authorid != req.user.userid &&
+        req.user.authLevel < BASIC_AUTH_LEVEL
       ) {
         throw new Error("ERROR: UNAUTHORIZED");
       }

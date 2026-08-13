@@ -1,9 +1,5 @@
-import {
-  AdminAuth,
-  BasicAuth,
-  CheckAndMakeDefaultAdminAccount,
-} from "../services/admin.js";
 import { Op } from "sequelize";
+import { requireAdmin, requireAuth } from "../middleware/authorization.js";
 import {
   ADMIN_AUTH_LEVEL,
   BASIC_AUTH_LEVEL,
@@ -12,6 +8,9 @@ import {
 import { DeleteUser } from "../services/user.js";
 
 export default function userRouter(Router, usersModel, sessionStore) {
+  const requireAuthMiddleware = requireAuth(usersModel);
+  const requireAdminMiddleware = requireAdmin(usersModel);
+
   // User DB API
   // Routes
   Router.get("/user/", (req, res) => {
@@ -46,23 +45,14 @@ export default function userRouter(Router, usersModel, sessionStore) {
     }
   });
 
-  Router.put("/user/:id", async (req, res) => {
-    const session = req.session;
+  Router.put("/user/:id", requireAdminMiddleware, async (req, res) => {
     const headers = req.headers;
     const action = headers.action;
     const userid = req.params.id;
 
     try {
-      const auth = await BasicAuth(usersModel.sequelize, session);
-      const adminAuth = await AdminAuth(usersModel.sequelize, session);
-
-      if (!auth) {
-        throw new Error("ERROR: UNAUTHORIZED");
-      }
-
       const user = await usersModel.findByPk(userid);
       if (
-        adminAuth &&
         action == "suspend" &&
         user.authLevel < ADMIN_AUTH_LEVEL
       ) {
@@ -88,9 +78,8 @@ export default function userRouter(Router, usersModel, sessionStore) {
     }
   });
 
-  Router.delete("/user/:id", async (req, res) => {
-    const session = req.session;
-    const sessionUserID = session.userid;
+  Router.delete("/user/:id", requireAuthMiddleware, async (req, res) => {
+    const sessionUserID = req.user.userid;
     const id = req.params.id;
 
     try {
@@ -104,7 +93,7 @@ export default function userRouter(Router, usersModel, sessionStore) {
 
       // Check if user is admin or authenticated user.
       if (
-        requestedUser.id != session.userid &&
+        requestedUser.id != req.user.userid &&
         actingUser.authLevel < ADMIN_AUTH_LEVEL
       ) {
         throw new Error("ERROR: UNAUTHORIZED");
