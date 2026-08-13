@@ -2,8 +2,11 @@ import { afterAll, beforeAll, beforeEach, expect, test } from "vitest";
 import express from "express";
 import { Sequelize } from "sequelize";
 import Users from "../models/users.js";
-import userRouter from "../apis/users.js";
 import { AUTH_LEVEL } from "../services/constants.js";
+
+process.env.JWT_SECRET = "test-secret";
+const { default: userRouter } = await import("../apis/users.js");
+const { default: authMiddleware } = await import("../middleware/authentication.js");
 
 const sequelize = new Sequelize({
   dialect: "sqlite",
@@ -56,8 +59,10 @@ beforeAll(async () => {
   app.use(express.json());
   app.use((req, res, next) => {
     req.user = currentUser;
+    req.session = currentUser;
     next();
   });
+  app.use(authMiddleware);
   app.use(userRouter(express.Router(), usersModel));
 
   server = await new Promise((resolve) => {

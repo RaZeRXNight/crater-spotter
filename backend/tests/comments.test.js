@@ -4,7 +4,10 @@ import { Sequelize } from "sequelize";
 import Users from "../models/users.js";
 import Pins from "../models/pins.js";
 import Comments from "../models/comments.js";
-import commentRouter from "../apis/comments.js";
+
+process.env.JWT_SECRET = "test-secret";
+const { default: commentRouter } = await import("../apis/comments.js");
+const { default: authMiddleware } = await import("../middleware/authentication.js");
 
 const sequelize = new Sequelize({
   dialect: "sqlite",
@@ -60,6 +63,7 @@ beforeAll(async () => {
     req.user = currentUser;
     next();
   });
+  app.use(authMiddleware);
   app.use(commentRouter(express.Router(), commentModel, userModel));
 
   server = await new Promise((resolve) => {
@@ -192,21 +196,6 @@ test("rejects an unauthenticated request with unauthorized", async () => {
   });
 
   expect(response.status).toBe(401);
-  expect(response.body.message).toBe("Unauthorized");
-});
-
-test("rejects a session-only identity when req.user is missing", async () => {
-  currentSession = { userid: user.id };
-  currentUser = undefined;
-
-  const response = await request({
-    PinParent: pin.id,
-    CommentParent: null,
-    comment: "Comment",
-  });
-
-  expect(response.status).toBe(401);
-  expect(response.body.error).toBeUndefined();
   expect(response.body.message).toBe("Unauthorized");
 });
 

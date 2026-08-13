@@ -3,6 +3,7 @@ import process from "process";
 import { constants, existsSync, unlink } from "fs";
 import multer from "multer";
 import { checkSchema } from "express-validator";
+import authMiddleware from "../middleware/authentication.js";
 import { requireAuth } from "../middleware/authorization.js";
 import { PinSchema } from "../schema/pin.js";
 import { validatePagination } from "../services/validation.js";
@@ -139,6 +140,7 @@ export default function pinRouter(Router, PinsModel, usersModel) {
   // Body Containing: title, authorid, comment, cooordinates and Image.
   Router.post(
     "/pin",
+    authMiddleware,
     requireAuthMiddleware,
     checkSchema(PinSchema, ["body"]),
     upload.single("image"),
@@ -202,6 +204,7 @@ export default function pinRouter(Router, PinsModel, usersModel) {
 
   Router.put(
     "/pin/:id/",
+    authMiddleware,
     requireAuthMiddleware,
     checkSchema(PinSchema, ["body"]),
     async (req, res) => {
@@ -241,59 +244,64 @@ export default function pinRouter(Router, PinsModel, usersModel) {
     },
   );
 
-  Router.delete("/pin/:id", requireAuthMiddleware, async (req, res) => {
-    const id = req.params.id;
+  Router.delete(
+    "/pin/:id",
+    authMiddleware,
+    requireAuthMiddleware,
+    async (req, res) => {
+      const id = req.params.id;
 
-    try {
-      // Perform action to delete
-      const query = await PinsModel.findOne({ where: { id: id } });
+      try {
+        // Perform action to delete
+        const query = await PinsModel.findOne({ where: { id: id } });
 
-      if (
-        query.authorid != req.user.userid &&
-        req.user.authLevel < BASIC_AUTH_LEVEL
-      ) {
-        throw new Error("ERROR: UNAUTHORIZED");
-      }
-
-      const commentModel = PinsModel.sequelize.models.Comments;
-      await PinsModel.sequelize.transaction(async (transaction) => {
-        await commentModel.destroy({
-          where: { PinParent: id },
-          transaction,
-        });
-
-        const deletedPins = await PinsModel.destroy({
-          where: { id },
-          transaction,
-        });
-
-        if (!deletedPins) {
-          throw new Error("ERROR: PIN DOES NOT EXIST");
+        if (
+          query.authorid != req.user.userid &&
+          req.user.authLevel < BASIC_AUTH_LEVEL
+        ) {
+          throw new Error("ERROR: UNAUTHORIZED");
         }
-      });
 
-      // Filesystem changes cannot be rolled back with the database transaction.
-      const file_path = path.join(STORAGE_PATH, query.image);
-      const file_status = existsSync(file_path, constants.F_OK);
-      if (query.image && file_status) {
-        unlink(file_path, (err) => {
-          if (err) {
-            console.error(`ERROR: Failed to delete file: ${err}`);
+        const commentModel = PinsModel.sequelize.models.Comments;
+        await PinsModel.sequelize.transaction(async (transaction) => {
+          await commentModel.destroy({
+            where: { PinParent: id },
+            transaction,
+          });
+
+          const deletedPins = await PinsModel.destroy({
+            where: { id },
+            transaction,
+          });
+
+          if (!deletedPins) {
+            throw new Error("ERROR: PIN DOES NOT EXIST");
           }
         });
-      }
 
-      res.json({
-        message: `${id} was deleted.`,
-      });
-    } catch (error) {
-      console.error(error);
-      res.json({
-        error: true,
-        message: error.message,
-      });
-    }
-  });
+        // Filesystem changes cannot be rolled back with the database transaction.
+        const file_path = path.join(STORAGE_PATH, query.image);
+        const file_status = existsSync(file_path, constants.F_OK);
+        if (query.image && file_status) {
+          unlink(file_path, (err) => {
+            if (err) {
+              console.error(`ERROR: Failed to delete file: ${err}`);
+            }
+          });
+        }
+
+        res.json({
+          message: `${id} was deleted.`,
+        });
+      } catch (error) {
+        console.error(error);
+        res.json({
+          error: true,
+          message: error.message,
+        });
+      }
+    },
+  );
 
   return Router;
 }

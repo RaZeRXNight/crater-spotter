@@ -1,4 +1,5 @@
 import { checkSchema, validationResult } from "express-validator";
+import authMiddleware from "../middleware/authentication.js";
 import { requireAuth } from "../middleware/authorization.js";
 import { CommentSchema } from "../schema/comment.js";
 import { validatePagination } from "../services/validation.js";
@@ -146,6 +147,7 @@ export default function commentRouter(Router, CommentModel, usersModel) {
 
   Router.post(
     "/comment",
+    authMiddleware,
     requireAuthMiddleware,
     (req, res, next) => {
       if (
@@ -250,36 +252,41 @@ export default function commentRouter(Router, CommentModel, usersModel) {
     });
   });
 
-  Router.delete("/comment/:id", requireAuthMiddleware, async (req, res) => {
-    const id = req.params.id;
+  Router.delete(
+    "/comment/:id",
+    authMiddleware,
+    requireAuthMiddleware,
+    async (req, res) => {
+      const id = req.params.id;
 
-    try {
-      // Perform action to delete
-      const query = await CommentModel.findOne({ where: { id: id } });
+      try {
+        // Perform action to delete
+        const query = await CommentModel.findOne({ where: { id: id } });
 
-      if (
-        query.authorid != req.user.userid &&
-        req.user.authLevel < BASIC_AUTH_LEVEL
-      ) {
-        throw new Error("ERROR: UNAUTHORIZED");
+        if (
+          query.authorid != req.user.userid &&
+          req.user.authLevel < BASIC_AUTH_LEVEL
+        ) {
+          throw new Error("ERROR: UNAUTHORIZED");
+        }
+
+        await CommentModel.destroy({
+          where: {
+            id: id,
+          },
+        });
+
+        res.json({
+          message: `Comment #${id} was deleted.`,
+        });
+      } catch (error) {
+        res.json({
+          error: true,
+          message: error.message,
+        });
       }
-
-      await CommentModel.destroy({
-        where: {
-          id: id,
-        },
-      });
-
-      res.json({
-        message: `Comment #${id} was deleted.`,
-      });
-    } catch (error) {
-      res.json({
-        error: true,
-        message: error.message,
-      });
-    }
-  });
+    },
+  );
 
   return Router;
 }
