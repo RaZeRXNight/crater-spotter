@@ -40,8 +40,7 @@ async function PinDataLoader({ params }) {
 
   const { err, data } = await api({ url: `/api/v1/pin/${id}` });
   if (err) { console.log(err); }
-  const userData = await getUser();
-  return { pin: err ? undefined : data.message, user: userData };
+  return { pin: err ? undefined : data.message };
 }
 
 async function PinCommentDataLoader({ params }) {
@@ -49,8 +48,7 @@ async function PinCommentDataLoader({ params }) {
 
   const pinData = await getPin({ id });
   const commentData = await getComments({ id });
-  const userData = await getUser();
-  return { pin: pinData, user: userData, comments: commentData };
+  return { pin: pinData, comments: commentData };
 }
 
 async function UserPinsLoader() {
