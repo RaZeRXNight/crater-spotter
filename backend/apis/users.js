@@ -1,4 +1,3 @@
-import { Op } from "sequelize";
 import { requireAdmin, requireAuth } from "../middleware/authorization.js";
 import {
   ADMIN_AUTH_LEVEL,
