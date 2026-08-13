@@ -8,13 +8,14 @@ const SequelizeStore = require("connect-session-sequelize")(session.Store);
 const { default: connectDatabase } = require("./services/connection.js");
 const { CheckAndMakeDefaultAdminAccount } = require("./services/admin.js");
 const { DEFAULT_PORT, sessionSecrets } = require("./services/constants.js");
-const router = require("./routes/api.js");
 const { logger } = require("./middleware/logging.js");
 require("dotenv").config({
   path: ENVIRONMENT,
-  override: true,
+  // Compose environment variables must override host-local .env values.
+  override: false,
   debug: ENVIRONMENT ? true : false,
 });
+const router = require("./routes/api.js");
 
 // Env Variables
 const sessionSecret = process.env.SESSION_SECRET;
@@ -32,6 +33,7 @@ async function startServer() {
   const apiRouter = router(database, sessionStore);
 
   const server = express();
+  server.set("trust proxy", 1);
 
   // Middleware
   server.use(express.json());
@@ -40,8 +42,14 @@ async function startServer() {
   server.use(cookieParser());
 
   // Public Storage Path
-  const storage_path = path.resolve(__dirname, "..", process.env.STORAGE_PATH);
-  server.use(`/${process.env.STORAGE_PATH}`, express.static(storage_path));
+  const storageRelativePath = (process.env.STORAGE_PATH || "public/storage")
+    .replace(/^\/+|\/+$/g, "");
+  const storagePath = path.resolve(process.cwd(), storageRelativePath);
+  server.use(`/${storageRelativePath}`, express.static(storagePath));
+
+  server.get("/healthz", (_req, res) => {
+    res.status(200).json({ status: "ok" });
+  });
 
   server.use("/api/v1", apiRouter);
 

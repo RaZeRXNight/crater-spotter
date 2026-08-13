@@ -16,13 +16,17 @@ import {
   UPLOAD_FIELD_SIZE,
 } from "../services/constants.js";
 
+const storageRelativePath = (process.env.STORAGE_PATH || "public/storage")
+  .replace(/^\/+|\/+$/g, "");
+const storagePath = path.resolve(process.cwd(), storageRelativePath);
+
 export const upload = multer({
   limits: { fieldSize: UPLOAD_FIELD_SIZE },
-  dest: process.env.STORAGE_PATH,
+  dest: storagePath,
 });
 
 export default function pinRouter(Router, PinsModel) {
-  const STORAGE_PATH = path.join(process.cwd(), process.env.STORAGE_PATH);
+  const STORAGE_PATH = storagePath;
 
   // pin DB API
   // Routes

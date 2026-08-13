@@ -4,7 +4,7 @@ crater-spotter is a small full-stack javascript project that interacts with
 the google maps API. It provides a forum for users to post about pot-holes and
 other road hazards, allowing users to pin their locations on a map. crater-spotter
 is built using react for the front-end and node/express js for the back-end. The
-database used is SQLite,
+database used is PostgreSQL,
 
 ![Screenshot](https://i.imgur.com/lTETNZf.png)
 
@@ -28,11 +28,9 @@ With the current react app, you are able to do the following:
   website usage of it.
 - Implement OAuth for easier sign-in and account creation.
 - Implement Administration Dashboard and Features.
-- Migrate to PostgreSQL for better performance and scalability.
 - Nested Comments and Replies.
 - Password Changing
 - Minimize Session Request Loads.
-- Create a docker image for the project to allow for easier deployment.
 
 ## Structure
 
@@ -90,17 +88,28 @@ filed out with your own credentials.
 ```bash
 git clone https://github.com/RaZeRXNight/crater-spotter.git
 cd crater-spotter
-cp .env.example .env
+cp backend/.env.example backend/.env
 ```
 
-Edit `.env` with your Google Maps API key and a session secret, then:
+Edit `backend/.env` with your Google Maps API key and a session secret. Start
+the HTTP development stack with:
 
 ```bash
 docker compose up --build
 ```
 
-The app is served at `http://localhost:8000`. An admin account
-(`admin` / `password`) is auto-created on first run.
+The app is served at `http://localhost:8000`. An admin account (`admin` /
+`password`) is auto-created on first run.
+
+The production-like stack is separate and requires certificates for a real
+domain:
+
+```bash
+docker compose -f docker-compose.prod.yml up --build
+```
+
+See [`docs/deployment/docker.md`](docs/deployment/docker.md) for certificate
+provisioning, renewal, and production environment details.
 
 ## License
 

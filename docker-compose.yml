@@ -21,17 +21,26 @@ services:
     env_file: ./backend/.env
     environment:
       DEVELOPMENT: "true"
+      HOST: 0.0.0.0
+      PORT: 8000
       DEV_DB_HOST: postgres
       DEV_DB_PORT: 5432
       DEV_DB_NAME: ${POSTGRES_DB:-crater_spotter}
       DEV_DB_USER: ${POSTGRES_USER:-crater_spotter}
       DEV_DB_PASSWORD: ${POSTGRES_PASSWORD:-development-password}
       DB_SSL: "false"
+      JWT_SECRET: ${JWT_SECRET:-development-jwt-secret-change-me-please}
+      STORAGE_PATH: public/storage/
     depends_on:
       postgres:
         condition: service_healthy
     volumes:
       - ./public/storage:/backend/public/storage
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:8000/healthz', response => process.exit(response.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   frontend:
     container_name: crater-spotter-frontend
@@ -39,14 +48,12 @@ services:
       context: .
       dockerfile: docker/frontend/Dockerfile
     volumes:
-      - ./docker/nginx/certs/local.rsa.crt:/etc/nginx/certs/local.rsa.crt
-      - ./docker/nginx/certs/local.rsa.key:/etc/nginx/certs/local.rsa.key
-      - ./docker/nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./docker/nginx/nginx.dev.conf:/etc/nginx/conf.d/default.conf:ro
     ports:
-      - "80:80"
-      - "8443:443"
+      - "8000:80"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
 
 volumes:
   postgres_data:

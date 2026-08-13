@@ -13,5 +13,4 @@ FROM nginx:alpine
 
 COPY --from=frontend_build /frontend/dist /usr/share/nginx/html
 
-EXPOSE 80
-EXPOSE 443
+EXPOSE 80 443

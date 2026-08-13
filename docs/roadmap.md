@@ -26,7 +26,7 @@
 
 ### Month 2 — Database
 
-- [ ] Migrate from SQLite to PostgreSQL
+- [ X ] Migrate from SQLite to PostgreSQL
 - [ ] Database optimization: indexing, pagination, connection pooling, solve N+1
 - [ X ] API Versioning: prefix all API Routes with `/v1/`
 

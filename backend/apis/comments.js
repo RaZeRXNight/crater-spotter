@@ -23,6 +23,22 @@ function mapRows(row) {
 }
 
 export default function commentRouter(Router, CommentModel) {
+  // Malformed Request Middleware
+  Router.use((error, req, res, next) => {
+    if (
+      error?.type === "entity.parse.failed" ||
+      error?.status === 400 ||
+      error instanceof SyntaxError
+    ) {
+      return res.status(400).json({
+        error: true,
+        message: "ERROR: INVALID REQUEST BODY",
+      });
+    }
+
+    next(error);
+  });
+
   // comment DB API
   // Routes
   const CommentInclude = [
@@ -129,6 +145,16 @@ export default function commentRouter(Router, CommentModel) {
 
   Router.post(
     "/comment",
+    (req, res, next) => {
+      if (
+        !req.body ||
+        typeof req.body !== "object" ||
+        Array.isArray(req.body)
+      ) {
+        req.body = {};
+      }
+      next();
+    },
     checkSchema(CommentSchema, ["body"]),
     async (req, res) => {
       const session = req.session;
@@ -146,41 +172,59 @@ export default function commentRouter(Router, CommentModel) {
       try {
         const validation = validationResult(req);
         if (!validation.isEmpty()) {
-          throw new Error(
-            validation
+          return res.status(400).json({
+            error: true,
+            message: validation
               .array()
               .map(({ msg }) => msg)
               .join(", "),
-          );
+          });
         }
 
         const auth = await BasicAuth(CommentModel.sequelize, session);
 
         if (!auth) {
-          throw new Error("ERROR: NOT AUTHORIZED");
+          return res.status(401).json({
+            error: true,
+            message: "ERROR: NOT AUTHORIZED",
+          });
         }
 
         // Validation
         if (!body.comment) {
-          throw new Error("ERROR: NO COMMENT SUBMITTED");
+          return res.status(400).json({
+            error: true,
+            message: "ERROR: NO COMMENT SUBMITTED",
+          });
         }
 
         const pinParent = await pinsModel.findByPk(reqPinParent);
-        const commentParent = reqCommentParent
-          ? await CommentModel.findOne({
-              where: {
-                id: reqCommentParent,
-                PinParent: reqPinParent,
-              },
-            })
-          : null;
+        const commentParent =
+          reqCommentParent !== null && reqCommentParent !== undefined
+            ? await CommentModel.findOne({
+                where: {
+                  id: reqCommentParent,
+                  PinParent: reqPinParent,
+                },
+              })
+            : null;
 
-        if (reqCommentParent && !commentParent) {
-          throw new Error("ERROR: NO COMMENT PARENT FOUND");
+        if (
+          reqCommentParent !== null &&
+          reqCommentParent !== undefined &&
+          !commentParent
+        ) {
+          return res.status(404).json({
+            error: true,
+            message: "ERROR: NO COMMENT PARENT FOUND",
+          });
         }
 
         if (!pinParent) {
-          throw new Error("ERROR: POST NOT FOUND");
+          return res.status(404).json({
+            error: true,
+            message: "ERROR: POST NOT FOUND",
+          });
         }
 
         // Post Content
@@ -188,22 +232,22 @@ export default function commentRouter(Router, CommentModel) {
           authorid: session.userid,
           PinParent: reqPinParent,
           CommentParent: reqCommentParent,
-          replyLevel: reqReplyLevel,
+          replyLevel: reqReplyLevel ?? 0,
           comment: reqComment,
         });
 
         // Response
-        res.json({
+        return res.status(201).json({
           id: comment.id,
           comment: comment.comment,
           message: "Comment created",
         });
       } catch (error) {
-        res.json({
-          error: true,
-          message: error.message,
-        });
         console.error(error);
+        return res.status(500).json({
+          error: true,
+          message: "ERROR: INTERNAL SERVER ERROR",
+        });
       }
     },
   );

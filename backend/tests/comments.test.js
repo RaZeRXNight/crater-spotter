@@ -24,11 +24,14 @@ let server;
 function request(body) {
   return new Promise((resolve, reject) => {
     const payload = JSON.stringify(body);
-    const request = globalThis.fetch(`http://127.0.0.1:${server.address().port}/comment`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: payload,
-    });
+    const request = globalThis.fetch(
+      `http://127.0.0.1:${server.address().port}/comment`,
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: payload,
+      },
+    );
 
     request
       .then(async (response) => {
@@ -36,9 +39,10 @@ function request(body) {
         const contentType = response.headers.get("content-type") || "";
         resolve({
           status: response.status,
-          body: contentType.includes("application/json") && text
-            ? JSON.parse(text)
-            : null,
+          body:
+            contentType.includes("application/json") && text
+              ? JSON.parse(text)
+              : null,
         });
       })
       .catch(reject);
@@ -82,7 +86,9 @@ beforeEach(async () => {
 });
 
 afterAll(async () => {
-  await new Promise((resolve, reject) => server.close((error) => (error ? reject(error) : resolve())));
+  await new Promise((resolve, reject) =>
+    server.close((error) => (error ? reject(error) : resolve())),
+  );
   await sequelize.close();
 });
 
@@ -159,6 +165,7 @@ test("rejects an empty comment with bad request", async () => {
   });
 
   expect(response.status).toBe(400);
+  expect(response.body).toBe(true);
   expect(response.body.error).toBe(true);
 });
 
@@ -166,6 +173,7 @@ test("rejects a null request body with bad request", async () => {
   const response = await request(null);
 
   expect(response.status).toBe(400);
+  expect(response.body).toBe(true);
   expect(response.body?.error).toBe(true);
 });
 
@@ -229,9 +237,9 @@ test("returns not found when the parent belongs to another pin", async () => {
 });
 
 test("returns a generic internal error when creation fails", async () => {
-  const create = vi.spyOn(commentModel, "create").mockRejectedValue(
-    new Error("database secret"),
-  );
+  const create = vi
+    .spyOn(commentModel, "create")
+    .mockRejectedValue(new Error("database secret"));
 
   try {
     const response = await request({

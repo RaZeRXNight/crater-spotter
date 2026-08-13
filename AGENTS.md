@@ -39,9 +39,9 @@
 
 ## Docker / deployment
 
-- `docker compose up --build` from repo root runs two services: `backend` (Node, not published to host ports) and `frontend` (nginx, ports 80/8443). `docker/nginx/nginx.conf` proxies `/api/` and `/public/storage/` to `backend:8000`; everything else serves the React SPA. HTTP on port 80 redirects to HTTPS on 443 (self-signed TLS certs from `docker/nginx/certs/` — excluded from git by `.gitignore`).
-- Backend container mounts `./.sqlite3` at `/.sqlite3` (absolute path in container) and `./public/storage` at `/backend/public/storage` — deleting those on the host resets data/uploads even without rebuilding.
-- Root `.gitignore` excludes: `.env*` (except `.env.example`), `node_modules/`, `.sqlite3*` (wildcard, so `.sqlite3` + journal/WAL), `public/storage/*`, `docker/nginx/certs/*`, logs.
+- `docker compose up --build` from repo root runs the HTTP development stack: `backend` (Node, not published to host ports), `frontend` (nginx on host port 8000), and PostgreSQL. `docker/nginx/nginx.dev.conf` proxies `/api/` and `/public/storage/` to `backend:8000`; everything else serves the React SPA. `docker compose -f docker-compose.prod.yml up --build` enables nginx HTTPS on host ports 80/443 and mounts externally provisioned certificates.
+- Backend container mounts `./public/storage` at `/backend/public/storage`; PostgreSQL data is stored in the `postgres_data` Docker volume. Removing those persistent stores removes uploads or database data.
+- Root `.gitignore` excludes: `.env*` (except `.env.example`), `node_modules/`, `.sqlite3*` (legacy SQLite artifacts), `public/storage/*`, `docker/nginx/certs/*`, `docker/nginx/acme/*`, logs.
 
 ## Frontend notes
 
