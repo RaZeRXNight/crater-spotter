@@ -1,5 +1,6 @@
 const ENVIRONMENT = require("process").argv[2];
 const express = require("express");
+const compression = require("compression");
 const path = require("path");
 const { existsSync } = require("fs");
 const cookieParser = require("cookie-parser");
@@ -34,6 +35,7 @@ async function startServer() {
   const server = express();
 
   // Middleware
+  server.use(compression());
   server.use(express.json());
   server.use(session(sessionSecrets(sessionSecret, sessionStore)));
   server.use(logger);
@@ -41,7 +43,8 @@ async function startServer() {
 
   // Public Storage Path
   const storage_path = path.resolve(__dirname, "..", process.env.STORAGE_PATH);
-  server.use(`/${process.env.STORAGE_PATH}`, express.static(storage_path));
+  // Serve storage with caching (1 day) and enable etag for conditional requests
+  server.use(`/${process.env.STORAGE_PATH}`, express.static(storage_path, { maxAge: 86400000, etag: true }));
 
   server.use("/api/v1", apiRouter);
 
