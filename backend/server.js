@@ -4,6 +4,7 @@ const compression = require("compression");
 const path = require("path");
 const { existsSync } = require("fs");
 const cookieParser = require("cookie-parser");
+const compression = require("compression");
 const session = require("express-session");
 const SequelizeStore = require("connect-session-sequelize")(session.Store);
 const { default: connectDatabase } = require("./services/connection.js");
@@ -39,22 +40,25 @@ async function startServer() {
   // Middleware
   server.use(compression());
   server.use(express.json());
+  server.use(compression());
   server.use(session(sessionSecrets(sessionSecret, sessionStore)));
   server.use(logger);
   server.use(cookieParser());
 
   // Public Storage Path
-  const storageRelativePath = (process.env.STORAGE_PATH || "public/storage")
-    .replace(/^\/+|\/+$/g, "");
-  const storagePath = path.resolve(process.cwd(), storageRelativePath);
+  const storage_path = path.resolve(__dirname, "..", process.env.STORAGE_PATH);
   server.use(
-    `/${storageRelativePath}`,
-    express.static(storagePath, { maxAge: 86400000, etag: true }),
+    `/${process.env.STORAGE_PATH}`,
+    express.static(storage_path, {
+      maxAge: "1d",
+      setHeaders: (res, filePath) => {
+        // Never cache HTML files to avoid serving stale pages
+        if (filePath.endsWith(".html")) {
+          res.setHeader("Cache-Control", "no-cache");
+        }
+      },
+    }),
   );
-
-  server.get("/healthz", (_req, res) => {
-    res.status(200).json({ status: "ok" });
-  });
 
   server.use("/api/v1", apiRouter);
 
