@@ -53,6 +53,24 @@ function request(body) {
   });
 }
 
+async function getComments(query) {
+  const response = await fetch(
+    `http://127.0.0.1:${server.address().port}/comment/?${query}`,
+    { headers: { accept: "application/json" } },
+  );
+
+  return { status: response.status, body: await response.json() };
+}
+
+async function deleteComment(id) {
+  const response = await fetch(
+    `http://127.0.0.1:${server.address().port}/comment/${id}`,
+    { method: "DELETE" },
+  );
+
+  return { status: response.status, body: await response.json() };
+}
+
 beforeAll(async () => {
   await sequelize.sync({ force: true });
 
@@ -244,6 +262,153 @@ test("returns not found when the parent belongs to another pin", async () => {
 
   expect(response.status).toBe(404);
   expect(response.body.error).toBe(true);
+});
+
+test("returns paginated top-level comments with nested replies", async () => {
+  const topLevel = await request({
+    PinParent: pin.id,
+    comment: "Top-level comment",
+  });
+  const reply = await request({
+    PinParent: pin.id,
+    CommentParent: topLevel.body.id,
+    comment: "Reply",
+  });
+  await request({
+    PinParent: pin.id,
+    CommentParent: reply.body.id,
+    comment: "Nested reply",
+  });
+
+  const response = await getComments(`postid=${pin.id}&page=1&perPage=1`);
+  const rows = response.body.message.rows;
+
+  expect(response.status).toBe(200);
+  expect(response.body.message.count).toBe(1);
+  expect(response.body.message.hasNext).toBe(false);
+  expect(rows).toHaveLength(1);
+  expect(rows[0].comment).toBe("Top-level comment");
+  expect(rows[0].replyLevel).toBe(0);
+  expect(rows[0].replies).toHaveLength(1);
+  expect(rows[0].replies[0].comment).toBe("Reply");
+  expect(rows[0].replies[0].replyLevel).toBe(1);
+  expect(rows[0].replies[0].replies[0].comment).toBe("Nested reply");
+  expect(rows[0].replies[0].replies[0].replyLevel).toBe(2);
+});
+
+test("paginates only top-level comments while returning every descendant", async () => {
+  const first = await request({ PinParent: pin.id, comment: "First" });
+  await request({
+    PinParent: pin.id,
+    CommentParent: first.body.id,
+    comment: "First reply",
+  });
+  await request({ PinParent: pin.id, comment: "Second" });
+
+  const response = await getComments(`postid=${pin.id}&page=1&perPage=1`);
+
+  expect(response.status).toBe(200);
+  expect(response.body.message.count).toBe(2);
+  expect(response.body.message.hasNext).toBe(true);
+  expect(response.body.message.rows).toHaveLength(1);
+  expect(response.body.message.rows[0].replies).toHaveLength(1);
+});
+
+test("derives reply levels from the parent and ignores client input", async () => {
+  let parent = null;
+
+  for (let level = 0; level <= 7; level += 1) {
+    const response = await request({
+      PinParent: pin.id,
+      CommentParent: parent,
+      replyLevel: 999,
+      comment: `Level ${level}`,
+    });
+
+    expect(response.status).toBe(201);
+    parent = response.body.id;
+  }
+
+  const response = await getComments(`postid=${pin.id}&perPage=10`);
+  expect(response.status).toBe(200);
+  let comment = response.body.message.rows[0];
+
+  for (let level = 0; level <= 7; level += 1) {
+    expect(comment.replyLevel).toBe(level);
+    comment = comment.replies[0];
+  }
+});
+
+test("soft-deletes a comment while preserving its descendants", async () => {
+  const parent = await request({ PinParent: pin.id, comment: "Parent" });
+  const child = await request({
+    PinParent: pin.id,
+    CommentParent: parent.body.id,
+    comment: "Child",
+  });
+
+  const deletion = await deleteComment(parent.body.id);
+  expect(deletion.status).toBe(200);
+  expect(deletion.body.message).toBe("Comment deleted");
+
+  const response = await getComments(`postid=${pin.id}`);
+  expect(response.status).toBe(200);
+  const deleted = response.body.message.rows[0];
+
+  expect(deleted.id).toBe(parent.body.id);
+  expect(deleted.deleted).toBe(true);
+  expect(deleted.comment).toBeNull();
+  expect(deleted.authorid).toBeNull();
+  expect(deleted.replies[0].id).toBe(child.body.id);
+  expect(deleted.replies[0].comment).toBe("Child");
+});
+
+test("allows only the comment author or an admin to delete a comment", async () => {
+  const otherUser = await userModel.create({
+    authLevel: 1,
+    username: "other-commenter",
+    email: "other@example.com",
+    password: "password",
+  });
+  const comment = await request({ PinParent: pin.id, comment: "Protected" });
+
+  currentSession = { userid: otherUser.id };
+  currentUser = {
+    userid: otherUser.id,
+    username: otherUser.username,
+    authLevel: otherUser.authLevel,
+  };
+
+  const forbidden = await deleteComment(comment.body.id);
+  expect(forbidden.status).toBe(403);
+
+  currentSession = { userid: user.id };
+  currentUser = {
+    userid: user.id,
+    username: user.username,
+    authLevel: user.authLevel,
+  };
+
+  const allowed = await deleteComment(comment.body.id);
+  expect(allowed.status).toBe(200);
+
+  const admin = await userModel.create({
+    authLevel: 2,
+    username: "admin-commenter",
+    email: "admin@example.com",
+    password: "password",
+  });
+  const adminTarget = await request({ PinParent: pin.id, comment: "Admin target" });
+
+  currentSession = { userid: admin.id };
+  currentUser = {
+    userid: admin.id,
+    username: admin.username,
+    authLevel: admin.authLevel,
+  };
+
+  const adminDeletion = await deleteComment(adminTarget.body.id);
+  expect(adminDeletion.status).toBe(200);
 });
 
 test("returns a generic internal error when creation fails", async () => {
