@@ -109,7 +109,7 @@ export default function pinRouter(Router, PinsModel, usersModel) {
       });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ error: true, message: error.message });
+      res.status(500).json({ error: true, message: "Internal server error" });
     }
   });
 
@@ -135,7 +135,7 @@ export default function pinRouter(Router, PinsModel, usersModel) {
       console.error(error);
       res.status(500).json({
         error: true,
-        message: `ERROR: Couldn't retrieve Pin #${id}`,
+        message: "Unable to retrieve pin",
       });
     }
   });
@@ -192,14 +192,14 @@ export default function pinRouter(Router, PinsModel, usersModel) {
 
         // Message back to Poster
         res.json({
-          message: `SUCCESS! ${title} #${id} posted successfully!`,
+          message: "Pin created",
           error: false,
           id: id,
         });
       } catch (error) {
         res.json({
           error: true,
-          message: `ERROR: ${error.message}`,
+          message: "Unable to create pin",
         });
         console.error(error);
       }
@@ -240,14 +240,14 @@ export default function pinRouter(Router, PinsModel, usersModel) {
         );
 
         res.json({
-          message: `SUCCESS: ID ${id} ${oldData.title} updated!`,
+          message: "Pin updated",
         });
       } catch (error) {
         console.error(error);
         if (!res.headersSent) {
           res.status(500).json({
             error: true,
-            message: error.message,
+            message: "Unable to update pin",
           });
         }
       }
@@ -301,13 +301,13 @@ export default function pinRouter(Router, PinsModel, usersModel) {
         }
 
         res.json({
-          message: `${id} was deleted.`,
+          message: "Pin deleted",
         });
       } catch (error) {
         console.error(error);
         res.json({
           error: true,
-          message: error.message,
+          message: "Unable to delete pin",
         });
       }
     },

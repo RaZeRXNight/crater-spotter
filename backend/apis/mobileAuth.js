@@ -13,7 +13,10 @@ export default function mobileAuthRouter(Router, usersModel) {
     const token = req.cookies?.refreshtoken;
 
     if (!token) {
-      return res.status(401).json({ message: "Refresh token missing" });
+      return res.status(401).json({
+        error: true,
+        message: "Refresh token missing",
+      });
     }
 
     try {
@@ -28,7 +31,10 @@ export default function mobileAuthRouter(Router, usersModel) {
 
       return res.json({ accessToken: newAccessToken });
     } catch (error) {
-      return res.status(403).json({ message: "Invalid or expired token" });
+      return res.status(403).json({
+        error: true,
+        message: "Invalid or expired token",
+      });
     }
   });
 
@@ -45,13 +51,17 @@ export default function mobileAuthRouter(Router, usersModel) {
         });
 
         if (!User) {
-          res.status(404).json({ message: "ERROR: USER DOES NOT EXIST" });
+          res.status(401).json({
+            error: true,
+            message: "Invalid username or password",
+          });
           return;
         }
 
         if (!(await bcrypt.compare(body.password, User.password))) {
           res.status(401).json({
-            message: "ERROR: INCORRECT PASSWORD, Authentication Failed",
+            error: true,
+            message: "Invalid username or password",
           });
           return;
         }
@@ -117,7 +127,7 @@ export default function mobileAuthRouter(Router, usersModel) {
   Router.delete("/auth/mobile/logout", async (req, res) => {
     // Token revocation deferred to roadmap — client discards the token
     res.json({
-      message: "Logged Out, Bye",
+      message: "Logout successful",
     });
   });
 

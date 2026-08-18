@@ -79,7 +79,7 @@ test("allows an authenticated session user to delete their own account", async (
   const response = await request();
 
   expect(response.status).toBe(200);
-  expect(response.body.message).toBe(`${user.id} was deleted.`);
+  expect(response.body.message).toBe("Account deleted");
   expect(await usersModel.count({ where: { id: user.id } })).toBe(0);
   expect(await commentsModel.count({ where: { authorid: user.id } })).toBe(0);
 });

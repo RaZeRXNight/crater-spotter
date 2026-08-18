@@ -47,7 +47,10 @@ export default function authRouter(Router, usersModel) {
         if (req.session) {
           req.session.destroy();
         }
-        return res.status(401).json({ message: "ERROR: ACCOUNT NOT FOUND." });
+        return res.status(401).json({
+          error: true,
+          message: "Account not found",
+        });
       }
 
       res.json({
@@ -58,7 +61,10 @@ export default function authRouter(Router, usersModel) {
       });
     } catch (error) {
       console.error(error);
-      return res.status(500).json({ message: "Internal server error" });
+      return res.status(500).json({
+        error: true,
+        message: "Internal server error",
+      });
     }
   });
 
@@ -89,11 +95,14 @@ export default function authRouter(Router, usersModel) {
         await authenticateSession(req, newUser);
 
         res.json({
-          message: `Welcome ${newUser.username}!`,
+          message: "Registration successful",
         });
       } catch (error) {
         console.error(error);
-        return res.status(500).json({ message: "Internal server error" });
+        return res.status(500).json({
+          error: true,
+          message: "Internal server error",
+        });
       }
     },
   );
@@ -113,9 +122,10 @@ export default function authRouter(Router, usersModel) {
 
         // Throws if no valid user is found
         if (!User) {
-          return res
-            .status(404)
-            .json({ message: "ERROR: USER DOES NOT EXIST" });
+          return res.status(401).json({
+            error: true,
+            message: "Invalid username or password",
+          });
         }
 
         // Verify if Password Matches then Authenticate Session
@@ -124,17 +134,20 @@ export default function authRouter(Router, usersModel) {
 
           // response
           res.json({
-            message: `Welcome back ${User.username}!`,
+            message: "Login successful",
           });
         } else {
           return res.status(401).json({
             error: true,
-            message: "ERROR: INCORRECT PASSWORD, Authentication Failed",
+            message: "Invalid username or password",
           });
         }
       } catch (error) {
         console.error(error);
-        return res.status(500).json({ message: "Internal server error" });
+        return res.status(500).json({
+          error: true,
+          message: "Internal server error",
+        });
       }
     },
   );
@@ -145,11 +158,10 @@ export default function authRouter(Router, usersModel) {
 
     try {
       if (session.userid) {
-        const username = session.username;
         session.destroy();
 
         res.json({
-          message: `Logged Out, Bye ${username}`,
+          message: "Logout successful",
         });
       } else {
         res.json({
@@ -159,7 +171,8 @@ export default function authRouter(Router, usersModel) {
     } catch (error) {
       console.error(error);
       res.status(500).json({
-        message: "ERROR: LOGOUT FAILED",
+        error: true,
+        message: "Unable to log out",
       });
     }
   });
@@ -177,13 +190,13 @@ export default function authRouter(Router, usersModel) {
         await destroySession(session);
 
         res.json({
-          message: `${id} was deleted.`,
+          message: "Account deleted",
         });
       } catch (error) {
         console.error(error);
         res.status(500).json({
           error: true,
-          message: error.message,
+          message: "Unable to delete account",
         });
       }
     },

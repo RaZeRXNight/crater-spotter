@@ -111,7 +111,7 @@ export default function commentRouter(Router, CommentModel, usersModel) {
 
       res.json({ message: dataToSend });
     } catch (error) {
-      res.json({ error: true, message: error.message });
+      res.status(500).json({ error: true, message: "Internal server error" });
       console.error(error);
     }
   });
@@ -140,7 +140,7 @@ export default function commentRouter(Router, CommentModel, usersModel) {
         },
       });
     } catch (error) {
-      res.json({ error: true, message: error.message });
+      res.status(500).json({ error: true, message: "Internal server error" });
       console.error(error);
     }
   });
@@ -277,12 +277,12 @@ export default function commentRouter(Router, CommentModel, usersModel) {
         });
 
         res.json({
-          message: `Comment #${id} was deleted.`,
+          message: "Comment deleted",
         });
       } catch (error) {
         res.json({
           error: true,
-          message: error.message,
+          message: "Unable to delete comment",
         });
       }
     },

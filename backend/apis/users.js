@@ -74,7 +74,7 @@ export default function userRouter(Router, usersModel, sessionStore) {
 
           await user.update({ authLevel: newAuthLevel });
           res.json({
-            message: "Successfully Updated User",
+            message: "User updated",
             authLevel: newAuthLevel,
           });
           return;
@@ -84,7 +84,7 @@ export default function userRouter(Router, usersModel, sessionStore) {
       } catch (error) {
         res.json({
           error: true,
-          message: error.message,
+          message: "Unable to update user",
         });
         console.error(error);
       }
@@ -119,12 +119,12 @@ export default function userRouter(Router, usersModel, sessionStore) {
         await DeleteUser(usersModel, id);
 
         res.json({
-          message: `${id} was deleted.`,
+          message: "User deleted",
         });
       } catch (error) {
         res.json({
           error: true,
-          message: error.message,
+          message: "Unable to delete user",
         });
         console.error(error);
       }
