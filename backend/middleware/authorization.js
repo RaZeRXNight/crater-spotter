@@ -29,7 +29,7 @@ function createAuthorizationMiddleware(usersModel, minimumAuthLevel) {
         return unauthorized(res);
       }
 
-      if (user.authLevel < minimumAuthLevel) {
+      if (!Number.isInteger(user.authLevel) || user.authLevel < minimumAuthLevel) {
         return forbidden(res);
       }
 

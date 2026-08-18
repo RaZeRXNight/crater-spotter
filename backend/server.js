@@ -1,5 +1,6 @@
 const ENVIRONMENT = require("process").argv[2];
 const express = require("express");
+const compression = require("compression");
 const path = require("path");
 const { existsSync } = require("fs");
 const cookieParser = require("cookie-parser");
@@ -36,6 +37,7 @@ async function startServer() {
   server.set("trust proxy", 1);
 
   // Middleware
+  server.use(compression());
   server.use(express.json());
   server.use(session(sessionSecrets(sessionSecret, sessionStore)));
   server.use(logger);
@@ -45,7 +47,10 @@ async function startServer() {
   const storageRelativePath = (process.env.STORAGE_PATH || "public/storage")
     .replace(/^\/+|\/+$/g, "");
   const storagePath = path.resolve(process.cwd(), storageRelativePath);
-  server.use(`/${storageRelativePath}`, express.static(storagePath));
+  server.use(
+    `/${storageRelativePath}`,
+    express.static(storagePath, { maxAge: 86400000, etag: true }),
+  );
 
   server.get("/healthz", (_req, res) => {
     res.status(200).json({ status: "ok" });

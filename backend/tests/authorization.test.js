@@ -78,6 +78,23 @@ describe("requireAuth", () => {
     expect(next).not.toHaveBeenCalled();
   });
 
+  test("rejects a user with a non-numeric authorization level with 403", async () => {
+    const malformedUsersModel = {
+      findByPk: vi.fn().mockResolvedValue({
+        id: 1,
+        username: "malformed",
+        authLevel: undefined,
+      }),
+    };
+    const response = responseDouble();
+    const next = vi.fn();
+
+    await requireAuth(malformedUsersModel)({ user: { userid: 1 } }, response.res, next);
+
+    expect(response.res.status).toHaveBeenCalledWith(403);
+    expect(next).not.toHaveBeenCalled();
+  });
+
   test("refreshes req.user from the current standard user record", async () => {
     const user = await createUser(AUTH_LEVEL.STANDARD);
     const req = {
@@ -104,6 +121,23 @@ describe("requireAdmin", () => {
     const next = vi.fn();
 
     await requireAdmin(usersModel)({ user: { userid: user.id } }, response.res, next);
+
+    expect(response.res.status).toHaveBeenCalledWith(403);
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  test("rejects an administrator with a non-numeric authorization level with 403", async () => {
+    const malformedUsersModel = {
+      findByPk: vi.fn().mockResolvedValue({
+        id: 1,
+        username: "malformed",
+        authLevel: undefined,
+      }),
+    };
+    const response = responseDouble();
+    const next = vi.fn();
+
+    await requireAdmin(malformedUsersModel)({ user: { userid: 1 } }, response.res, next);
 
     expect(response.res.status).toHaveBeenCalledWith(403);
     expect(next).not.toHaveBeenCalled();
