@@ -3,8 +3,12 @@ export const CommentSchema = {
     isInt: { errorMessage: "PinParent must be an integer" },
   },
   CommentParent: {
-    optional: { nullable: true },
+    optional: { options: { nullable: true } },
     isInt: { errorMessage: "CommentParent must be an integer" },
+  },
+  replyLevel: {
+    optional: { options: { nullable: true } },
+    isInt: { errorMessage: "replyLevel must be an integer" },
   },
   replyLevel: {
     isInt: { errorMessage: "replyLevel must be an integer" },

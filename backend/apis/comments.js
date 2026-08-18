@@ -141,7 +141,7 @@ export default function commentRouter(Router, CommentModel) {
       const reqComment = body.comment;
       const reqCommentParent = body.CommentParent;
       const reqPinParent = body.PinParent;
-      const reqReplyLevel = body.replyLevel;
+      const reqReplyLevel = body.replyLevel ?? 0;
 
       try {
         const validation = validationResult(req);
@@ -193,7 +193,7 @@ export default function commentRouter(Router, CommentModel) {
         });
 
         // Response
-        res.json({
+        res.status(201).json({
           id: comment.id,
           comment: comment.comment,
           message: "Comment created",
