@@ -103,6 +103,7 @@ export default function pinRouter(Router, PinsModel, usersModel) {
       });
 
       res.json({
+        message: "Pins retrieved",
         rows: dataRows,
         count: data.count,
       });
@@ -132,7 +133,10 @@ export default function pinRouter(Router, PinsModel, usersModel) {
       });
     } catch (error) {
       console.error(error);
-      res.status(500).send(`ERROR: Couldn't retrieve Pin #${id}`);
+      res.status(500).json({
+        error: true,
+        message: `ERROR: Couldn't retrieve Pin #${id}`,
+      });
     }
   });
 
@@ -240,6 +244,12 @@ export default function pinRouter(Router, PinsModel, usersModel) {
         });
       } catch (error) {
         console.error(error);
+        if (!res.headersSent) {
+          res.status(500).json({
+            error: true,
+            message: error.message,
+          });
+        }
       }
     },
   );

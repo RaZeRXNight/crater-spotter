@@ -51,6 +51,7 @@ export default function authRouter(Router, usersModel) {
       }
 
       res.json({
+        message: "Authenticated",
         id: req.user.userid,
         username: req.user.username,
         authLevel: req.user.authLevel,
@@ -126,9 +127,10 @@ export default function authRouter(Router, usersModel) {
             message: `Welcome back ${User.username}!`,
           });
         } else {
-          return res
-            .status(401)
-            .send("ERROR: INCORRECT PASSWORD, Authentication Failed");
+          return res.status(401).json({
+            error: true,
+            message: "ERROR: INCORRECT PASSWORD, Authentication Failed",
+          });
         }
       } catch (error) {
         console.error(error);
@@ -148,6 +150,10 @@ export default function authRouter(Router, usersModel) {
 
         res.json({
           message: `Logged Out, Bye ${username}`,
+        });
+      } else {
+        res.json({
+          message: "Already Logged Out",
         });
       }
     } catch (error) {

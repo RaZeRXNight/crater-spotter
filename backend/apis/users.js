@@ -24,24 +24,35 @@ export default function userRouter(Router, usersModel, sessionStore) {
 
     try {
       if (!userid) {
-        res.status(400).send("Invalid user id");
-        throw new Error("ERROR: NO USERID PROVIDED");
+        return res.status(400).json({
+          error: true,
+          message: "ERROR: NO USERID PROVIDED",
+        });
       }
 
       const user = await usersModel.findByPk(userid);
 
       if (!user) {
-        res.status(404).send("ERROR: USER NOT FOUND");
-        throw new Error("ERROR: USER NOT FOUND");
+        return res.status(404).json({
+          error: true,
+          message: "ERROR: USER NOT FOUND",
+        });
       }
 
       res.json({
+        message: "User retrieved",
         id: user.id,
         username: user.username,
         authLevel: user.authLevel,
       });
     } catch (error) {
       console.error(error);
+      if (!res.headersSent) {
+        res.status(500).json({
+          error: true,
+          message: "Internal server error",
+        });
+      }
     }
   });
 
