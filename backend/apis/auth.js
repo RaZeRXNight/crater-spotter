@@ -6,7 +6,7 @@ import {
   BCRYPT_SALT_ROUNDS,
   DEFAULT_USER_AUTH_LEVEL,
 } from "../services/constants.js";
-import { BasicAuth } from "../services/admin.js";
+import { requireAuth } from "../middleware/authorization.js";
 import { DeleteUser } from "../services/user.js";
 
 function authenticateSession(req, user) {
@@ -22,7 +22,19 @@ function authenticateSession(req, user) {
   });
 }
 
+function destroySession(session) {
+  if (!session?.destroy) {
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve, reject) => {
+    session.destroy((error) => (error ? reject(error) : resolve()));
+  });
+}
+
 export default function authRouter(Router, usersModel) {
+  const requireAuthMiddleware = requireAuth(usersModel);
+
   // User DB API
   // Routes
   // User Authentication & Session Handling
@@ -146,29 +158,30 @@ export default function authRouter(Router, usersModel) {
     }
   });
 
-  Router.delete("/auth/delete", async (req, res) => {
-    const session = req.session;
-    const id = session.userid;
+  Router.delete(
+    "/auth/delete",
+    authMiddleware,
+    requireAuthMiddleware,
+    async (req, res) => {
+      const session = req.session;
+      const id = req.user.userid;
 
-    try {
-      if (!(await BasicAuth(usersModel.sequelize, session))) {
-        throw new Error("ERROR: UNAUTHORIZED");
+      try {
+        await DeleteUser(usersModel, id);
+        await destroySession(session);
+
+        res.json({
+          message: `${id} was deleted.`,
+        });
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({
+          error: true,
+          message: error.message,
+        });
       }
-
-      await DeleteUser(usersModel, id);
-      await session.destroy();
-
-      res.json({
-        message: `${id} was deleted.`,
-      });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({
-        error: true,
-        message: error.message,
-      });
-    }
-  });
+    },
+  );
 
   return Router;
 }

@@ -3,7 +3,8 @@ import process from "process";
 import { constants, existsSync, unlink } from "fs";
 import multer from "multer";
 import { checkSchema } from "express-validator";
-import { BasicAuth } from "../services/admin.js";
+import authMiddleware from "../middleware/authentication.js";
+import { requireAuth } from "../middleware/authorization.js";
 import { PinSchema } from "../schema/pin.js";
 import { validatePagination } from "../services/validation.js";
 import {
@@ -25,8 +26,9 @@ export const upload = multer({
   dest: storagePath,
 });
 
-export default function pinRouter(Router, PinsModel) {
+export default function pinRouter(Router, PinsModel, usersModel) {
   const STORAGE_PATH = storagePath;
+  const requireAuthMiddleware = requireAuth(usersModel);
 
   // pin DB API
   // Routes
@@ -138,10 +140,11 @@ export default function pinRouter(Router, PinsModel) {
   // Body Containing: title, authorid, comment, cooordinates and Image.
   Router.post(
     "/pin",
+    authMiddleware,
+    requireAuthMiddleware,
     checkSchema(PinSchema, ["body"]),
     upload.single("image"),
     async (req, res) => {
-      const session = req.session;
       const body = req.body;
       const file = req.file;
       const { title, authorid, comment, lat, lng } = body;
@@ -160,17 +163,11 @@ export default function pinRouter(Router, PinsModel) {
           throw new Error("Coordinates are Needed");
         }
 
-        const auth = BasicAuth(PinsModel.sequelize, session);
-
-        if (!auth) {
-          throw new Error("ERROR: UNAUTHORIZED");
-        }
-
         if (!authorid) {
           throw new Error("An Account is needed");
         }
 
-        if (authorid != session.userid) {
+        if (authorid != req.user.userid) {
           throw new Error("User ID not Valid");
         }
 
@@ -207,27 +204,21 @@ export default function pinRouter(Router, PinsModel) {
 
   Router.put(
     "/pin/:id/",
+    authMiddleware,
+    requireAuthMiddleware,
     checkSchema(PinSchema, ["body"]),
     async (req, res) => {
       const userModel = PinsModel.sequelize.models.Users;
       const id = req.params.id;
-      const session = req.session;
 
       try {
         const query = await PinsModel.findOne({ where: { id: id } });
-        const userQuery = await userModel.findByPk(session.userid);
         const oldData = query.dataValues;
         const newData = req.body;
 
-        const auth = BasicAuth(PinsModel.sequelize, session);
-
-        if (!auth) {
-          throw new Error("ERROR: UNAUTHORIZED");
-        }
-
         if (
-          session.userid != query.authorid &&
-          userQuery.authLevel < BASIC_AUTH_LEVEL
+          req.user.userid != query.authorid &&
+          req.user.authLevel < BASIC_AUTH_LEVEL
         ) {
           res.json({ error: true, message: "ERROR: UNAUTHORIZED" });
           throw new Error("ERROR: UNAUTHORIZED");
@@ -253,68 +244,64 @@ export default function pinRouter(Router, PinsModel) {
     },
   );
 
-  Router.delete("/pin/:id", async (req, res) => {
-    const userModel = PinsModel.sequelize.models.Users;
-    const id = req.params.id;
-    const session = req.session;
+  Router.delete(
+    "/pin/:id",
+    authMiddleware,
+    requireAuthMiddleware,
+    async (req, res) => {
+      const id = req.params.id;
 
-    try {
-      // Perform action to delete
-      const query = await PinsModel.findOne({ where: { id: id } });
-      const userQuery = await userModel.findByPk(session.userid);
+      try {
+        // Perform action to delete
+        const query = await PinsModel.findOne({ where: { id: id } });
 
-      const auth = BasicAuth(PinsModel.sequelize, session);
-
-      if (!auth) {
-        throw new Error("ERROR: UNAUTHORIZED");
-      }
-
-      if (
-        query.authorid != session.userid &&
-        userQuery.authLevel < BASIC_AUTH_LEVEL
-      ) {
-        throw new Error("ERROR: UNAUTHORIZED");
-      }
-
-      const commentModel = PinsModel.sequelize.models.Comments;
-      await PinsModel.sequelize.transaction(async (transaction) => {
-        await commentModel.destroy({
-          where: { PinParent: id },
-          transaction,
-        });
-
-        const deletedPins = await PinsModel.destroy({
-          where: { id },
-          transaction,
-        });
-
-        if (!deletedPins) {
-          throw new Error("ERROR: PIN DOES NOT EXIST");
+        if (
+          query.authorid != req.user.userid &&
+          req.user.authLevel < BASIC_AUTH_LEVEL
+        ) {
+          throw new Error("ERROR: UNAUTHORIZED");
         }
-      });
 
-      // Filesystem changes cannot be rolled back with the database transaction.
-      const file_path = path.join(STORAGE_PATH, query.image);
-      const file_status = existsSync(file_path, constants.F_OK);
-      if (query.image && file_status) {
-        unlink(file_path, (err) => {
-          if (err) {
-            console.error(`ERROR: Failed to delete file: ${err}`);
+        const commentModel = PinsModel.sequelize.models.Comments;
+        await PinsModel.sequelize.transaction(async (transaction) => {
+          await commentModel.destroy({
+            where: { PinParent: id },
+            transaction,
+          });
+
+          const deletedPins = await PinsModel.destroy({
+            where: { id },
+            transaction,
+          });
+
+          if (!deletedPins) {
+            throw new Error("ERROR: PIN DOES NOT EXIST");
           }
         });
-      }
 
-      res.json({
-        message: `${id} was deleted.`,
-      });
-    } catch (error) {
-      console.error(error);
-      res.json({
-        error: true,
-        message: error.message,
-      });
-    }
-  });
+        // Filesystem changes cannot be rolled back with the database transaction.
+        const file_path = path.join(STORAGE_PATH, query.image);
+        const file_status = existsSync(file_path, constants.F_OK);
+        if (query.image && file_status) {
+          unlink(file_path, (err) => {
+            if (err) {
+              console.error(`ERROR: Failed to delete file: ${err}`);
+            }
+          });
+        }
+
+        res.json({
+          message: `${id} was deleted.`,
+        });
+      } catch (error) {
+        console.error(error);
+        res.json({
+          error: true,
+          message: error.message,
+        });
+      }
+    },
+  );
 
   return Router;
 }

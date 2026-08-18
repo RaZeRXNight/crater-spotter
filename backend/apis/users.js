@@ -1,9 +1,5 @@
-import {
-  AdminAuth,
-  BasicAuth,
-  CheckAndMakeDefaultAdminAccount,
-} from "../services/admin.js";
-import { Op } from "sequelize";
+import { requireAdmin, requireAuth } from "../middleware/authorization.js";
+import authMiddleware from "../middleware/authentication.js";
 import {
   ADMIN_AUTH_LEVEL,
   BASIC_AUTH_LEVEL,
@@ -12,6 +8,9 @@ import {
 import { DeleteUser } from "../services/user.js";
 
 export default function userRouter(Router, usersModel, sessionStore) {
+  const requireAuthMiddleware = requireAuth(usersModel);
+  const requireAdminMiddleware = requireAdmin(usersModel);
+
   // User DB API
   // Routes
   Router.get("/user/", (req, res) => {
@@ -46,83 +45,80 @@ export default function userRouter(Router, usersModel, sessionStore) {
     }
   });
 
-  Router.put("/user/:id", async (req, res) => {
-    const session = req.session;
-    const headers = req.headers;
-    const action = headers.action;
-    const userid = req.params.id;
+  Router.put(
+    "/user/:id",
+    authMiddleware,
+    requireAdminMiddleware,
+    async (req, res) => {
+      const headers = req.headers;
+      const action = headers.action;
+      const userid = req.params.id;
 
-    try {
-      const auth = await BasicAuth(usersModel.sequelize, session);
-      const adminAuth = await AdminAuth(usersModel.sequelize, session);
+      try {
+        const user = await usersModel.findByPk(userid);
+        if (action == "suspend" && user.authLevel < ADMIN_AUTH_LEVEL) {
+          const newAuthLevel = user.authLevel
+            ? SUSPENDED_AUTH_LEVEL
+            : BASIC_AUTH_LEVEL;
 
-      if (!auth) {
-        throw new Error("ERROR: UNAUTHORIZED");
-      }
-
-      const user = await usersModel.findByPk(userid);
-      if (
-        adminAuth &&
-        action == "suspend" &&
-        user.authLevel < ADMIN_AUTH_LEVEL
-      ) {
-        const newAuthLevel = user.authLevel
-          ? SUSPENDED_AUTH_LEVEL
-          : BASIC_AUTH_LEVEL;
-
-        const updatedUser = await user.update({ authLevel: newAuthLevel });
+          await user.update({ authLevel: newAuthLevel });
+          res.json({
+            message: "Successfully Updated User",
+            authLevel: newAuthLevel,
+          });
+          return;
+        } else {
+          throw new Error("ERROR: UNAUTHORIZED");
+        }
+      } catch (error) {
         res.json({
-          message: "Successfully Updated User",
-          authLevel: newAuthLevel,
+          error: true,
+          message: error.message,
         });
-        return;
-      } else {
-        throw new Error("ERROR: UNAUTHORIZED");
+        console.error(error);
       }
-    } catch (error) {
-      res.json({
-        error: true,
-        message: error.message,
-      });
-      console.error(error);
-    }
-  });
+    },
+  );
 
-  Router.delete("/user/:id", async (req, res) => {
-    const session = req.session;
-    const sessionUserID = session.userid;
-    const id = req.params.id;
+  Router.delete(
+    "/user/:id",
+    authMiddleware,
+    requireAuthMiddleware,
+    async (req, res) => {
+      const sessionUserID = req.user.userid;
+      const id = req.params.id;
 
-    try {
-      // Perform action to delete
-      const requestedUser = await usersModel.findByPk(id);
-      const actingUser = await usersModel.findByPk(sessionUserID);
+      try {
+        // Perform action to delete
+        const requestedUser = await usersModel.findByPk(id);
+        const actingUser = await usersModel.findByPk(sessionUserID);
 
-      if (!requestedUser) {
-        throw new Error("ERROR: USER DOES NOT EXIST");
+        if (!requestedUser) {
+          throw new Error("ERROR: USER DOES NOT EXIST");
+        }
+
+        // Check if user is admin or authenticated user.
+        if (
+          requestedUser.id != req.user.userid &&
+          actingUser.authLevel < ADMIN_AUTH_LEVEL
+        ) {
+          throw new Error("ERROR: UNAUTHORIZED");
+        }
+
+        await DeleteUser(usersModel, id);
+
+        res.json({
+          message: `${id} was deleted.`,
+        });
+      } catch (error) {
+        res.json({
+          error: true,
+          message: error.message,
+        });
+        console.error(error);
       }
-
-      // Check if user is admin or authenticated user.
-      if (
-        requestedUser.id != session.userid &&
-        actingUser.authLevel < ADMIN_AUTH_LEVEL
-      ) {
-        throw new Error("ERROR: UNAUTHORIZED");
-      }
-
-      await DeleteUser(usersModel, id);
-
-      res.json({
-        message: `${id} was deleted.`,
-      });
-    } catch (error) {
-      res.json({
-        error: true,
-        message: error.message,
-      });
-      console.error(error);
-    }
-  });
+    },
+  );
 
   return Router;
 }

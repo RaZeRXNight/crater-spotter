@@ -5,6 +5,8 @@ import { Pagination } from "../components/paginations";
 import "../css/Home.css";
 import { getPins, getUserPins, RenderPins } from "./Pins";
 
+let inFlightAuthRequest = null;
+
 /**
  * Checks if the primary user is authorized to perform actions on the other user.
  */
@@ -18,10 +20,23 @@ export function isAuthorized(primaryUser, otherUser) {
  * Gets the current user, authenticating their session if they're logged in.
  * Returns their user data { id, username }
  */
-export async function getUser(userid = null) {
-  const apiURL = userid ? `/api/v1/user/${userid}` : "/api/v1/auth";
-  const { data } = await api({ url: apiURL, silent: apiURL === "/api/v1/auth" });
-  return data;
+export function getUser(userid = null) {
+  if (userid) {
+    return api({ url: `/api/v1/user/${userid}` }).then(({ data }) => data);
+  }
+
+  if (!inFlightAuthRequest) {
+    inFlightAuthRequest = api({
+      url: "/api/v1/auth",
+      silent: true,
+    })
+      .then(({ data }) => data)
+      .finally(() => {
+        inFlightAuthRequest = null;
+      });
+  }
+
+  return inFlightAuthRequest;
 }
 
 export async function HandleLogout() {
@@ -34,7 +49,9 @@ export async function HandleUserDeletion() {
   if (window.confirm(`Are you sure you want to delete this account?`)) {
     const { err } = await api({ url: "/api/v1/auth/delete", method: "DELETE" });
     if (err) return;
+    return true;
   }
+  return false;
 }
 
 export function Dashboard() {
