@@ -3,6 +3,7 @@ const express = require("express");
 const path = require("path");
 const { existsSync } = require("fs");
 const cookieParser = require("cookie-parser");
+const compression = require("compression");
 const session = require("express-session");
 const SequelizeStore = require("connect-session-sequelize")(session.Store);
 const { default: connectDatabase } = require("./services/connection.js");
@@ -35,13 +36,22 @@ async function startServer() {
 
   // Middleware
   server.use(express.json());
+  server.use(compression());
   server.use(session(sessionSecrets(sessionSecret, sessionStore)));
   server.use(logger);
   server.use(cookieParser());
 
   // Public Storage Path
   const storage_path = path.resolve(__dirname, "..", process.env.STORAGE_PATH);
-  server.use(`/${process.env.STORAGE_PATH}`, express.static(storage_path));
+  server.use(`/${process.env.STORAGE_PATH}`, express.static(storage_path, {
+    maxAge: "1d",
+    setHeaders: (res, filePath) => {
+      // Never cache HTML files to avoid serving stale pages
+      if (filePath.endsWith('.html')) {
+        res.setHeader('Cache-Control', 'no-cache');
+      }
+    },
+  }));
 
   server.use("/api/v1", apiRouter);
 
