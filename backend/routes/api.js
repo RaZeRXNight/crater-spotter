@@ -32,7 +32,7 @@ const router = function (database, sessionStore) {
   // Comment Routes
   const commentRouter = require("../apis/comments.js");
   const commentsModel = Comments(database);
-  commentRouter.default(router, commentsModel);
+  commentRouter.default(router, commentsModel, usersModel);
 
   // Config Route
   const configRouter = require("../apis/config.js");

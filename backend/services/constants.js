@@ -2,10 +2,15 @@ export const ACCESS_TOKEN_EXPIRY = "15m";
 export const REFRESH_TOKEN_EXPIRY = "7d";
 export const JWT_ALGORITHM = "HS256";
 export const BCRYPT_SALT_ROUNDS = 12;
-export const BASIC_AUTH_LEVEL = 1;
-export const ADMIN_AUTH_LEVEL = 2;
-export const SUSPENDED_AUTH_LEVEL = 0;
-export const DEFAULT_USER_AUTH_LEVEL = BASIC_AUTH_LEVEL;
+export const AUTH_LEVEL = Object.freeze({
+  SUSPENDED: 0,
+  STANDARD: 1,
+  ADMIN: 2,
+});
+export const BASIC_AUTH_LEVEL = AUTH_LEVEL.STANDARD;
+export const ADMIN_AUTH_LEVEL = AUTH_LEVEL.ADMIN;
+export const SUSPENDED_AUTH_LEVEL = AUTH_LEVEL.SUSPENDED;
+export const DEFAULT_USER_AUTH_LEVEL = AUTH_LEVEL.STANDARD;
 export const DEFAULT_PORT = 8000;
 export const MAX_PAGE = 100;
 export const MAX_PER_PAGE = 10;

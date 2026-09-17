@@ -1,4 +1,5 @@
 import api from "../api.js";
+import { normalizeComments } from "../commentState.js";
 import { isAuthorized } from "./Pins";
 
 export function RenderComments({ rows, user }) {
@@ -28,21 +29,19 @@ export async function getComments({ id, page, perPage }) {
     url: "/api/v1/comment/",
     headers: {
       Accept: "application/json",
+    },
+    params: {
       postid: id,
       perPage: perPage || 10,
       page: page || 1,
     },
   });
-  if (err) return null;
-  return data.message;
+  return normalizeComments(data?.message, err);
 }
 
 export async function HandleCommentFormSubmission(event, commentForm) {
   event.preventDefault();
-  event.currentTarget.reset();
-
-  const { err } = await api({ url: "/api/v1/comment", method: "POST", body: commentForm });
-  if (err) return;
+  return api({ url: "/api/v1/comment", method: "POST", body: commentForm });
 }
 
 export function CreateComment({

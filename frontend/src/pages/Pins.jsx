@@ -4,6 +4,12 @@ import { useLoaderData, useNavigate, useOutletContext } from "react-router";
 import Card from "../components/Card.jsx";
 import App from "../components/Maps.jsx";
 import { Pagination } from "../components/paginations.jsx";
+import {
+  appendCommentPage,
+  commentPageError,
+  hasMoreComments,
+  replaceCommentPage,
+} from "../commentState.js";
 import "../css/articles.css";
 import "../css/forms.css";
 import {
@@ -59,6 +65,8 @@ export async function getUserPins({ page, perPage }) {
     headers: {
       Authorization: "User",
       Accept: "application/json",
+    },
+    params: {
       perPage: perPage || 10,
       page: page || 1,
     },
@@ -77,7 +85,9 @@ export async function getPins({ userid = null, page, perPage }) {
     url: "/api/v1/pin/",
     headers: {
       Accept: "application/json",
-      userid: userid,
+    },
+    params: {
+      userid,
       perPage: perPage || 10,
       page: page || 1,
     },
@@ -348,10 +358,15 @@ export function Pin() {
     replyLevel: 0,
     comment: "",
   });
-  const [page, setPage] = useState(1);
-  const [comments, setComments] = useState(data.comments.rows || []);
-  const [viewMoreVisibility, setViewMoreVisibility] = useState(true);
+  const [commentState, setCommentState] = useState({
+    rows: data.comments.rows,
+    count: data.comments.count,
+    page: 1,
+    loading: false,
+    error: data.comments.error,
+  });
   const [commentCoolDown, setCommentCoolDown] = useState(false);
+  const [commentFormError, setCommentFormError] = useState(null);
 
   async function HandleDeletePost(event) {
     DeletePost(event, data.pin, Navigator);
@@ -361,49 +376,56 @@ export function Pin() {
     setCommentVisibility(!commentVisibility);
   }
 
-  async function HandleCommentFetch(event) {
-    const button = event.currentTarget;
-    button.disabled = true;
+  async function loadCommentPage(requestedPage, append = false) {
+    setCommentState((current) => ({
+      ...current,
+      loading: true,
+      error: null,
+    }));
 
-    const commentFetch = await getComments({ id, page: page + 1, perPage });
-
-    if ((page + 1) * perPage > commentFetch.count) {
-      setViewMoreVisibility(false);
+    const commentFetch = await getComments({ id, page: requestedPage, perPage });
+    if (commentFetch.error) {
+      setCommentState((current) => commentPageError(current, commentFetch.error));
+      return false;
     }
 
-    if (!commentFetch.count) {
-      return;
-    }
+    setCommentState((current) => ({
+      ...(append
+        ? appendCommentPage(current, commentFetch, requestedPage)
+        : replaceCommentPage(current, commentFetch, requestedPage)),
+      loading: false,
+    }));
+    return true;
+  }
 
-    setComments([...comments, ...commentFetch.rows]);
-    setPage(page + 1);
-    button.disabled = false;
+  async function HandleCommentFetch() {
+    await loadCommentPage(commentState.page + 1, true);
   }
 
   async function HandleCommentForm(event) {
     if (!commentCoolDown) {
       setCommentCoolDown(true);
+      setCommentFormError(null);
 
-      await HandleCommentFormSubmission(event, commentForm);
-      HandleCommentVisibility();
-
-      setTimeout(async function () {
-        const commentFetch = await getComments({ id, page: 1, perPage });
-        console.log(commentFetch);
-
-        if (1 * perPage > commentFetch.count) {
-          setViewMoreVisibility(false);
-        }
-
-        if (!commentFetch.count) {
-          return;
-        }
-
-        setComments([...commentFetch.rows]);
-        setPage(1);
-      }, 1000);
+      const { err } = await HandleCommentFormSubmission(event, commentForm);
+      if (err) {
+        setCommentFormError(err);
+      } else {
+        setCommentForm({
+          PinParent: id,
+          CommentParent: null,
+          replyLevel: 0,
+          comment: "",
+        });
+        setCommentVisibility(false);
+        await loadCommentPage(1);
+      }
+      setCommentCoolDown(false);
     }
   }
+
+  const canViewMore =
+    !commentState.loading && hasMoreComments(commentState);
 
   return (
     <>
@@ -456,25 +478,43 @@ export function Pin() {
           {
             // Shows the Comment Form if the button is pressed
             commentVisibility ? (
-              <CreateComment
-                commentForm={commentForm}
-                setCommentFormState={setCommentForm}
-                HandleFormSubmission={HandleCommentForm}
-              />
+              <>
+                {commentFormError ? <p role="alert">{commentFormError}</p> : undefined}
+                <CreateComment
+                  commentForm={commentForm}
+                  setCommentFormState={setCommentForm}
+                  HandleFormSubmission={HandleCommentForm}
+                />
+              </>
             ) : undefined
           }
         </div>
 
         <div id="comment-section" className={"flex flex-col gap-3"}>
-          {comments ? RenderComments({ rows: comments, user }) : undefined}
-          {
-            // Shows the button to view more if the count isn't 0
-            viewMoreVisibility ? (
-              <button onClick={HandleCommentFetch} type="button">
-                View More
-              </button>
-            ) : undefined
-          }
+          {commentState.rows.length
+            ? RenderComments({ rows: commentState.rows, user })
+            : commentState.error
+              ? (
+                <>
+                  <p role="alert">Unable to load comments: {commentState.error}</p>
+                  <button
+                    onClick={() => loadCommentPage(1)}
+                    type="button"
+                    disabled={commentState.loading}
+                  >
+                    Retry
+                  </button>
+                </>
+              )
+              : <p>No comments yet.</p>}
+          {commentState.error && commentState.rows.length ? (
+            <p role="alert">Unable to load more comments: {commentState.error}</p>
+          ) : undefined}
+          {canViewMore ? (
+            <button onClick={HandleCommentFetch} type="button" disabled={commentState.loading}>
+              {commentState.loading ? "Loading..." : "View More"}
+            </button>
+          ) : undefined}
         </div>
       </section>
     </>

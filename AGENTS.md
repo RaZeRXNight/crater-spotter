@@ -9,7 +9,7 @@
 ## Module system quirk (don't "fix" this)
 
 - `backend/package.json` has no `"type": "module"`, so `.js` files are CommonJS by default. `backend/routes/api.js` and `backend/server.js` load modules with `require(...)`, but `backend/apis/*.js`, `backend/models/*.js`, `backend/services/*.js`, and `backend/middleware/*.js` are written with `export default` / `import` (ESM syntax).
-- This works only because of Node's stable `require(esm)` interop (Node ≥22, matches `node:22-alpine` in `docker/backend/Dockerfile`). Keep this pattern — don't convert one side to the other without checking Node version compatibility.
+- This works only because of Node's stable `require(esm)` interop (Node ≥22, matches `node:22-alpine` in `docker/backend/crater-spotter`). Keep this pattern — don't convert one side to the other without checking Node version compatibility.
 
 ## Commands
 
@@ -39,9 +39,9 @@
 
 ## Docker / deployment
 
-- `docker compose up --build` from repo root runs two services: `backend` (Node, not published to host ports) and `frontend` (nginx, ports 80/8443). `docker/nginx/nginx.conf` proxies `/api/` and `/public/storage/` to `backend:8000`; everything else serves the React SPA. HTTP on port 80 redirects to HTTPS on 443 (self-signed TLS certs from `docker/nginx/certs/` — excluded from git by `.gitignore`).
-- Backend container mounts `./.sqlite3` at `/.sqlite3` (absolute path in container) and `./public/storage` at `/backend/public/storage` — deleting those on the host resets data/uploads even without rebuilding.
-- Root `.gitignore` excludes: `.env*` (except `.env.example`), `node_modules/`, `.sqlite3*` (wildcard, so `.sqlite3` + journal/WAL), `public/storage/*`, `docker/nginx/certs/*`, logs.
+- `docker compose up --build` from repo root runs the HTTP development stack: `backend` (serves the built React SPA, API, and uploads on host port 8000) and PostgreSQL. `docker compose -f docker-compose.prod.yml up --build` serves the same application on host port 80; TLS is handled by an external reverse proxy.
+- Backend container mounts `./public/storage` at `/backend/public/storage`; PostgreSQL data is stored in the `postgres_data` Docker volume. Removing those persistent stores removes uploads or database data.
+- Root `.gitignore` excludes: `.env*` (except `.env.example`), `node_modules/`, `.sqlite3*` (legacy SQLite artifacts), `public/storage/*`, `docker/nginx/certs/*`, `docker/nginx/acme/*`, logs.
 
 ## Frontend notes
 

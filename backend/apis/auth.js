@@ -6,7 +6,7 @@ import {
   BCRYPT_SALT_ROUNDS,
   DEFAULT_USER_AUTH_LEVEL,
 } from "../services/constants.js";
-import { BasicAuth } from "../services/admin.js";
+import { requireAuth } from "../middleware/authorization.js";
 import { DeleteUser } from "../services/user.js";
 
 function authenticateSession(req, user) {
@@ -22,7 +22,19 @@ function authenticateSession(req, user) {
   });
 }
 
+function destroySession(session) {
+  if (!session?.destroy) {
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve, reject) => {
+    session.destroy((error) => (error ? reject(error) : resolve()));
+  });
+}
+
 export default function authRouter(Router, usersModel) {
+  const requireAuthMiddleware = requireAuth(usersModel);
+
   // User DB API
   // Routes
   // User Authentication & Session Handling
@@ -35,17 +47,24 @@ export default function authRouter(Router, usersModel) {
         if (req.session) {
           req.session.destroy();
         }
-        return res.status(401).json({ message: "ERROR: ACCOUNT NOT FOUND." });
+        return res.status(401).json({
+          error: true,
+          message: "Account not found",
+        });
       }
 
       res.json({
+        message: "Authenticated",
         id: req.user.userid,
         username: req.user.username,
         authLevel: req.user.authLevel,
       });
     } catch (error) {
       console.error(error);
-      return res.status(500).json({ message: "Internal server error" });
+      return res.status(500).json({
+        error: true,
+        message: "Internal server error",
+      });
     }
   });
 
@@ -76,11 +95,14 @@ export default function authRouter(Router, usersModel) {
         await authenticateSession(req, newUser);
 
         res.json({
-          message: `Welcome ${newUser.username}!`,
+          message: "Registration successful",
         });
       } catch (error) {
         console.error(error);
-        return res.status(500).json({ message: "Internal server error" });
+        return res.status(500).json({
+          error: true,
+          message: "Internal server error",
+        });
       }
     },
   );
@@ -100,9 +122,10 @@ export default function authRouter(Router, usersModel) {
 
         // Throws if no valid user is found
         if (!User) {
-          return res
-            .status(404)
-            .json({ message: "ERROR: USER DOES NOT EXIST" });
+          return res.status(401).json({
+            error: true,
+            message: "Invalid username or password",
+          });
         }
 
         // Verify if Password Matches then Authenticate Session
@@ -111,16 +134,20 @@ export default function authRouter(Router, usersModel) {
 
           // response
           res.json({
-            message: `Welcome back ${User.username}!`,
+            message: "Login successful",
           });
         } else {
-          return res
-            .status(401)
-            .send("ERROR: INCORRECT PASSWORD, Authentication Failed");
+          return res.status(401).json({
+            error: true,
+            message: "Invalid username or password",
+          });
         }
       } catch (error) {
         console.error(error);
-        return res.status(500).json({ message: "Internal server error" });
+        return res.status(500).json({
+          error: true,
+          message: "Internal server error",
+        });
       }
     },
   );
@@ -131,44 +158,49 @@ export default function authRouter(Router, usersModel) {
 
     try {
       if (session.userid) {
-        const username = session.username;
         session.destroy();
 
         res.json({
-          message: `Logged Out, Bye ${username}`,
+          message: "Logout successful",
+        });
+      } else {
+        res.json({
+          message: "Already Logged Out",
         });
       }
     } catch (error) {
       console.error(error);
       res.status(500).json({
-        message: "ERROR: LOGOUT FAILED",
-      });
-    }
-  });
-
-  Router.delete("/auth/delete", async (req, res) => {
-    const session = req.session;
-    const id = session.userid;
-
-    try {
-      if (!(await BasicAuth(usersModel.sequelize, session))) {
-        throw new Error("ERROR: UNAUTHORIZED");
-      }
-
-      await DeleteUser(usersModel, id);
-      await session.destroy();
-
-      res.json({
-        message: `${id} was deleted.`,
-      });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({
         error: true,
-        message: error.message,
+        message: "Unable to log out",
       });
     }
   });
+
+  Router.delete(
+    "/auth/delete",
+    authMiddleware,
+    requireAuthMiddleware,
+    async (req, res) => {
+      const session = req.session;
+      const id = req.user.userid;
+
+      try {
+        await DeleteUser(usersModel, id);
+        await destroySession(session);
+
+        res.json({
+          message: "Account deleted",
+        });
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({
+          error: true,
+          message: "Unable to delete account",
+        });
+      }
+    },
+  );
 
   return Router;
 }
