@@ -4,23 +4,51 @@ import { requireAuth } from "../middleware/authorization.js";
 import { CommentSchema } from "../schema/comment.js";
 import { validatePagination } from "../services/validation.js";
 import {
-  BASIC_AUTH_LEVEL,
+  ADMIN_AUTH_LEVEL,
   DEFAULT_SORT_ORDER,
   SORT_ASC,
   SORT_DESC,
   TEXT_LIMIT,
 } from "../services/constants.js";
 
-function mapRows(row) {
+function mapCommentRows(row) {
   const tempdata = { ...row.dataValues };
 
-  tempdata.authorName = row.author?.username || "Deleted User";
+  if (tempdata.deletedAt) {
+    tempdata.authorid = null;
+    tempdata.authorName = null;
+    tempdata.comment = null;
+    tempdata.deleted = true;
+  } else {
+    tempdata.authorName = row.author?.username || "Deleted User";
+    tempdata.deleted = false;
+  }
 
   if (tempdata.comment?.length > TEXT_LIMIT) {
     tempdata.comment = tempdata.comment.slice(0, TEXT_LIMIT) + "...";
   }
 
   return tempdata;
+}
+
+function buildCommentTree(rows) {
+  const nodes = new Map(
+    rows.map((row) => [row.id, { ...mapCommentRows(row), replies: [] }]),
+  );
+  const roots = [];
+
+  for (const row of rows) {
+    const node = nodes.get(row.id);
+    const parent = row.CommentParent ? nodes.get(row.CommentParent) : null;
+
+    if (parent) {
+      parent.replies.push(node);
+    } else {
+      roots.push(node);
+    }
+  }
+
+  return roots;
 }
 
 export default function commentRouter(Router, CommentModel, usersModel) {
@@ -53,11 +81,12 @@ export default function commentRouter(Router, CommentModel, usersModel) {
 
   Router.get("/comment/", async (req, res) => {
     const headers = req.headers;
+    const queryParams = req.query;
 
     // Data Order & Filters
-    const userid = headers.userid;
-    const postid = headers.postid;
-    const order = headers.order || DEFAULT_SORT_ORDER;
+    const userid = queryParams.userid;
+    const postid = queryParams.postid;
+    const order = queryParams.order || SORT_ASC;
 
     try {
       // Validation
@@ -70,8 +99,17 @@ export default function commentRouter(Router, CommentModel, usersModel) {
       if (!postid) {
         throw new Error("ERROR: NO PARENT PROVIDED FOR COMMENT");
       }
+      if (userid) {
+        return res.status(422).json({
+          error: true,
+          message: "userid filtering is not supported for nested comments",
+        });
+      }
 
-      const pagination = validatePagination(headers);
+      const pagination = validatePagination({
+        page: queryParams.page,
+        perpage: queryParams.perPage ?? queryParams.perpage,
+      });
       if (!pagination) {
         return res.status(400).json({
           error: true,
@@ -82,31 +120,28 @@ export default function commentRouter(Router, CommentModel, usersModel) {
 
       // Query Additions
       const query = {};
-      userid ? (query.authorid = userid) : null;
       postid ? (query.PinParent = postid) : null;
 
       // Determines whether we send user specific data or general data.
-      const data = await CommentModel.findAndCountAll({
+      const rows = await CommentModel.findAll({
         where: query,
         order: [
           ["createdAt", order],
           ["id", order],
         ],
-        offset,
-        limit: perPage,
         include: CommentInclude,
       });
 
-      if (!data) {
-        throw new Error("ERROR: NO DATA FOUND");
-      }
-
-      // Limits amount of characters
-      const dataRows = data.rows.map(mapRows);
+      const roots = buildCommentTree(rows);
+      const count = roots.length;
+      const dataRows = roots.slice(offset, offset + perPage);
 
       const dataToSend = {
         rows: dataRows,
-        count: data.count,
+        count,
+        page: pagination.currentPage,
+        perPage,
+        hasNext: offset + dataRows.length < count,
       };
 
       res.json({ message: dataToSend });
@@ -125,7 +160,6 @@ export default function commentRouter(Router, CommentModel, usersModel) {
         throw new Error("ERROR: INCORRECT FORMAT WANTED");
       }
 
-      // Fetch one comment by ID
       const data = await CommentModel.findByPk(req.params.id, {
         include: CommentInclude,
       });
@@ -134,11 +168,26 @@ export default function commentRouter(Router, CommentModel, usersModel) {
         throw new Error("ERROR: NO DATA FOUND");
       }
 
-      res.json({
-        message: {
-          row: mapRows(data),
-        },
+      const rows = await CommentModel.findAll({
+        where: { PinParent: data.PinParent },
+        order: [
+          ["createdAt", DEFAULT_SORT_ORDER],
+          ["id", DEFAULT_SORT_ORDER],
+        ],
+        include: CommentInclude,
       });
+      const pending = [...buildCommentTree(rows)];
+      let row;
+      while (pending.length && !row) {
+        const comment = pending.pop();
+        if (comment.id === data.id) {
+          row = comment;
+        } else {
+          pending.push(...comment.replies);
+        }
+      }
+
+      res.json({ message: { row } });
     } catch (error) {
       res.status(500).json({ error: true, message: "Internal server error" });
       console.error(error);
@@ -169,7 +218,6 @@ export default function commentRouter(Router, CommentModel, usersModel) {
       const reqComment = body.comment;
       const reqCommentParent = body.CommentParent;
       const reqPinParent = body.PinParent;
-      const reqReplyLevel = body.replyLevel;
 
       try {
         const validation = validationResult(req);
@@ -225,7 +273,7 @@ export default function commentRouter(Router, CommentModel, usersModel) {
           authorid: req.user.userid,
           PinParent: reqPinParent,
           CommentParent: reqCommentParent,
-          replyLevel: reqReplyLevel ?? 0,
+          replyLevel: commentParent ? commentParent.replyLevel + 1 : 0,
           comment: reqComment,
         });
 
@@ -263,17 +311,25 @@ export default function commentRouter(Router, CommentModel, usersModel) {
         // Perform action to delete
         const query = await CommentModel.findOne({ where: { id: id } });
 
-        if (
-          query.authorid != req.user.userid &&
-          req.user.authLevel < BASIC_AUTH_LEVEL
-        ) {
-          throw new Error("ERROR: UNAUTHORIZED");
+        if (!query) {
+          return res.status(404).json({
+            error: true,
+            message: "Comment not found",
+          });
         }
 
-        await CommentModel.destroy({
-          where: {
-            id: id,
-          },
+        const requester = await usersModel.findByPk(req.user.userid);
+        const authLevel = req.user.authLevel ?? requester?.authLevel ?? 0;
+
+        if (query.authorid != req.user.userid && authLevel < ADMIN_AUTH_LEVEL) {
+          return res.status(403).json({
+            error: true,
+            message: "Unauthorized",
+          });
+        }
+
+        await query.update({
+          deletedAt: new Date(),
         });
 
         res.json({
