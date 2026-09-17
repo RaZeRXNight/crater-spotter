@@ -13,7 +13,7 @@
 - View your own dashboard
 - Comment on posts and view comments
 - Administrate your own posts and comments (delete them)
-- Docker image for deployment (nginx container enforces HTTPS)
+- Docker image for deployment (TLS handled by an external reverse proxy)
 
 ## Monthly Milestones
 

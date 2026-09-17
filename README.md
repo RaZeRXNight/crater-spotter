@@ -98,18 +98,18 @@ the HTTP development stack with:
 docker compose up --build
 ```
 
-The app is served at `http://localhost:8000`. An admin account (`admin` /
-`password`) is auto-created on first run.
+The app is served at `http://localhost:8000` by the backend container. An admin
+account (`admin` / `password`) is auto-created on first run.
 
-The production-like stack is separate and requires certificates for a real
-domain:
+The production-like stack serves HTTP directly on port `80`. Put it behind an
+external TLS reverse proxy for HTTPS:
 
 ```bash
 docker compose -f docker-compose.prod.yml up --build
 ```
 
-See [`docs/deployment/docker.md`](docs/deployment/docker.md) for certificate
-provisioning, renewal, and production environment details.
+See [`docs/deployment/docker.md`](docs/deployment/docker.md) for production
+environment details and external TLS guidance.
 
 ## License
 

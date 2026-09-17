@@ -41,6 +41,7 @@ async function startServer() {
   server.use(session(sessionSecrets(sessionSecret, sessionStore)));
   server.use(logger);
   server.use(cookieParser());
+  server.get("/healthz", (req, res) => res.json({ status: "ok" }));
 
   // Public Storage Path
   const storage_path = path.resolve(__dirname, "..", process.env.STORAGE_PATH);
@@ -58,6 +59,15 @@ async function startServer() {
   );
 
   server.use("/api/v1", apiRouter);
+
+  const frontendPath = path.resolve(__dirname, "..", "frontend", "dist");
+  server.use(express.static(frontendPath, { index: false }));
+  server.get("/{*splat}", (req, res, next) => {
+    if (req.path.startsWith("/api/") || req.path.startsWith(`/${process.env.STORAGE_PATH}`)) {
+      return next();
+    }
+    return res.sendFile(path.join(frontendPath, "index.html"));
+  });
 
   await database.sync();
   await CheckAndMakeDefaultAdminAccount(database);

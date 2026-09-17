@@ -2,7 +2,7 @@
 
 ## High-Level Overview
 
-Node.js (Express) + Sequelize (PostgreSQL in Docker). Sessions via `express-session` + `connect-session-sequelize`. Auth levels: 0=suspended, 1=user, 2=admin. Single entrypoint `server.js` mounts the API under `/api`, serves uploads from `STORAGE_PATH` as static files, and exposes an internal `/healthz` readiness endpoint. Nginx serves the built React app at the deployment edge.
+Node.js (Express) + Sequelize (PostgreSQL in Docker). Sessions via `express-session` + `connect-session-sequelize`. Auth levels: 0=suspended, 1=user, 2=admin. Single entrypoint `server.js` mounts the API under `/api`, serves uploads from `STORAGE_PATH` as static files, serves the built React app, and exposes an internal `/healthz` readiness endpoint.
 
 ## Resource Groups
 

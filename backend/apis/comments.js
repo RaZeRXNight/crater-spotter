@@ -123,6 +123,7 @@ export default function commentRouter(Router, CommentModel, usersModel) {
       postid ? (query.PinParent = postid) : null;
 
       // Determines whether we send user specific data or general data.
+      // May Query a Mass amount of Data on a more popular Post.
       const rows = await CommentModel.findAll({
         where: query,
         order: [

@@ -81,7 +81,7 @@ CSS is in `src/css/`. Tailwind CSS v4 is imported via `@import "tailwindcss"` in
 
 ## Deployment
 
-The production build (`frontend/dist/`) is served directly by nginx in Docker. Nginx provides SPA history fallback and proxies `/api/*` and `/public/storage/*` to the private backend container. The default development Compose stack uses HTTP; `docker-compose.prod.yml` adds HTTPS and certificate mounts.
+The production build (`frontend/dist/`) is copied into the backend image and served directly by Express. Express provides SPA history fallback alongside `/api/*` and `/public/storage/*`. Both Compose stacks use direct HTTP; TLS is handled by an external reverse proxy.
 
 ## Key Files
 

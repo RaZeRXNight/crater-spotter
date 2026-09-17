@@ -1,0 +1,24 @@
+FROM node:26-alpine AS frontend_build
+WORKDIR /frontend
+
+RUN apk upgrade --no-cache
+
+COPY frontend/package*.json ./
+RUN npm i --legacy-peer-deps
+
+COPY frontend/ ./
+RUN npm run build
+
+FROM node:26-alpine
+WORKDIR /backend
+
+RUN apk upgrade --no-cache
+
+COPY backend/package*.json ./
+RUN npm i
+
+COPY backend/ ./
+COPY --from=frontend_build /frontend/dist /frontend/dist
+
+EXPOSE 8000
+CMD ["npm", "start"]
