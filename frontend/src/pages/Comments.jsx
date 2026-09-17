@@ -29,6 +29,8 @@ export async function getComments({ id, page, perPage }) {
     url: "/api/v1/comment/",
     headers: {
       Accept: "application/json",
+    },
+    params: {
       postid: id,
       perPage: perPage || 10,
       page: page || 1,

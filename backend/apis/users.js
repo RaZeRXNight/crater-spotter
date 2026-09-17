@@ -20,7 +20,7 @@ export default function userRouter(Router, usersModel, sessionStore) {
   });
 
   Router.get("/user/:id", async (req, res) => {
-    const userid = req.headers.userid;
+    const userid = req.params.id;
 
     try {
       if (!userid) {

@@ -65,6 +65,8 @@ export async function getUserPins({ page, perPage }) {
     headers: {
       Authorization: "User",
       Accept: "application/json",
+    },
+    params: {
       perPage: perPage || 10,
       page: page || 1,
     },
@@ -83,7 +85,9 @@ export async function getPins({ userid = null, page, perPage }) {
     url: "/api/v1/pin/",
     headers: {
       Accept: "application/json",
-      userid: userid,
+    },
+    params: {
+      userid,
       perPage: perPage || 10,
       page: page || 1,
     },

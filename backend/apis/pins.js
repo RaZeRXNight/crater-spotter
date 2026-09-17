@@ -36,11 +36,12 @@ export default function pinRouter(Router, PinsModel, usersModel) {
     const sequelizeInstance = PinsModel.sequelize;
     const userModel = sequelizeInstance.models.Users;
 
-    // Cookie Session & Headers
+    // Authentication and content negotiation headers
     const session = req.session;
     const headers = req.headers;
-    const userid = headers.userid;
-    const order = headers.order || DEFAULT_SORT_ORDER;
+    const queryParams = req.query;
+    const userid = queryParams.userid;
+    const order = queryParams.order || DEFAULT_SORT_ORDER;
 
     try {
       // Validation
@@ -50,7 +51,10 @@ export default function pinRouter(Router, PinsModel, usersModel) {
       if (order && order != SORT_ASC && order != SORT_DESC) {
         throw new Error("ERROR: INCORRECT ORDER ENTERED");
       }
-      const pagination = validatePagination(headers);
+      const pagination = validatePagination({
+        page: queryParams.page,
+        perpage: queryParams.perPage ?? queryParams.perpage,
+      });
       if (!pagination) {
         return res.status(400).json({
           error: true,
