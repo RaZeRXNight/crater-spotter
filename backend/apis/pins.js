@@ -3,8 +3,8 @@ import process from "process";
 import { constants, existsSync, unlink } from "fs";
 import multer from "multer";
 import { checkSchema } from "express-validator";
-import authMiddleware from "../middleware/authentication.js";
-import { requireAuth } from "../middleware/authorization.js";
+import AuthenticationMiddleware from "../middleware/authentication.js";
+import { forbidden, requireBasicAuthorization, unauthorized } from "../middleware/authorization.js";
 import { PinSchema } from "../schema/pin.js";
 import { validatePagination } from "../services/validation.js";
 import {
@@ -28,13 +28,11 @@ export const upload = multer({
 
 export default function pinRouter(Router, PinsModel, usersModel) {
   const STORAGE_PATH = storagePath;
-  const requireAuthMiddleware = requireAuth(usersModel);
+  const requireAuthMiddleware = requireBasicAuthorization(usersModel);
 
   // pin DB API
   // Routes
   Router.get("/pin/", async (req, res) => {
-    const sequelizeInstance = PinsModel.sequelize;
-    const userModel = sequelizeInstance.models.Users;
 
     // Authentication and content negotiation headers
     const session = req.session;
@@ -148,7 +146,7 @@ export default function pinRouter(Router, PinsModel, usersModel) {
   // Body Containing: title, authorid, comment, cooordinates and Image.
   Router.post(
     "/pin",
-    authMiddleware,
+    AuthenticationMiddleware,
     requireAuthMiddleware,
     checkSchema(PinSchema, ["body"]),
     upload.single("image"),
@@ -195,126 +193,84 @@ export default function pinRouter(Router, PinsModel, usersModel) {
         const id = pin.id;
 
         // Message back to Poster
-        res.json({
-          message: "Pin created",
-          error: false,
-          id: id,
-        });
+        res.status(200).json({ message: "Pin created", error: false, id: id, });
       } catch (error) {
-        res.json({
-          error: true,
-          message: "Unable to create pin",
-        });
+        res.json({ error: true, message: "INTERNAL SERVER ERROR", });
         console.error(error);
       }
     },
   );
 
-  Router.put(
-    "/pin/:id/",
-    authMiddleware,
-    requireAuthMiddleware,
-    checkSchema(PinSchema, ["body"]),
+  Router.put("/pin/:id/", AuthenticationMiddleware, requireAuthMiddleware, checkSchema(PinSchema, ["body"]),
     async (req, res) => {
-      const userModel = PinsModel.sequelize.models.Users;
-      const id = req.params.id;
-
       try {
+        const id = req.params.id;
         const query = await PinsModel.findOne({ where: { id: id } });
-        const oldData = query.dataValues;
         const newData = req.body;
 
-        if (
-          req.user.userid != query.authorid &&
-          req.user.authLevel < BASIC_AUTH_LEVEL
-        ) {
-          res.json({ error: true, message: "ERROR: UNAUTHORIZED" });
-          throw new Error("ERROR: UNAUTHORIZED");
+        if (!query) {
+          return res.status(404).json({ error: true, message: "Pin NOT FOUND." });
+        }
+
+        if (req.user.userid != query.authorid && req.user.authLevel < BASIC_AUTH_LEVEL) {
+          return forbidden(res)
         }
 
         await PinsModel.update(
-          {
-            comment: newData.comment,
-          },
-          {
-            where: {
-              id: id,
-            },
-          },
+          { comment: newData.comment },
+          { where: { id: id, } }
         );
 
-        res.json({
-          message: "Pin updated",
-        });
+        res.json({ message: "Pin updated" });
       } catch (error) {
         console.error(error);
-        if (!res.headersSent) {
-          res.status(500).json({
-            error: true,
-            message: "Unable to update pin",
-          });
-        }
+        return res.status(500).json({ error: true, message: "ERROR: Internal Server Error" });
       }
     },
   );
 
-  Router.delete(
-    "/pin/:id",
-    authMiddleware,
-    requireAuthMiddleware,
-    async (req, res) => {
-      const id = req.params.id;
+  Router.delete("/pin/:id", AuthenticationMiddleware, requireAuthMiddleware, async (req, res) => {
+    const id = req.params.id;
 
-      try {
-        // Perform action to delete
-        const query = await PinsModel.findOne({ where: { id: id } });
+    try {
+      // Perform action to delete
+      const query = await PinsModel.findOne({ where: { id: id } });
 
-        if (
-          query.authorid != req.user.userid &&
-          req.user.authLevel < BASIC_AUTH_LEVEL
-        ) {
-          throw new Error("ERROR: UNAUTHORIZED");
+      if (query.authorid != req.user.userid && req.user.authLevel < BASIC_AUTH_LEVEL) {
+        return unauthorized(res);
+      }
+
+      const commentModel = PinsModel.sequelize.models.Comments;
+      await PinsModel.sequelize.transaction(async (transaction) => {
+        await commentModel.destroy({ where: { PinParent: id }, transaction });
+
+        const deletedPins = await PinsModel.destroy({
+          where: { id },
+          transaction,
+        });
+
+        if (!deletedPins) {
+          return res.status(404).json({ error: true, message: "PIN DOES NOT EXIST" })
         }
+      });
 
-        const commentModel = PinsModel.sequelize.models.Comments;
-        await PinsModel.sequelize.transaction(async (transaction) => {
-          await commentModel.destroy({
-            where: { PinParent: id },
-            transaction,
-          });
-
-          const deletedPins = await PinsModel.destroy({
-            where: { id },
-            transaction,
-          });
-
-          if (!deletedPins) {
-            throw new Error("ERROR: PIN DOES NOT EXIST");
+      // Filesystem changes cannot be rolled back with the database transaction.
+      const file_path = path.join(STORAGE_PATH, query.image);
+      const file_status = existsSync(file_path, constants.F_OK);
+      if (query.image && file_status) {
+        unlink(file_path, (err) => {
+          if (err) {
+            console.error(`ERROR: Failed to delete file: ${err}`);
           }
         });
-
-        // Filesystem changes cannot be rolled back with the database transaction.
-        const file_path = path.join(STORAGE_PATH, query.image);
-        const file_status = existsSync(file_path, constants.F_OK);
-        if (query.image && file_status) {
-          unlink(file_path, (err) => {
-            if (err) {
-              console.error(`ERROR: Failed to delete file: ${err}`);
-            }
-          });
-        }
-
-        res.json({
-          message: "Pin deleted",
-        });
-      } catch (error) {
-        console.error(error);
-        res.json({
-          error: true,
-          message: "Unable to delete pin",
-        });
       }
-    },
+
+      res.json({ message: "Pin deleted", });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: true, message: "Internal Server Error", });
+    }
+  },
   );
 
   return Router;

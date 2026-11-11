@@ -1,6 +1,6 @@
 import { checkSchema, validationResult } from "express-validator";
-import authMiddleware from "../middleware/authentication.js";
-import { requireAuth } from "../middleware/authorization.js";
+import AuthenticationMiddleware from "../middleware/authentication.js";
+import { requireBasicAuthorization } from "../middleware/authorization.js";
 import { CommentSchema } from "../schema/comment.js";
 import { validatePagination } from "../services/validation.js";
 import {
@@ -54,20 +54,14 @@ function buildCommentTree(rows) {
 export default function commentRouter(Router, CommentModel, usersModel) {
   // comment DB API
   // Routes
-  const requireAuthMiddleware = requireAuth(usersModel);
+  const pinsModel = CommentModel.sequelize.models.Pins;
+  const BasicAuthorizationMiddleware = requireBasicAuthorization(usersModel);
+
   // Malformed Request Middleware
   Router.use((error, req, res, next) => {
-    if (
-      error?.type === "entity.parse.failed" ||
-      error?.status === 400 ||
-      error instanceof SyntaxError
-    ) {
-      return res.status(400).json({
-        error: true,
-        message: "ERROR: INVALID REQUEST BODY",
-      });
+    if (error?.type === "entity.parse.failed" || error?.status === 400 || error instanceof SyntaxError) {
+      return res.status(400).json({ error: true, message: "ERROR: INVALID REQUEST BODY" });
     }
-
     next(error);
   });
 
@@ -93,28 +87,26 @@ export default function commentRouter(Router, CommentModel, usersModel) {
       if (headers.accept != "application/json") {
         throw new Error("ERROR: INCORRECT FORMAT WANTED");
       }
+
       if (order && order != SORT_ASC && order != SORT_DESC) {
         throw new Error("ERROR: INCORRECT ORDER ENTERED");
       }
+
       if (!postid) {
         throw new Error("ERROR: NO PARENT PROVIDED FOR COMMENT");
       }
+
       if (userid) {
-        return res.status(422).json({
-          error: true,
-          message: "userid filtering is not supported for nested comments",
-        });
+        return res.status(422).json({ error: true, message: "userid filtering is not supported for nested comments" });
       }
 
       const pagination = validatePagination({
         page: queryParams.page,
         perpage: queryParams.perPage ?? queryParams.perpage,
       });
+
       if (!pagination) {
-        return res.status(400).json({
-          error: true,
-          message: "ERROR: INVALID PAGINATION",
-        });
+        return res.status(400).json({ error: true, message: "ERROR: INVALID PAGINATION" });
       }
       const { perPage, offset } = pagination;
 
@@ -195,26 +187,10 @@ export default function commentRouter(Router, CommentModel, usersModel) {
     }
   });
 
-  Router.post(
-    "/comment",
-    authMiddleware,
-    requireAuthMiddleware,
-    (req, res, next) => {
-      if (
-        !req.body ||
-        typeof req.body !== "object" ||
-        Array.isArray(req.body)
-      ) {
-        req.body = {};
-      }
-      next();
-    },
-    checkSchema(CommentSchema, ["body"]),
+  Router.post("/comment", AuthenticationMiddleware, BasicAuthorizationMiddleware, checkSchema(CommentSchema, ["body"]),
     async (req, res) => {
       // post data
       const body = req.body;
-
-      const pinsModel = CommentModel.sequelize.models.Pins;
 
       const reqComment = body.comment;
       const reqCommentParent = body.CommentParent;
@@ -225,48 +201,32 @@ export default function commentRouter(Router, CommentModel, usersModel) {
         if (!validation.isEmpty()) {
           return res.status(400).json({
             error: true,
-            message: validation
-              .array()
-              .map(({ msg }) => msg)
-              .join(", "),
+            message: validation.array().map(({ msg }) => msg).join(", "),
           });
         }
 
         // Validation
         if (!body.comment) {
-          return res.status(400).json({
-            error: true,
-            message: "ERROR: NO COMMENT SUBMITTED",
-          });
+          return res.status(400).json({ error: true, message: "ERROR: NO COMMENT SUBMITTED" });
         }
 
         const pinParent = await pinsModel.findByPk(reqPinParent);
         const commentParent =
           reqCommentParent !== null && reqCommentParent !== undefined
             ? await CommentModel.findOne({
-                where: {
-                  id: reqCommentParent,
-                  PinParent: reqPinParent,
-                },
-              })
+              where: {
+                id: reqCommentParent,
+                PinParent: reqPinParent,
+              },
+            })
             : null;
 
-        if (
-          reqCommentParent !== null &&
-          reqCommentParent !== undefined &&
-          !commentParent
-        ) {
-          return res.status(404).json({
-            error: true,
-            message: "ERROR: NO COMMENT PARENT FOUND",
-          });
+        if (reqCommentParent !== null && reqCommentParent !== undefined && !commentParent) {
+          return res.status(404).json({ error: true, message: "ERROR: NO COMMENT PARENT FOUND" });
         }
 
         if (!pinParent) {
-          return res.status(404).json({
-            error: true,
-            message: "ERROR: POST NOT FOUND",
-          });
+          return res.status(404).json({ error: true, message: "ERROR: POST NOT FOUND" });
         }
 
         // Post Content
@@ -286,10 +246,7 @@ export default function commentRouter(Router, CommentModel, usersModel) {
         });
       } catch (error) {
         console.error(error);
-        return res.status(500).json({
-          error: true,
-          message: "ERROR: INTERNAL SERVER ERROR",
-        });
+        return res.status(500).json({ error: true, message: "ERROR: INTERNAL SERVER ERROR" });
       }
     },
   );
@@ -301,48 +258,28 @@ export default function commentRouter(Router, CommentModel, usersModel) {
     });
   });
 
-  Router.delete(
-    "/comment/:id",
-    authMiddleware,
-    requireAuthMiddleware,
-    async (req, res) => {
-      const id = req.params.id;
+  Router.delete("/comment/:id", AuthenticationMiddleware, BasicAuthorizationMiddleware, async (req, res) => {
+    const id = req.params.id;
 
-      try {
-        // Perform action to delete
-        const query = await CommentModel.findOne({ where: { id: id } });
+    try {
+      // Perform action to delete
+      const query = await CommentModel.findOne({ where: { id: id } });
 
-        if (!query) {
-          return res.status(404).json({
-            error: true,
-            message: "Comment not found",
-          });
-        }
-
-        const requester = await usersModel.findByPk(req.user.userid);
-        const authLevel = req.user.authLevel ?? requester?.authLevel ?? 0;
-
-        if (query.authorid != req.user.userid && authLevel < ADMIN_AUTH_LEVEL) {
-          return res.status(403).json({
-            error: true,
-            message: "Unauthorized",
-          });
-        }
-
-        await query.update({
-          deletedAt: new Date(),
-        });
-
-        res.json({
-          message: "Comment deleted",
-        });
-      } catch (error) {
-        res.json({
-          error: true,
-          message: "Unable to delete comment",
-        });
+      if (!query) {
+        return res.status(404).json({ error: true, message: "Comment not found" });
       }
-    },
+
+      if (query.authorid != req.user.userid && req.user.authLevel < ADMIN_AUTH_LEVEL) {
+        return res.status(403).json({ error: true, message: "Unauthorized" });
+      }
+
+      await query.update({ deletedAt: new Date(), });
+
+      res.json({ message: "Comment deleted", });
+    } catch (error) {
+      res.json({ error: true, message: "INTERNAL SERVER ERROR" });
+    }
+  },
   );
 
   return Router;

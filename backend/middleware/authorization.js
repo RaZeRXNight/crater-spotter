@@ -1,19 +1,15 @@
 import { AUTH_LEVEL } from "../services/constants.js";
 
-function unauthorized(res) {
+export function unauthorized(res) {
   return res.status(401).json({ message: "Unauthorized" });
 }
 
-function forbidden(res) {
+export function forbidden(res) {
   return res.status(403).json({ message: "Forbidden" });
 }
 
 function currentIdentity(user) {
-  return {
-    userid: user.id,
-    username: user.username,
-    authLevel: user.authLevel,
-  };
+  return { userid: user.id, username: user.username, authLevel: user.authLevel };
 }
 
 function createAuthorizationMiddleware(usersModel, minimumAuthLevel) {
@@ -42,10 +38,10 @@ function createAuthorizationMiddleware(usersModel, minimumAuthLevel) {
   };
 }
 
-export function requireAuth(usersModel) {
+export function requireBasicAuthorization(usersModel) {
   return createAuthorizationMiddleware(usersModel, AUTH_LEVEL.STANDARD);
 }
 
-export function requireAdmin(usersModel) {
+export function requireAdminAuthorization(usersModel) {
   return createAuthorizationMiddleware(usersModel, AUTH_LEVEL.ADMIN);
 }
