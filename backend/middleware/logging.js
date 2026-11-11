@@ -8,7 +8,7 @@ export function logger(req, res, next) {
       res.statusCode,
       `${req.protocol}`,
       req.host,
-      req.path,
+      req.originalUrl,
       `${latency}ms`,
       req.headers["user-agent"] || "-",
       req.ip || req.headers["x-forwarded-for"] || "-", // IP

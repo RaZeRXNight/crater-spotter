@@ -1,5 +1,5 @@
 import { checkSchema, validationResult } from "express-validator";
-import AuthenticationMiddleware from "../middleware/authentication.js";
+import VerifyAuthToken from "../middleware/authentication.js";
 import { requireBasicAuthorization } from "../middleware/authorization.js";
 import { CommentSchema } from "../schema/comment.js";
 import { validatePagination } from "../services/validation.js";
@@ -187,7 +187,7 @@ export default function commentRouter(Router, CommentModel, usersModel) {
     }
   });
 
-  Router.post("/comment", AuthenticationMiddleware, BasicAuthorizationMiddleware, checkSchema(CommentSchema, ["body"]),
+  Router.post("/comment", VerifyAuthToken, BasicAuthorizationMiddleware, checkSchema(CommentSchema, ["body"]),
     async (req, res) => {
       // post data
       const body = req.body;
@@ -258,7 +258,7 @@ export default function commentRouter(Router, CommentModel, usersModel) {
     });
   });
 
-  Router.delete("/comment/:id", AuthenticationMiddleware, BasicAuthorizationMiddleware, async (req, res) => {
+  Router.delete("/comment/:id", VerifyAuthToken, BasicAuthorizationMiddleware, async (req, res) => {
     const id = req.params.id;
 
     try {

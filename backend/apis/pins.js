@@ -3,7 +3,7 @@ import process from "process";
 import { constants, existsSync, unlink } from "fs";
 import multer from "multer";
 import { checkSchema } from "express-validator";
-import AuthenticationMiddleware from "../middleware/authentication.js";
+import VerifyAuthToken from "../middleware/authentication.js";
 import { forbidden, requireBasicAuthorization, unauthorized } from "../middleware/authorization.js";
 import { PinSchema } from "../schema/pin.js";
 import { validatePagination } from "../services/validation.js";
@@ -146,7 +146,7 @@ export default function pinRouter(Router, PinsModel, usersModel) {
   // Body Containing: title, authorid, comment, cooordinates and Image.
   Router.post(
     "/pin",
-    AuthenticationMiddleware,
+    VerifyAuthToken,
     requireAuthMiddleware,
     checkSchema(PinSchema, ["body"]),
     upload.single("image"),
@@ -201,7 +201,7 @@ export default function pinRouter(Router, PinsModel, usersModel) {
     },
   );
 
-  Router.put("/pin/:id/", AuthenticationMiddleware, requireAuthMiddleware, checkSchema(PinSchema, ["body"]),
+  Router.put("/pin/:id/", VerifyAuthToken, requireAuthMiddleware, checkSchema(PinSchema, ["body"]),
     async (req, res) => {
       try {
         const id = req.params.id;
@@ -229,7 +229,7 @@ export default function pinRouter(Router, PinsModel, usersModel) {
     },
   );
 
-  Router.delete("/pin/:id", AuthenticationMiddleware, requireAuthMiddleware, async (req, res) => {
+  Router.delete("/pin/:id", VerifyAuthToken, requireAuthMiddleware, async (req, res) => {
     const id = req.params.id;
 
     try {

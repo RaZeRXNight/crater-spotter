@@ -2,7 +2,7 @@ import { jwtVerification } from "../services/jwt.js";
 
 // Unified auth middleware
 // Checks Authorization: Bearer <token> first, falls back to session cookie
-export default async function AuthenticationMiddleware(req, res, next) {
+export default async function VerifyAuthToken(req, res, next) {
   const authHeader = req.headers["authorization"];
 
   // JWT Authenitication for Mobile Applicaitons

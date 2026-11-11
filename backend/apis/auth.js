@@ -1,12 +1,12 @@
 import bcrypt from "bcrypt";
 import { checkSchema } from "express-validator";
 import { LoginSchema, RegisterSchema } from "../schema/auth.js";
-import authMiddleware from "../middleware/authentication.js";
+import VerifyAuthToken from "../middleware/authentication.js";
 import {
   BCRYPT_SALT_ROUNDS,
   DEFAULT_USER_AUTH_LEVEL,
 } from "../services/constants.js";
-import { requireAuth } from "../middleware/authorization.js";
+import { requireBasicAuthorization } from "../middleware/authorization.js";
 import { DeleteUser } from "../services/user.js";
 
 function authenticateSession(req, user) {
@@ -33,24 +33,19 @@ function destroySession(session) {
 }
 
 export default function authRouter(Router, usersModel) {
-  const requireAuthMiddleware = requireAuth(usersModel);
+  const requireAuthMiddleware = requireBasicAuthorization(usersModel);
 
   // User DB API
   // Routes
   // User Authentication & Session Handling
-  // Authenticate User — protected by authMiddleware (JWT or session)
-  Router.get("/auth", authMiddleware, async (req, res) => {
+  // Authenticate User — protected by VerifyAuthToken (JWT or session)
+  Router.get("/auth", VerifyAuthToken, async (req, res) => {
     try {
       const user = await usersModel.findByPk(req.user.userid);
 
       if (!user) {
-        if (req.session) {
-          req.session.destroy();
-        }
-        return res.status(401).json({
-          error: true,
-          message: "Account not found",
-        });
+        if (req.session) { req.session.destroy(); }
+        return res.status(404).json({ error: true, message: "Account not found" });
       }
 
       res.json({
@@ -61,10 +56,7 @@ export default function authRouter(Router, usersModel) {
       });
     } catch (error) {
       console.error(error);
-      return res.status(500).json({
-        error: true,
-        message: "Internal server error",
-      });
+      return res.status(500).json({ error: true, message: "Internal server error" });
     }
   });
 
@@ -179,7 +171,7 @@ export default function authRouter(Router, usersModel) {
 
   Router.delete(
     "/auth/delete",
-    authMiddleware,
+    VerifyAuthToken,
     requireAuthMiddleware,
     async (req, res) => {
       const session = req.session;
