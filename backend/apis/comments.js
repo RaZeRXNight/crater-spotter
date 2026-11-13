@@ -124,7 +124,7 @@ export default function commentRouter(Router, CommentModel, usersModel) {
         attributes: {
           include: [
             CommentModel.sequelize.literal(
-              `(SELECT COUNT(*) FROM "COMMENTS" AS "Replies" WHERE "replies"."CommentParent" = "Comments"."id")`,
+              `(SELECT CAST(COUNT(*) AS INTEGER) FROM "COMMENTS" AS "Replies" WHERE "replies"."CommentParent" = "Comments"."id")`,
             ),
             "replyCount",
           ]
