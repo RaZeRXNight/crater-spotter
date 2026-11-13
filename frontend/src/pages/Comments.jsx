@@ -27,14 +27,9 @@ export function RenderComments({ rows, user }) {
 export async function getComments({ id, page, perPage }) {
   const { err, data } = await api({
     url: "/api/v1/comment/",
-    headers: {
-      Accept: "application/json",
-    },
-    params: {
-      postid: id,
-      perPage: perPage || 10,
-      page: page || 1,
-    },
+    headers: { Accept: "application/json" },
+    params: { postid: id, perPage: perPage || 10, page: page || 1 },
+    silent: true
   });
   return normalizeComments(data?.message, err);
 }

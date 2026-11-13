@@ -32,14 +32,15 @@ function mapCommentRows(row) {
 }
 
 function buildCommentTree(rows) {
+
+  // Converts all of the Top Level Comments -> Nodes
   const nodes = new Map(
     rows.map((row) => [row.id, { ...mapCommentRows(row), replies: [] }]),
   );
-  const roots = [];
 
-  for (const row of rows) {
-    const node = nodes.get(row.id);
-    const parent = row.CommentParent ? nodes.get(row.CommentParent) : null;
+  const roots = [];
+  for (const node of nodes.values()) {
+    const parent = node.CommentParent ? nodes.get(node.CommentParent) : null;
 
     if (parent) {
       parent.replies.push(node);
@@ -80,6 +81,7 @@ export default function commentRouter(Router, CommentModel, usersModel) {
     // Data Order & Filters
     const userid = queryParams.userid;
     const postid = queryParams.postid;
+    const commentParentid = queryParams.commentParent
     const order = queryParams.order || SORT_ASC;
 
     try {
@@ -96,10 +98,7 @@ export default function commentRouter(Router, CommentModel, usersModel) {
         throw new Error("ERROR: NO PARENT PROVIDED FOR COMMENT");
       }
 
-      if (userid) {
-        return res.status(422).json({ error: true, message: "userid filtering is not supported for nested comments" });
-      }
-
+      // Pagination
       const pagination = validatePagination({
         page: queryParams.page,
         perpage: queryParams.perPage ?? queryParams.perpage,
@@ -108,33 +107,39 @@ export default function commentRouter(Router, CommentModel, usersModel) {
       if (!pagination) {
         return res.status(400).json({ error: true, message: "ERROR: INVALID PAGINATION" });
       }
+
       const { perPage, offset } = pagination;
 
       // Query Additions
-      const query = {};
-      postid ? (query.PinParent = postid) : null;
+      const query = { PinParent: null, CommentParent: null };
+      if (postid) { query.PinParent = postid }
+      if (commentParentid) { query.CommentParent = commentParentid }
+      if (userid) { query.authorid = userid }
 
       // Determines whether we send user specific data or general data.
       // May Query a Mass amount of Data on a more popular Post.
-      const rows = await CommentModel.findAll({
+      const { count, rows } = await CommentModel.findAndCountAll({
         where: query,
-        order: [
-          ["createdAt", order],
-          ["id", order],
-        ],
+        order: [["createdAt", order], ["id", order]],
+        attributes: {
+          include: [
+            CommentModel.sequelize.literal(
+              `(SELECT COUNT(*) FROM "COMMENTS" AS "Replies" WHERE "replies"."CommentParent" = "Comments"."id")`,
+            ),
+            "replyCount",
+          ]
+        },
+        offset,
+        limit: perPage,
         include: CommentInclude,
       });
 
-      const roots = buildCommentTree(rows);
-      const count = roots.length;
-      const dataRows = roots.slice(offset, offset + perPage);
-
       const dataToSend = {
-        rows: dataRows,
-        count,
+        rows: rows.map(mapCommentRows),
+        count: count,
         page: pagination.currentPage,
         perPage,
-        hasNext: offset + dataRows.length < count,
+        hasNext: offset + rows.length < count
       };
 
       res.json({ message: dataToSend });

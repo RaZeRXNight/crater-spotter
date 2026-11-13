@@ -62,14 +62,9 @@ export function RenderPins({ rows, user }) {
 export async function getUserPins({ page, perPage }) {
   const { err, data } = await api({
     url: "/api/v1/pin/",
-    headers: {
-      Authorization: "User",
-      Accept: "application/json",
-    },
-    params: {
-      perPage: perPage || 10,
-      page: page || 1,
-    },
+    headers: { Authorization: "User", Accept: "application/json" },
+    params: { perPage: perPage || 10, page: page || 1 },
+    silent: true
   });
   if (err) return null;
   return data;
@@ -83,14 +78,9 @@ export async function getUserPins({ page, perPage }) {
 export async function getPins({ userid = null, page, perPage }) {
   const { err, data } = await api({
     url: "/api/v1/pin/",
-    headers: {
-      Accept: "application/json",
-    },
-    params: {
-      userid,
-      perPage: perPage || 10,
-      page: page || 1,
-    },
+    headers: { Accept: "application/json", },
+    params: { userid, perPage: perPage || 10, page: page || 1 },
+    silent: true
   });
   if (err) return null;
   return { rows: data.rows, count: data.count };
@@ -147,10 +137,7 @@ export function CreatePin() {
     authorid: user.id,
     title: "",
     comment: "",
-    coordinates: {
-      lat: 0,
-      lng: 0,
-    },
+    coordinates: { lat: 0, lng: 0 },
   });
 
   const HandleMapClick = useCallback(
@@ -169,10 +156,7 @@ export function CreatePin() {
         const coords = position.coords;
         setForm({
           ...form,
-          coordinates: {
-            lat: coords.latitude,
-            lng: coords.longitude,
-          },
+          coordinates: { lat: coords.latitude, lng: coords.longitude },
         });
       },
       (error) => console.error(error),
