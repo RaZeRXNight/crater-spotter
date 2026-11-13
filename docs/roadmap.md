@@ -13,7 +13,7 @@
 - View your own dashboard
 - Comment on posts and view comments
 - Administrate your own posts and comments (delete them)
-- Docker image for deployment (nginx container enforces HTTPS)
+- Docker image for deployment (TLS handled by an external reverse proxy)
 
 ## Monthly Milestones
 
@@ -26,7 +26,7 @@
 
 ### Month 2 — Database
 
-- [ ] Migrate from SQLite to PostgreSQL
+- [ X ] Migrate from SQLite to PostgreSQL
 - [ ] Database optimization: indexing, pagination, connection pooling, solve N+1
 - [ X ] API Versioning: prefix all API Routes with `/v1/`
 

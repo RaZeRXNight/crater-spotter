@@ -3,7 +3,8 @@ import process from "process";
 import { constants, existsSync, unlink } from "fs";
 import multer from "multer";
 import { checkSchema } from "express-validator";
-import { BasicAuth } from "../services/admin.js";
+import VerifyAuthToken from "../middleware/authentication.js";
+import { forbidden, requireBasicAuthorization, unauthorized } from "../middleware/authorization.js";
 import { PinSchema } from "../schema/pin.js";
 import { validatePagination } from "../services/validation.js";
 import {
@@ -16,25 +17,29 @@ import {
   UPLOAD_FIELD_SIZE,
 } from "../services/constants.js";
 
+const storageRelativePath = (process.env.STORAGE_PATH || "public/storage")
+  .replace(/^\/+|\/+$/g, "");
+const storagePath = path.resolve(process.cwd(), storageRelativePath);
+
 export const upload = multer({
   limits: { fieldSize: UPLOAD_FIELD_SIZE },
-  dest: process.env.STORAGE_PATH,
+  dest: storagePath,
 });
 
-export default function pinRouter(Router, PinsModel) {
-  const STORAGE_PATH = path.join(process.cwd(), process.env.STORAGE_PATH);
+export default function pinRouter(Router, PinsModel, usersModel) {
+  const STORAGE_PATH = storagePath;
+  const requireAuthMiddleware = requireBasicAuthorization(usersModel);
 
   // pin DB API
   // Routes
   Router.get("/pin/", async (req, res) => {
-    const sequelizeInstance = PinsModel.sequelize;
-    const userModel = sequelizeInstance.models.Users;
 
-    // Cookie Session & Headers
+    // Authentication and content negotiation headers
     const session = req.session;
     const headers = req.headers;
-    const userid = headers.userid;
-    const order = headers.order || DEFAULT_SORT_ORDER;
+    const queryParams = req.query;
+    const userid = queryParams.userid;
+    const order = queryParams.order || DEFAULT_SORT_ORDER;
 
     try {
       // Validation
@@ -44,7 +49,10 @@ export default function pinRouter(Router, PinsModel) {
       if (order && order != SORT_ASC && order != SORT_DESC) {
         throw new Error("ERROR: INCORRECT ORDER ENTERED");
       }
-      const pagination = validatePagination(headers);
+      const pagination = validatePagination({
+        page: queryParams.page,
+        perpage: queryParams.perPage ?? queryParams.perpage,
+      });
       if (!pagination) {
         return res.status(400).json({
           error: true,
@@ -97,12 +105,13 @@ export default function pinRouter(Router, PinsModel) {
       });
 
       res.json({
+        message: "Pins retrieved",
         rows: dataRows,
         count: data.count,
       });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ error: true, message: error.message });
+      res.status(500).json({ error: true, message: "Internal server error" });
     }
   });
 
@@ -126,7 +135,10 @@ export default function pinRouter(Router, PinsModel) {
       });
     } catch (error) {
       console.error(error);
-      res.status(500).send(`ERROR: Couldn't retrieve Pin #${id}`);
+      res.status(500).json({
+        error: true,
+        message: "Unable to retrieve pin",
+      });
     }
   });
 
@@ -134,10 +146,11 @@ export default function pinRouter(Router, PinsModel) {
   // Body Containing: title, authorid, comment, cooordinates and Image.
   Router.post(
     "/pin",
+    VerifyAuthToken,
+    requireAuthMiddleware,
     checkSchema(PinSchema, ["body"]),
     upload.single("image"),
     async (req, res) => {
-      const session = req.session;
       const body = req.body;
       const file = req.file;
       const { title, authorid, comment, lat, lng } = body;
@@ -156,17 +169,11 @@ export default function pinRouter(Router, PinsModel) {
           throw new Error("Coordinates are Needed");
         }
 
-        const auth = BasicAuth(PinsModel.sequelize, session);
-
-        if (!auth) {
-          throw new Error("ERROR: UNAUTHORIZED");
-        }
-
         if (!authorid) {
           throw new Error("An Account is needed");
         }
 
-        if (authorid != session.userid) {
+        if (authorid != req.user.userid) {
           throw new Error("User ID not Valid");
         }
 
@@ -186,98 +193,56 @@ export default function pinRouter(Router, PinsModel) {
         const id = pin.id;
 
         // Message back to Poster
-        res.json({
-          message: `SUCCESS! ${title} #${id} posted successfully!`,
-          error: false,
-          id: id,
-        });
+        res.status(200).json({ message: "Pin created", error: false, id: id, });
       } catch (error) {
-        res.json({
-          error: true,
-          message: `ERROR: ${error.message}`,
-        });
+        res.json({ error: true, message: "INTERNAL SERVER ERROR", });
         console.error(error);
       }
     },
   );
 
-  Router.put(
-    "/pin/:id/",
-    checkSchema(PinSchema, ["body"]),
+  Router.put("/pin/:id/", VerifyAuthToken, requireAuthMiddleware, checkSchema(PinSchema, ["body"]),
     async (req, res) => {
-      const userModel = PinsModel.sequelize.models.Users;
-      const id = req.params.id;
-      const session = req.session;
-
       try {
+        const id = req.params.id;
         const query = await PinsModel.findOne({ where: { id: id } });
-        const userQuery = await userModel.findByPk(session.userid);
-        const oldData = query.dataValues;
         const newData = req.body;
 
-        const auth = BasicAuth(PinsModel.sequelize, session);
-
-        if (!auth) {
-          throw new Error("ERROR: UNAUTHORIZED");
+        if (!query) {
+          return res.status(404).json({ error: true, message: "Pin NOT FOUND." });
         }
 
-        if (
-          session.userid != query.authorid &&
-          userQuery.authLevel < BASIC_AUTH_LEVEL
-        ) {
-          res.json({ error: true, message: "ERROR: UNAUTHORIZED" });
-          throw new Error("ERROR: UNAUTHORIZED");
+        if (req.user.userid != query.authorid && req.user.authLevel < BASIC_AUTH_LEVEL) {
+          return forbidden(res)
         }
 
         await PinsModel.update(
-          {
-            comment: newData.comment,
-          },
-          {
-            where: {
-              id: id,
-            },
-          },
+          { comment: newData.comment },
+          { where: { id: id, } }
         );
 
-        res.json({
-          message: `SUCCESS: ID ${id} ${oldData.title} updated!`,
-        });
+        res.json({ message: "Pin updated" });
       } catch (error) {
         console.error(error);
+        return res.status(500).json({ error: true, message: "ERROR: Internal Server Error" });
       }
     },
   );
 
-  Router.delete("/pin/:id", async (req, res) => {
-    const userModel = PinsModel.sequelize.models.Users;
+  Router.delete("/pin/:id", VerifyAuthToken, requireAuthMiddleware, async (req, res) => {
     const id = req.params.id;
-    const session = req.session;
 
     try {
       // Perform action to delete
       const query = await PinsModel.findOne({ where: { id: id } });
-      const userQuery = await userModel.findByPk(session.userid);
 
-      const auth = BasicAuth(PinsModel.sequelize, session);
-
-      if (!auth) {
-        throw new Error("ERROR: UNAUTHORIZED");
-      }
-
-      if (
-        query.authorid != session.userid &&
-        userQuery.authLevel < BASIC_AUTH_LEVEL
-      ) {
-        throw new Error("ERROR: UNAUTHORIZED");
+      if (query.authorid != req.user.userid && req.user.authLevel < BASIC_AUTH_LEVEL) {
+        return unauthorized(res);
       }
 
       const commentModel = PinsModel.sequelize.models.Comments;
       await PinsModel.sequelize.transaction(async (transaction) => {
-        await commentModel.destroy({
-          where: { PinParent: id },
-          transaction,
-        });
+        await commentModel.destroy({ where: { PinParent: id }, transaction });
 
         const deletedPins = await PinsModel.destroy({
           where: { id },
@@ -285,7 +250,7 @@ export default function pinRouter(Router, PinsModel) {
         });
 
         if (!deletedPins) {
-          throw new Error("ERROR: PIN DOES NOT EXIST");
+          return res.status(404).json({ error: true, message: "PIN DOES NOT EXIST" })
         }
       });
 
@@ -300,17 +265,13 @@ export default function pinRouter(Router, PinsModel) {
         });
       }
 
-      res.json({
-        message: `${id} was deleted.`,
-      });
+      res.json({ message: "Pin deleted", });
     } catch (error) {
       console.error(error);
-      res.json({
-        error: true,
-        message: error.message,
-      });
+      res.status(500).json({ error: true, message: "Internal Server Error", });
     }
-  });
+  },
+  );
 
   return Router;
 }
