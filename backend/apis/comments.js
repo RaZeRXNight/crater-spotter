@@ -79,7 +79,7 @@ export default function commentRouter(Router, CommentModel, usersModel) {
 
     // Data Order & Filters
     const userid = queryParams.userid;
-    const postid = queryParams.postid;
+    const pinid = queryParams.postid;
     const commentParentid = queryParams.commentParent
     const order = queryParams.order || SORT_ASC;
 
@@ -93,7 +93,7 @@ export default function commentRouter(Router, CommentModel, usersModel) {
         throw new Error("ERROR: INCORRECT ORDER ENTERED");
       }
 
-      if (!postid) {
+      if (!pinid) {
         throw new Error("ERROR: NO PARENT PROVIDED FOR COMMENT");
       }
 
@@ -111,7 +111,7 @@ export default function commentRouter(Router, CommentModel, usersModel) {
 
       // Query Additions
       const query = { PinParent: null, CommentParent: null };
-      if (postid) { query.PinParent = postid }
+      if (pinid) { query.PinParent = pinid }
       if (commentParentid) { query.CommentParent = commentParentid }
       if (userid) { query.authorid = userid }
 
