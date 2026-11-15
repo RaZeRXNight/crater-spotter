@@ -15,9 +15,6 @@ All endpoints are mounted under `/api`.
 
 ## Auth — Mobile (JWT-based)
 
-<!-- Mobile endpoints are defined in apis/mobileAuth.js and wired in routes/api.js -->
-<!-- POST /auth/mobile/register is not implemented yet -->
-
 | Method | Path                  | Auth              | Body                            | Response                                                     |
 | ------ | --------------------- | ----------------- | ------------------------------- | ------------------------------------------------------------ |
 | POST   | /api/auth/mobile/login | —                 | `{ username, password }`        | `{ accessToken, refreshToken, expiresIn }`                   |
@@ -30,8 +27,9 @@ All endpoints are mounted under `/api`.
 2. Server validates, returns `{ accessToken, refreshToken }`.
 3. Client stores tokens in platform secure storage (iOS Keychain / Android Keystore).
 4. Every subsequent request includes `Authorization: Bearer <accessToken>`.
-5. When the access token expires, the client calls the web `/api/auth/refresh` endpoint with the refresh token stored in an httpOnly cookie. <!-- The mobile login returns the refresh token in the JSON body, but the refresh endpoint reads from req.cookies.refreshtoken. There's no mobile-specific refresh endpoint yet — this is a gap for mobile client development. -->
-6. If refresh fails, the client re-authenticates via login.
+5. When the access token expires, the client calls the web `/api/auth/refresh`
+endpoint with the refresh token stored in an httpOnly cookie.  If refresh fails,
+the client re-authenticates via login.
 
 ### Access & Refresh Token
 
@@ -75,12 +73,6 @@ All endpoints are mounted under `/api`.
 | Method | Path         | Auth | Body | Response                  |
 | ------ | ------------ | ---- | ---- | ------------------------- |
 | GET    | /api/config/ | —    | —    | `{ GOOGLE_MAPS_API_KEY }` |
-
-## Auth levels
-
-- `0` — suspended
-- `1` — standard user (BasicAuth)
-- `2` — admin (AdminAuth)
 
 ## Pagination
 

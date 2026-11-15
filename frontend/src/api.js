@@ -1,9 +1,9 @@
 import axios from "axios";
 import { toast } from "react-toastify";
 
-export default async function api({ url, method = "GET", headers = {}, body = null, silent = false }) {
+export default async function api({ url, method = "GET", headers = {}, params, body = null, silent = false }) {
   try {
-    const response = await axios({ method, url, headers, data: body });
+    const response = await axios({ method, url, headers, params, data: body });
     if (response.data && response.data.error) {
       if (!silent) toast.error(response.data.message || "Request failed");
       return { err: response.data.message || "Request failed", data: null };

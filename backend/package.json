@@ -3,10 +3,12 @@
     "build": "npm run --prefix ../frontend build",
     "start": "node server.js",
     "dev": "node server.js .env.development.local --watch",
+    "test": "vitest",
     "migrate:data": "node scripts/migrate-data.js"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
+    "compression": "^1.7.4",
     "connect-session-sequelize": "^8.0.6",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
@@ -25,5 +27,12 @@
     "sequelize": {
       "uuid": "^11.1.1"
     }
+  },
+  "devDependencies": {
+    "supertest": "^7.3.2",
+    "vitest": "^4.1.10"
+  },
+  "allowScripts": {
+    "sqlite3@6.0.1": true
   }
 }

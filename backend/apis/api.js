@@ -1,5 +1,3 @@
-import bcrypt from "bcrypt";
-
 export default function userRouter(Router, db) {
   // User DB API
   // Routes

@@ -16,3 +16,25 @@ All under `/api/comment`.
 | DELETE | /api/comment/:id | BasicAuth | —                                                               | `{ message }`                                |
 | PUT    | /api/comment     | —         | —                                                               | **Not implemented** — always returns error   |
 
+## API Overview
+
+### `/comment/` GET
+
+The API accepts the following queries:
+
+- postid (required)
+- userid
+- commentParentid
+- order
+- page
+- perPage
+
+Returns a List of Rows of a specified level. On default, without a commentParentid
+the api returns the root comments without a parent. It also returns
+the following information:
+
+- An Array of Comments,
+- Count, CurrentPage, perPage (Integers)
+- hasNext (Boolean)
+
+The Frontend determines when to create a thread for deeply nested comments.

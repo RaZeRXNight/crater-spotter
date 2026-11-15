@@ -29,3 +29,5 @@ lerna-debug.log*
 
 *.key
 *.crt
+docker/nginx/certs/*
+docker/nginx/acme/*

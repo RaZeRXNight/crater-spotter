@@ -1,11 +1,47 @@
-// Authorization middleware
-// Checks req.user (set by authentication middleware) against required authLevel
-// authLevel: 1 = basic user, 2 = admin
+import { AUTH_LEVEL } from "../services/constants.js";
 
-export function requireAuth(req, res, next) {
-  // Verify authenticated user exists with at least basic access
+export function unauthorized(res) {
+  return res.status(401).json({ message: "Unauthorized" });
 }
 
-export function requireAdmin(req, res, next) {
-  // Verify authenticated user has admin-level access (authLevel >= 2)
+export function forbidden(res) {
+  return res.status(403).json({ message: "Forbidden" });
+}
+
+function currentIdentity(user) {
+  return { userid: user.id, username: user.username, authLevel: user.authLevel };
+}
+
+function createAuthorizationMiddleware(usersModel, minimumAuthLevel) {
+  return async function authorizationMiddleware(req, res, next) {
+    if (!req.user?.userid) {
+      return unauthorized(res);
+    }
+
+    try {
+      const user = await usersModel.findByPk(req.user.userid);
+
+      if (!user) {
+        return unauthorized(res);
+      }
+
+      if (!Number.isInteger(user.authLevel) || user.authLevel < minimumAuthLevel) {
+        return forbidden(res);
+      }
+
+      req.user = currentIdentity(user);
+      return next();
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  };
+}
+
+export function requireBasicAuthorization(usersModel) {
+  return createAuthorizationMiddleware(usersModel, AUTH_LEVEL.STANDARD);
+}
+
+export function requireAdminAuthorization(usersModel) {
+  return createAuthorizationMiddleware(usersModel, AUTH_LEVEL.ADMIN);
 }

@@ -23,6 +23,5 @@ export function validatePagination({
     return null;
   }
 
-  // ponytail: MAX_PAGE caps offsets; use cursor pagination if feeds outgrow it.
   return { currentPage, perPage, offset: (currentPage - 1) * perPage };
 }

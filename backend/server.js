@@ -1,20 +1,21 @@
 const ENVIRONMENT = require("process").argv[2];
 const express = require("express");
+const compression = require("compression");
 const path = require("path");
-const { existsSync } = require("fs");
 const cookieParser = require("cookie-parser");
 const session = require("express-session");
 const SequelizeStore = require("connect-session-sequelize")(session.Store);
 const { default: connectDatabase } = require("./services/connection.js");
 const { CheckAndMakeDefaultAdminAccount } = require("./services/admin.js");
 const { DEFAULT_PORT, sessionSecrets } = require("./services/constants.js");
-const router = require("./routes/api.js");
 const { logger } = require("./middleware/logging.js");
 require("dotenv").config({
   path: ENVIRONMENT,
-  override: true,
+  // Compose environment variables must override host-local .env values.
+  override: false,
   debug: ENVIRONMENT ? true : false,
 });
+const router = require("./routes/api.js");
 
 // Env Variables
 const sessionSecret = process.env.SESSION_SECRET;
@@ -32,18 +33,41 @@ async function startServer() {
   const apiRouter = router(database, sessionStore);
 
   const server = express();
+  server.set("trust proxy", 1);
 
   // Middleware
   server.use(express.json());
+  server.use(compression());
   server.use(session(sessionSecrets(sessionSecret, sessionStore)));
   server.use(logger);
   server.use(cookieParser());
+  server.get("/healthz", (req, res) => res.json({ status: "ok" }));
 
   // Public Storage Path
   const storage_path = path.resolve(__dirname, "..", process.env.STORAGE_PATH);
-  server.use(`/${process.env.STORAGE_PATH}`, express.static(storage_path));
+  server.use(
+    `/${process.env.STORAGE_PATH}`,
+    express.static(storage_path, {
+      maxAge: "1d",
+      setHeaders: (res, filePath) => {
+        // Never cache HTML files to avoid serving stale pages
+        if (filePath.endsWith(".html")) {
+          res.setHeader("Cache-Control", "no-cache");
+        }
+      },
+    }),
+  );
 
   server.use("/api/v1", apiRouter);
+
+  const frontendPath = path.resolve(__dirname, "..", "frontend", "dist");
+  server.use(express.static(frontendPath, { index: false }));
+  server.get("/{*splat}", (req, res, next) => {
+    if (req.path.startsWith("/api/") || req.path.startsWith(`/${process.env.STORAGE_PATH}`)) {
+      return next();
+    }
+    return res.sendFile(path.join(frontendPath, "index.html"));
+  });
 
   await database.sync();
   await CheckAndMakeDefaultAdminAccount(database);

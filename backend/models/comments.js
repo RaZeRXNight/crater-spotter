@@ -26,6 +26,7 @@ export default function Comments(sequelize) {
         allowNull: true,
         type: DataTypes.INTEGER,
       },
+      deletedAt: { allowNull: true, type: DataTypes.DATE },
     },
     {
       timestamps: true,
@@ -36,6 +37,14 @@ export default function Comments(sequelize) {
   commentModel.belongsTo(sequelize.models.Users, {
     foreignKey: "authorid",
     as: "author",
+  });
+  commentModel.belongsTo(commentModel, {
+    foreignKey: "CommentParent",
+    as: "parent",
+  });
+  commentModel.hasMany(commentModel, {
+    foreignKey: "CommentParent",
+    as: "replies",
   });
   return sequelize.models.Comments;
 }
