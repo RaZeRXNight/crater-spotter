@@ -65,23 +65,15 @@ export default function pinRouter(Router, PinsModel, usersModel) {
       let data;
       if (headers.authorization && headers.authorization == "User") {
         data = await PinsModel.findAndCountAll({
-          where: {
-            authorid: session.userid,
-          },
-          order: [
-            ["createdAt", order],
-            ["id", order],
-          ],
+          where: { authorid: session.userid, },
+          order: [["createdAt", order], ["id", order]],
           offset,
           limit: perPage,
         });
       } else {
         data = await PinsModel.findAndCountAll({
           where: userid ? { authorid: userid } : null,
-          order: [
-            ["createdAt", order],
-            ["id", order],
-          ],
+          order: [["createdAt", order], ["id", order]],
           offset,
           limit: perPage,
         });

@@ -75,7 +75,6 @@ export default function commentRouter(Router, CommentModel, usersModel) {
   ];
 
   Router.get("/comment/", async (req, res) => {
-    const headers = req.headers;
     const queryParams = req.query;
 
     // Data Order & Filters
@@ -86,7 +85,7 @@ export default function commentRouter(Router, CommentModel, usersModel) {
 
     try {
       // Validation
-      if (headers.accept != "application/json") {
+      if (req.headers?.accept != "application/json") {
         throw new Error("ERROR: INCORRECT FORMAT WANTED");
       }
 
@@ -123,10 +122,12 @@ export default function commentRouter(Router, CommentModel, usersModel) {
         order: [["createdAt", order], ["id", order]],
         attributes: {
           include: [
-            CommentModel.sequelize.literal(
-              `(SELECT CAST(COUNT(*) AS INTEGER) FROM "COMMENTS" AS "Replies" WHERE "replies"."CommentParent" = "Comments"."id")`,
-            ),
-            "replyCount",
+            [
+              CommentModel.sequelize.literal(
+                `(SELECT CAST(COUNT(*) AS INTEGER) FROM "Comments" AS "replies" WHERE "replies"."CommentParent" = "Comments"."id")`,
+              ),
+              "replyCount",
+            ]
           ]
         },
         offset,
@@ -150,11 +151,9 @@ export default function commentRouter(Router, CommentModel, usersModel) {
   });
 
   Router.get("/comment/:id", async (req, res) => {
-    const headers = req.headers;
-
     try {
       // Validation
-      if (headers.accept != "application/json") {
+      if (req.headers?.accept != "application/json") {
         throw new Error("ERROR: INCORRECT FORMAT WANTED");
       }
 
