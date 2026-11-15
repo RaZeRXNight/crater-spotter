@@ -8,6 +8,7 @@ import { forbidden, requireBasicAuthorization, unauthorized } from "../middlewar
 import { PinSchema } from "../schema/pin.js";
 import { validatePagination } from "../services/validation.js";
 import {
+  ADMIN_AUTH_LEVEL,
   ALLOWED_IMAGE_MIME_TYPES,
   BASIC_AUTH_LEVEL,
   DEFAULT_SORT_ORDER,
@@ -204,7 +205,7 @@ export default function pinRouter(Router, PinsModel, usersModel) {
           return res.status(404).json({ error: true, message: "Pin NOT FOUND." });
         }
 
-        if (req.user.userid != query.authorid && req.user.authLevel < BASIC_AUTH_LEVEL) {
+        if (query.authorid != req.user.userid && req.user.authLevel < ADMIN_AUTH_LEVEL) {
           return forbidden(res)
         }
 
@@ -228,8 +229,12 @@ export default function pinRouter(Router, PinsModel, usersModel) {
       // Perform action to delete
       const query = await PinsModel.findOne({ where: { id: id } });
 
-      if (query.authorid != req.user.userid && req.user.authLevel < BASIC_AUTH_LEVEL) {
-        return unauthorized(res);
+      if (!query) {
+        return res.status(404).json({ error: true, message: "PIN DOES NOT EXIST" })
+      }
+
+      if (query.authorid != req.user.userid && req.user.authLevel < ADMIN_AUTH_LEVEL) {
+        return forbidden(res)
       }
 
       const commentModel = PinsModel.sequelize.models.Comments;
@@ -242,8 +247,9 @@ export default function pinRouter(Router, PinsModel, usersModel) {
         });
 
         if (!deletedPins) {
-          return res.status(404).json({ error: true, message: "PIN DOES NOT EXIST" })
+          throw new Error("ERROR: Pin Not Deleted!")
         }
+
       });
 
       // Filesystem changes cannot be rolled back with the database transaction.
